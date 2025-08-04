@@ -11,3 +11,11 @@ Authflow is a next-level, production-ready authentication system built for **spe
 - **Flexible & future-proof**: Modular design and container orchestration with async task queues (Celery) built to scale.
 
 Authflow is more than just authentication — it’s your launchpad for building secure, performant apps with confidence and ease.
+
+## How to use
+
+Simply run:
+
+```bash
+docker compose build
+docker compose up
