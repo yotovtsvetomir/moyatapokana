@@ -1,0 +1,188 @@
+.button {
+  display: block;
+  font-family: var(--font-sans);
+  font-size: var(--font-md);
+  font-weight: var(--font-weight-semi);
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: background-color 0.1s ease, color 0.1s ease;
+}
+
+.button > span {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.middle {
+  padding: 1rem 1.5rem !important;
+  font-size: var(--font-lg) !important;
+}
+
+.large {
+  padding: 1rem 1.5rem !important;
+  font-size: var(--font-xl) !important;
+}
+
+.large.secondary::before {
+  padding: 2px;
+}
+
+.content {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.shiftRight {
+  margin-right: 0.4rem;
+}
+
+.shiftLeft {
+  margin-left: 0.4rem;
+}
+
+.primary {
+  background: linear-gradient(
+    270deg,
+    var(--color-highlight-1),
+    var(--color-highlight-2),
+    var(--color-highlight-3),
+    var(--color-highlight-1)
+  );
+  background-size: 600% 600%;
+  color: var(--color-neutral-500);
+  transition: color 0.3s ease;
+}
+
+.primary:hover {
+  animation: gradientMove 1.5s ease forwards;
+}
+
+@keyframes gradientMove {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Secondary (bordered) */
+.secondary {
+  position: relative;
+  overflow: hidden;
+  z-index: 0;
+  background-color: transparent;
+  color: var(--color-highlight-1);
+  padding: calc(0.75rem - 1px) 1.5rem;
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
+  transition: color 0.3s ease;
+}
+
+/* Gradient border layer */
+.secondary::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  padding: 1px; /* border thickness */
+  background: linear-gradient(
+    to right,
+    var(--color-highlight-1),
+    var(--color-highlight-2),
+    var(--color-highlight-3)
+  );
+  border-radius: inherit;
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  z-index: -2;
+}
+
+/* Gradient background on hover */
+.secondary::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to right,
+    var(--color-highlight-1),
+    var(--color-highlight-2),
+    var(--color-highlight-3)
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+  border-radius: inherit;
+}
+
+/* Hover effects */
+.secondary:hover {
+  color: var(--color-neutral-500);
+}
+
+.secondary:hover::after {
+  opacity: 1;
+}
+
+/* Danger (red) */
+.danger {
+  border: 1px solid var(--color-error-1);
+  background-color: white;
+  color: var(--color-error-1);
+  box-sizing: border-box;
+  padding: calc(0.75rem - 1px) calc(1.5rem - 1px);
+}
+
+.danger:hover {
+  background-color: var(--color-neutral-300);
+}
+
+/* Disabled state */
+.button:disabled {
+  background-color: var(--color-neutral-200);
+  color: var(--color-dark-300);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Spinner (loading indicator) */
+.spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid var(--color-neutral-500);
+  border-top: 2px solid var(--color-highlight-1);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.bold {
+  font-weight: bold;
+}
+
+.ghost {
+  background-color: transparent;
+  border: 1px solid var(--color-neutral-300);
+  color: var(--color-dark-300);
+  transition: background-color 0.2s ease;
+}
+
+.ghost:hover {
+  background-color: var(--color-neutral-300);
+}

@@ -1,0 +1,41 @@
+{
+  "name": "frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "storybook": "storybook dev -p 6006 --ci",
+    "build-storybook": "storybook build",
+    "gen:types": "openapi-typescript http://backend:8000/openapi.json -o src/shared/types.ts"
+  },
+  "dependencies": {
+    "material-symbols": "^0.33.0",
+    "next": "15.4.5",
+    "react": "19.1.0",
+    "react-dom": "19.1.0"
+  },
+  "devDependencies": {
+    "@chromatic-com/storybook": "^4.1.0",
+    "@eslint/eslintrc": "^3",
+    "@storybook/addon-a11y": "^9.1.0",
+    "@storybook/addon-docs": "^9.1.0",
+    "@storybook/addon-vitest": "^9.1.0",
+    "@storybook/nextjs-vite": "^9.1.0",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@vitest/browser": "^3.2.4",
+    "@vitest/coverage-v8": "^3.2.4",
+    "eslint": "^9",
+    "eslint-config-next": "15.4.5",
+    "eslint-plugin-storybook": "^9.1.0",
+    "openapi-typescript": "^7.8.0",
+    "playwright": "^1.54.2",
+    "storybook": "^9.1.0",
+    "typescript": "^5",
+    "vitest": "^3.2.4"
+  }
+}
