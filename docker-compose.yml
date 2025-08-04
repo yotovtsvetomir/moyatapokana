@@ -1,0 +1,163 @@
+version: "3.9"
+
+services:
+
+  db_writer:
+    image: bitnami/postgresql:15
+    container_name: db_writer
+    restart: always
+    environment:
+      - POSTGRESQL_USERNAME=postgres
+      - POSTGRESQL_PASSWORD=postgres
+      - POSTGRESQL_DATABASE=app_db
+      - POSTGRESQL_REPLICATION_MODE=master
+      - POSTGRESQL_REPLICATION_USER=repl_user
+      - POSTGRESQL_REPLICATION_PASSWORD=repl_pass
+    volumes:
+      - pgdata_writer:/bitnami/postgresql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      retries: 5
+
+  db_reader:
+    image: bitnami/postgresql:15
+    container_name: db_reader
+    restart: always
+    depends_on:
+      - db_writer
+    environment:
+      - POSTGRESQL_USERNAME=postgres
+      - POSTGRESQL_PASSWORD=postgres
+      - POSTGRESQL_DATABASE=app_db
+      - POSTGRESQL_REPLICATION_MODE=slave
+      - POSTGRESQL_MASTER_HOST=db_writer
+      - POSTGRESQL_REPLICATION_USER=repl_user
+      - POSTGRESQL_REPLICATION_PASSWORD=repl_pass
+    volumes:
+      - pgdata_reader:/bitnami/postgresql
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      retries: 5
+
+  pgbouncer_writer:
+    image: edoburu/pgbouncer
+    container_name: pgbouncer_writer
+    restart: always
+    depends_on:
+      - db_writer
+    environment:
+      DB_HOST: db_writer
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: app_db
+    ports:
+      - "6432:6432"
+    volumes:
+      - ./backend/pgbouncer_writer:/etc/pgbouncer
+
+  pgbouncer_reader:
+    image: edoburu/pgbouncer
+    container_name: pgbouncer_reader
+    restart: always
+    depends_on:
+      - db_reader
+    environment:
+      DB_HOST: db_reader
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: app_db
+    ports:
+      - "6433:6432"
+    volumes:
+      - ./backend/pgbouncer_reader:/etc/pgbouncer
+
+  backend:
+    build: ./backend
+    container_name: backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend/.env
+    depends_on:
+      - pgbouncer_writer
+      - pgbouncer_reader
+    volumes:
+      - ./backend:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  redis:
+    image: redis:7
+    container_name: redis
+    ports:
+      - "6379:6379"
+    restart: always
+
+  celery_worker:
+    build:
+      context: ./backend
+    container_name: celery_worker
+    depends_on:
+      - backend
+      - redis
+    env_file:
+      - ./backend/.env
+    volumes:
+      - ./backend:/app
+    working_dir: /app
+    environment:
+      PYTHONUNBUFFERED: 1
+    command: celery -A app.celery_app worker --loglevel=info
+
+  celery_beat:
+    build:
+      context: ./backend
+    container_name: celery_beat
+    depends_on:
+      - backend
+      - redis
+    env_file:
+      - ./backend/.env
+    volumes:
+      - ./backend:/app
+    working_dir: /app
+    environment:
+      PYTHONUNBUFFERED: 1
+    command: celery -A app.celery_app beat --loglevel=info
+
+  frontend:
+    build: ./frontend
+    container_name: frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: npm run dev
+    environment:
+      - NODE_ENV=development
+    depends_on:
+      - backend
+
+  storybook:
+    build:
+      context: ./frontend
+      target: storybook
+    container_name: storybook
+    ports:
+      - "6006:6006"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: npm run storybook
+
+volumes:
+  pgdata_writer:
+  pgdata_reader:

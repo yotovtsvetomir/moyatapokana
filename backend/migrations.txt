@@ -1,0 +1,2 @@
+docker exec -it backend alembic revision --autogenerate -m "describe your migration"
+docker exec -it backend alembic upgrade head
