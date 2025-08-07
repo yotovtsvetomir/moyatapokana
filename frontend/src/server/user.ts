@@ -1,5 +1,5 @@
 import { getAccessToken } from "@/utils/auth";
-import { getCachedUser, setCachedUser } from "@/utils/serverCache";
+import { getCachedUser, setCachedUser } from "@/utils/redisClient";
 import type { components } from "@/share/types";
 
 type User = components["schemas"]["UserRead"];
@@ -8,7 +8,7 @@ export async function fetchUserSSR(): Promise<User | null> {
   const token = await getAccessToken();
   if (!token) return null;
 
-  const cached = getCachedUser(token);
+  const cached = await getCachedUser(token);
   if (cached) return cached;
 
   try {
@@ -22,7 +22,7 @@ export async function fetchUserSSR(): Promise<User | null> {
     if (!res.ok) return null;
 
     const user = (await res.json()) as User;
-    setCachedUser(token, user);
+    await setCachedUser(token, user);
     return user;
   } catch (err) {
     console.error("fetchUserSSR error:", err);

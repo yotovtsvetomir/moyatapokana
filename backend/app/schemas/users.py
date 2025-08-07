@@ -59,7 +59,7 @@ class TokenData(BaseModel):
     username: Optional[str] = None
 
 
-# --- Stored Token Models (optional but useful for admin/debug) ---
+# --- Stored Token Models ---
 
 
 class AccessTokenRead(BaseModel):

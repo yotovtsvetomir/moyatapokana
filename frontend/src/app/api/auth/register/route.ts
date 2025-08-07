@@ -31,7 +31,7 @@ export async function POST(req: Request) {
     });
 
     res.cookies.set("access_token_expires", tokens.access_token_expires, {
-      httpOnly: false,
+      httpOnly: true,
       secure: isProd,
       sameSite: "lax",
       path: "/",
@@ -46,7 +46,7 @@ export async function POST(req: Request) {
     });
 
     res.cookies.set("refresh_token_expires", tokens.refresh_token_expires, {
-      httpOnly: false,
+      httpOnly: true,
       secure: isProd,
       sameSite: "lax",
       path: "/",

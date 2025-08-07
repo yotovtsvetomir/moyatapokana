@@ -42,7 +42,7 @@ async def create_user(
     user = result.scalars().first()
     if user:
         raise HTTPException(
-            status_code=400, detail="Акаунт с този имейл вече е регистриран."
+            status_code=400, detail="Акаунт с този имейл вече съществува."
         )
 
     hashed_pwd = hash_password(user_in.password)

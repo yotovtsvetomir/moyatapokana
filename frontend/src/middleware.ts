@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { setAuthCookies } from "@/utils/setAuthCookies";
 
 const protectedRoutes = ["/profile"];
 const authPages = ["/login", "/register"];
@@ -30,7 +29,7 @@ export async function middleware(req: NextRequest) {
       const accessExpireTime = new Date(accessTokenExpires).getTime();
       const refreshExpireTime = new Date(refreshTokenExpires).getTime();
 
-      // Optionally, refresh a bit before expiration (e.g., 1 min before)
+      // Refresh before expiration 1 min
       const refreshBufferMs = 60 * 1000;
 
       if (now + refreshBufferMs < accessExpireTime) {
@@ -39,7 +38,7 @@ export async function middleware(req: NextRequest) {
       }
 
       if (now > refreshExpireTime) {
-        // Refresh token expired - redirect to login and clear cookies
+        // Refresh token expired - clear cookies and redirect to login
         const response = NextResponse.redirect(new URL("/login", req.url));
         response.cookies.delete("access_token");
         response.cookies.delete("refresh_token");
@@ -59,7 +58,7 @@ export async function middleware(req: NextRequest) {
         const newTokens = await refreshRes.json();
         const response = NextResponse.next();
 
-        // Set all tokens and expires cookies using helper (adapt it to set expires cookies too)
+        // Set all tokens and expires cookies
         response.cookies.set("access_token", newTokens.access_token, {
           httpOnly: true,
           secure: process.env.NODE_ENV === "production",
@@ -68,7 +67,7 @@ export async function middleware(req: NextRequest) {
           expires: new Date(newTokens.access_token_expires),
         });
         response.cookies.set("access_token_expires", newTokens.access_token_expires, {
-          httpOnly: false,
+          httpOnly: true,
           secure: process.env.NODE_ENV === "production",
           sameSite: "lax",
           path: "/",
@@ -81,7 +80,7 @@ export async function middleware(req: NextRequest) {
           expires: new Date(newTokens.refresh_token_expires),
         });
         response.cookies.set("refresh_token_expires", newTokens.refresh_token_expires, {
-          httpOnly: false,
+          httpOnly: true,
           secure: process.env.NODE_ENV === "production",
           sameSite: "lax",
           path: "/",
