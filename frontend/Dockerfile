@@ -1,23 +1,25 @@
-# Base stage for both Next.js and Storybook builds (dev deps installed)
+# -------------------------------
+# 1. Base dev stage (used by Storybook and Next.js dev)
+# -------------------------------
 FROM node:20-bullseye AS base
 
 WORKDIR /app
-
-RUN apt-get update && apt-get install -y \
-  libnss3 libatk-bridge2.0-0 libx11-xcb1 libxcomposite1 libxdamage1 \
-  libxrandr2 libgbm1 libasound2 libpangocairo-1.0-0 libcups2 libdrm2 \
-  libxshmfence1 libatspi2.0-0 wget ca-certificates && \
-  rm -rf /var/lib/apt/lists/*
 
 COPY package*.json ./
 
 ENV NODE_ENV=development
 
+# Install all deps for dev
 RUN npm install
+
+# Install Playwright browsers with dependencies
+RUN npx playwright install --with-deps
 
 COPY . .
 
-# --- Next.js build stage ---
+# -------------------------------
+# 2. Next.js build stage
+# -------------------------------
 FROM node:20-bullseye AS next-build
 
 WORKDIR /app
@@ -32,7 +34,9 @@ COPY . .
 
 RUN npm run build
 
-# Production image for Next.js
+# -------------------------------
+# 3. Next.js production stage
+# -------------------------------
 FROM node:20-alpine AS next-prod
 
 WORKDIR /app
@@ -45,10 +49,10 @@ EXPOSE 3000
 
 CMD ["npm", "start"]
 
-# --- Storybook build stage ---
+# -------------------------------
+# 4. Storybook stage (no Playwright here)
+# -------------------------------
 FROM base AS storybook
-
-RUN npx playwright install --with-deps
 
 EXPOSE 6006
 

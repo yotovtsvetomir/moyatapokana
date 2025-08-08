@@ -40,7 +40,7 @@ export const Input: React.FC<InputProps> = ({
         type={type}
         id={id}
         name={name}
-        autoComplete={name}
+        autoComplete={type === "password" ? "" : type}
         value={value}
         onChange={onChange}
         onFocus={onFocus}

@@ -131,15 +131,17 @@ Example fetch flow with auth and Redis shared cache:
 
 ## Kubernetes Pod Grouping & Deployment Strategy (Production)
 
-| Pod Group             | Services Included           | Rationale / Notes                                                 | **Prod Pod Size**             |
-| --------------------- | --------------------------- | ----------------------------------------------------------------- | ----------------------------- |
-| **frontend**          | Next.js app                 | Handles SSR, API routes, horizontally scalable                    | 500m–1 CPU / 512Mi–1Gi RAM    |
-| **backend**           | FastAPI app                 | Core API service, scales for API RPS and latency                  | 1–2 CPU / 1–2Gi RAM           |
-| **pgbouncer\_writer** | PgBouncer for write DB      | Connects to Aurora writer endpoint; handles pooled writes         | 250–500m CPU / 256–512Mi RAM  |
-| **pgbouncer\_reader** | PgBouncer for read replicas | Pools Aurora read replicas; isolates and balances read query load | 250–500m CPU / 256–512Mi RAM  |
-| **redis**             | Redis for Celery broker     | Single pod as message broker only; no HA, no caching              | 500m–1 CPU / 1–2Gi RAM        |
-| **celery\_worker**    | Celery async workers        | Stateless pods for background jobs, auto-scaled as needed         | 500m–1 CPU / 512Mi–1Gi RAM    |
-| **celery\_beat**      | Celery scheduler            | Manages periodic tasks; lightweight, single pod                   | 250m–500m CPU / 256–512Mi RAM |
+| Pod Group                   | Services Included           | Rationale / Notes                                                 | **Prod Pod Size**             |
+| --------------------------- | --------------------------- | ----------------------------------------------------------------- | ----------------------------- |
+| **frontend**                | Next.js app                 | Handles SSR, API routes, horizontally scalable                    | 500m–1 CPU / 512Mi–1Gi RAM    |
+| **backend**                 | FastAPI app                 | Core API service, scales for API RPS and latency                  | 1–2 CPU / 1–2Gi RAM           |
+| **pgbouncer\_writer**       | PgBouncer for write DB      | Connects to Aurora writer endpoint; handles pooled writes         | 250–500m CPU / 256–512Mi RAM  |
+| **pgbouncer\_reader**       | PgBouncer for read replicas | Pools Aurora read replicas; isolates and balances read query load | 250–500m CPU / 256–512Mi RAM  |
+| **redis**                   | Redis for Celery broker     | Single pod as message broker and frontend cache                   | 500m–1 CPU / 1–2Gi RAM        |
+| **celery\_worker**          | Celery async workers        | Stateless pods for background jobs, auto-scaled as needed         | 500m–1 CPU / 512Mi–1Gi RAM    |
+| **celery\_beat**            | Celery scheduler            | Manages periodic tasks; lightweight, single pod                   | 250m–500m CPU / 256–512Mi RAM |
+| **cms-frontend** (optional) | Next.js app (CMS UI)        | Separate frontend deployment for CMS, scales independently        | 500m–1 CPU / 512Mi–1Gi RAM    |
+
 
 ## Cost-Efficient Scaling Strategy (Production)
 
@@ -187,3 +189,24 @@ Example fetch flow with auth and Redis shared cache:
 | **Scale queues elastically** | Celery workers scale based on task concurrency / backlog                    |
 | **Aurora handles reads**     | Aurora auto-replicates, balancing load via read endpoints                   |
 | **Pod grouping is logical**  | Separate concerns: frontend, backend, infra (db proxy, redis, celery, etc.) |
+
+##  Staging Environment Philosophy & Best Practices
+
+| **Aspect**               | **Description**                                                                                   |
+|-------------------------|-------------------------------------------------------------------------------------------------|
+| **Full Production Parity** | Staging mirrors production architecture, configs, and integrations to ensure reliable testing.    |
+| **Scaled-Down Resources**  | Staging runs fewer pods and smaller node sizes but keeps all core services (DB, cache, workers). |
+| **Isolated Data Stores**   | Separate Aurora cluster, S3 buckets, and Redis instances to avoid interference with production data. |
+| **Separate Domains**       | Staging served on a dedicated domain or subdomain (`staging.example.com`) for clear separation.  |
+| **Deployment Pipeline**    | Automated CI/CD deploys to staging on every merge or PR for immediate feedback and QA visibility.|
+| **Safe Testing Ground**    | Bugs, data mutations, and experiments happen in staging, preserving production stability.       |
+| **Access Control**         | Controlled access to staging environment to protect sensitive test data and avoid leaks.        |
+| **Populating Data**        | Avoid syncing production data to staging — it leads to data corruption, privacy risks, and maintenance nightmares. Instead, use realistic dummy data tailored for safe testing. |
+
+
+
+
+| **Git Branch** | **Trigger**        | **CI/CD Action**                         | **Environment**        | **Purpose**                                                     |
+| -------------- | ------------------ | ---------------------------------------- | ---------------------- | --------------------------------------------------------------- |
+| `staging`      | `git push staging` | Run tests → Build → Deploy to staging    | Staging environment    | Continuous integration & testing; preview for QA/devs/reviewers |
+| `master`       | `git push master`  | Run tests → Build → Deploy to production | Production environment | Final release after staging approval; live app for users        |

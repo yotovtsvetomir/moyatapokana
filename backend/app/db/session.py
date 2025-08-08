@@ -1,7 +1,6 @@
 import os
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
-from contextlib import asynccontextmanager
 
 DATABASE_URL_WRITER = os.getenv("DATABASE_URL_WRITER")
 DATABASE_URL_READER = os.getenv("DATABASE_URL_READER")
@@ -31,16 +30,4 @@ async def get_write_session():
 
 async def get_read_session():
     async with AsyncSessionLocalReader() as session:
-        yield session
-
-
-@asynccontextmanager
-async def write_session_cm():
-    async for session in get_write_session():
-        yield session
-
-
-@asynccontextmanager
-async def read_session_cm():
-    async for session in get_read_session():
         yield session
