@@ -1,0 +1,89 @@
+import { NextResponse } from "next/server";
+import { NextRequest } from "next/server";
+
+const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!;
+const clientSecret = process.env.GOOGLE_CLIENT_SECRET!;
+const redirectUri = process.env.NEXT_PUBLIC_CLIENT_URL + "/api/auth/google-callback";
+
+export async function GET(request: NextRequest) {
+  const url = new URL(request.url);
+  const code = url.searchParams.get("code");
+
+  if (!code) {
+    return NextResponse.json({ error: "No code provided" }, { status: 400 });
+  }
+
+  // Exchange code for tokens from Google
+  const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      code,
+      client_id: clientId,
+      client_secret: clientSecret,
+      redirect_uri: redirectUri,
+      grant_type: "authorization_code",
+    }),
+  });
+
+  if (!tokenRes.ok) {
+    const errorBody = await tokenRes.text();
+    return NextResponse.json({ error: "Failed to get tokens", details: errorBody }, { status: 400 });
+  }
+
+  const tokenData = await tokenRes.json();
+  const { id_token } = tokenData;
+
+  if (!id_token) {
+    return NextResponse.json({ error: "No id_token returned" }, { status: 400 });
+  }
+
+  const backendRes = await fetch(`${process.env.API_URL_SERVER}/users/google-login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id_token }),
+  });
+
+  if (!backendRes.ok) {
+    const error = await backendRes.json();
+    return NextResponse.json({ error: "Backend login failed", details: error }, { status: 400 });
+  }
+
+  const backendData = await backendRes.json();
+
+  const res = NextResponse.redirect(new URL("/social-redirect", request.url));
+
+  const isProd = process.env.NODE_ENV === "production";
+
+  res.cookies.set("access_token", backendData.access_token, {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: "lax",
+    path: "/",
+    expires: new Date(backendData.access_token_expires),
+  });
+
+  res.cookies.set("access_token_expires", backendData.access_token_expires, {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: "lax",
+    path: "/",
+  });
+
+  res.cookies.set("refresh_token", backendData.refresh_token, {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: "lax",
+    path: "/",
+    expires: new Date(backendData.refresh_token_expires),
+  });
+
+  res.cookies.set("refresh_token_expires", backendData.refresh_token_expires, {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: "lax",
+    path: "/",
+  });
+
+  return res;
+}

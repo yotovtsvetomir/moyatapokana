@@ -132,6 +132,16 @@ services:
       PYTHONUNBUFFERED: 1
     command: celery -A app.celery_app beat --loglevel=info
 
+  flower:
+    image: mher/flower
+    container_name: flower
+    ports:
+      - "5555:5555"
+    depends_on:
+      - redis
+    entrypoint: ["celery"]
+    command: ["--broker=redis://redis:6379/0", "flower", "--address=0.0.0.0", "--port=5555"]
+
   frontend:
     build: ./frontend
     container_name: frontend

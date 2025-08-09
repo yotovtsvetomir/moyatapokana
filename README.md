@@ -61,6 +61,42 @@ The login and authentication lifecycle between the browser, Next.js, and FastAPI
    | 6. Stores cookies accessible by SSR
 ```
 
+Social Login Flow
+
+```
+[BROWSER]
+   |
+   | 1. User clicks "Login with Social Provider" → opens OAuth popup
+   |
+   V
+[SOCIAL PROVIDER OAUTH]
+   |
+   | 2. User authenticates → provider redirects popup to Next.js callback with code
+   |
+   V
+[NEXT.JS API (/api/auth/social-callback)]
+   |
+   | 3. Exchanges code for tokens with provider
+   | 4. Sends id_token (or equivalent) to FastAPI backend (/users/social-login)
+   |
+   V
+[FASTAPI]
+   |
+   | 5. Verifies token, creates/gets user, returns app tokens
+   |
+   V
+[NEXT.JS API]
+   |
+   | 6. Sets secure httpOnly cookies with tokens
+   | 7. Redirects popup to /social-redirect
+   |
+   V
+[BROWSER]
+   |
+   | 8. Closes popup, reloads main window to /profile with auth cookies set
+
+```
+
 Example fetch flow with auth and Redis shared cache:
 
 ```text

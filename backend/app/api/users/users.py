@@ -25,7 +25,7 @@ from app.services.auth import (
     hash_password,
 )
 
-router = APIRouter(prefix="/users", tags=["users"])
+router = APIRouter()
 
 SECRET_KEY = os.getenv("SECRET_KEY", "default-secret-key")
 REFRESH_SECRET_KEY = os.getenv("REFRESH_SECRET_KEY", "default-refresh-secret-key")

@@ -4,6 +4,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from app.api.users.users import router as users_router
 from app.api.users.admin import router as admin_router
+from app.api.users.social_auth import router as social_router
 
 app = FastAPI()
 
@@ -17,5 +18,6 @@ app.add_middleware(
 )
 
 # Include all routers
-app.include_router(users_router, prefix="", tags=["users"])
+app.include_router(users_router, prefix="/users", tags=["users"])
 app.include_router(admin_router, prefix="/users", tags=["users"])
+app.include_router(social_router, prefix="/users", tags=["users"])
