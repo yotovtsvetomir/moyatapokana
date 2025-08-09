@@ -30,6 +30,8 @@ docker compose up
 
 ## Auth Flow (High-Level)
 
+![Flow Diagram](authflow.png)
+
 The login and authentication lifecycle between the browser, Next.js, and FastAPI is designed for full SSR compatibility and secure cookie handling:
 
 ```text
