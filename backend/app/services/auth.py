@@ -32,13 +32,15 @@ def isoformat_z(dt: datetime) -> str:
 
 
 async def create_user(user_create: UserCreate, db: AsyncSession) -> User:
-    existing = await db.execute(
-        select(User).filter(User.username == user_create.username)
+    existing_user = (
+        (await db.execute(select(User).filter(User.username == user_create.username)))
+        .scalars()
+        .first()
     )
-    if existing.scalars().first():
+    if existing_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Username already taken",
+            detail="Акаунт с този имейл вече съществува",
         )
 
     hashed_password = pwd_context.hash(user_create.password)

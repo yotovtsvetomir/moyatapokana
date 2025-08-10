@@ -24,7 +24,7 @@ SESSION_COOKIE_NAME = os.getenv("SESSION_COOKIE_NAME", "session_id")
 SECRET_KEY = os.getenv("SECRET_KEY", "default-secret-key")
 
 
-@router.post("/users")
+@router.post("/")
 async def register(
     user_create: UserCreate, db_write: AsyncSession = Depends(get_write_session)
 ):
