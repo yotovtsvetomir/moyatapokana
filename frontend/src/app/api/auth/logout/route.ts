@@ -14,15 +14,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: data.detail || "Logout failed" }, { status: response.status });
     }
 
-    // Clear cookies here if you want
     const res = new NextResponse(null, { status: 204 });
-    res.cookies.delete("access_token");
-    res.cookies.delete("access_token_expires");
-    res.cookies.delete("refresh_token");
-    res.cookies.delete("refresh_token_expires");
+    res.cookies.delete("session_id");
 
     return res;
   } catch (error) {
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
+    return NextResponse.json({ error: "Server error: " + error }, { status: 500 });
   }
 }

@@ -13,8 +13,8 @@ celery_app.conf.broker_connection_retry_on_startup = True
 import app.api.users.tasks  # noqa
 
 celery_app.conf.beat_schedule = {
-    "cleanup-expired-tokens-every-10-minutes": {
-        "task": "app.api.users.tasks.cleanup_expired_tokens",
+    "dummy-db-task-every-30-seconds": {
+        "task": "app.tasks.dummy_db_task",
         "schedule": crontab(minute="*/10"),
     },
 }

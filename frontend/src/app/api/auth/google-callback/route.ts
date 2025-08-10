@@ -55,34 +55,15 @@ export async function GET(request: NextRequest) {
 
   const isProd = process.env.NODE_ENV === "production";
 
-  res.cookies.set("access_token", backendData.access_token, {
-    httpOnly: true,
-    secure: isProd,
-    sameSite: "lax",
-    path: "/",
-    expires: new Date(backendData.access_token_expires),
-  });
+  const SESSION_EXPIRE_SECONDS = parseInt(process.env.SESSION_EXPIRE_SECONDS || "604800", 10);
+  const expires = new Date(Date.now() + SESSION_EXPIRE_SECONDS * 1000);
 
-  res.cookies.set("access_token_expires", backendData.access_token_expires, {
+  res.cookies.set("session_id", backendData.session_id, {
     httpOnly: true,
     secure: isProd,
     sameSite: "lax",
     path: "/",
-  });
-
-  res.cookies.set("refresh_token", backendData.refresh_token, {
-    httpOnly: true,
-    secure: isProd,
-    sameSite: "lax",
-    path: "/",
-    expires: new Date(backendData.refresh_token_expires),
-  });
-
-  res.cookies.set("refresh_token_expires", backendData.refresh_token_expires, {
-    httpOnly: true,
-    secure: isProd,
-    sameSite: "lax",
-    path: "/",
+    expires,
   });
 
   return res;

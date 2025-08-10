@@ -4,10 +4,10 @@ Authflow is a **production-ready**, robust authentication system designed for **
 
 ## Key Features
 
-- **Highly efficient:** Minimal API requests powered by smart token caching, **Redis shared user cache**, and shared user context enable fast, seamless authentication flows.  
+- **Highly efficient:** Minimal API requests powered by Redis-backed session caching and shared user context enable fast, seamless authentication flows.  
 - **Enterprise-inspired architecture:** Primary-replica PostgreSQL setup with PgBouncer connection pooling, reflecting real-world cloud-native environments like EKS and Aurora.  
 - **Developer-friendly:** Automatic generation of shared types from backend OpenAPI specs to frontend TypeScript ensures strong, end-to-end type safety across the stack.  
-- **Robust tooling:** Alembic migrations, Storybook visual tests, and scheduled background jobs (e.g., token cleanup) maintain system reliability and smooth operation.  
+- **Robust tooling:** Alembic migrations, Storybook visual tests, and scheduled background jobs (e.g., session cleanup) maintain system reliability and smooth operation.  
 - **Flexible & future-proof:** Modular design combined with container orchestration, async task queues (Celery), and Redis caching built to scale seamlessly.
 
 Authflow is more than just authentication — it’s a solid foundation for building secure, performant applications with confidence.
@@ -19,7 +19,7 @@ Authflow is more than just authentication — it’s a solid foundation for buil
 ### Prerequisites
 
 - Docker and Docker Compose installed  
-- Ports 5432, 5433, 6379, 6432, 6433, 8000, 3000, and 6006 available on your machine  
+- Ports `5432`, `5433`, `6379`, `6432`, `6433`, `8000`, `3000`, and `6006` available on your machine  
 
 ### Run Locally
 
@@ -30,14 +30,14 @@ docker compose up
 
 ## Auth Flow (High-Level)
 
-![Flow Diagram](authflow.png)
+![Flow Diagram](authflow.svg)
 
 The login and authentication lifecycle between the browser, Next.js, and FastAPI is designed for full SSR compatibility and secure cookie handling:
 
 ```text
 [BROWSER]
    |
-   | 1. User submits login form
+   | 1. User submits login form with credentials
    |
    V
 [NEXT.JS SERVER] (API Route: /api/login)
@@ -47,18 +47,48 @@ The login and authentication lifecycle between the browser, Next.js, and FastAPI
    V
 [FASTAPI] (POST /users/login)
    |
-   | 3. Returns tokens (access + refresh + expiry)
+   | 3. Verifies credentials and creates a user session
+   | 4. Stores session data in Redis with a unique session_id
+   | 5. Returns session_id (only) to Next.js server
    |
    V
 [NEXT.JS SERVER]
    |
-   | 4. Sets httpOnly, secure cookies for tokens
-   | 5. Stores or updates user session data in Redis cache
+   | 6. Sets secure, httpOnly cookie with the session_id
    |
    V
 [BROWSER]
    |
-   | 6. Stores cookies accessible by SSR
+   | 7. Sends session_id cookie automatically with subsequent requests
+```
+
+Refresh Session Flow
+
+```
+[BROWSER]
+   |
+   | 1. User stops interacting with the app (no mouse, keyboard, or scroll)
+   |
+   V
+[FRONTEND]
+   |
+   | 2. Starts idle timer (e.g., 15 minutes) on user activity
+   |
+   | 3. After timeout, shows modal with countdown (e.g., 20 seconds)
+   |
+   V
+[BROWSER]
+   |
+   | 4. Modal prompts: "Session expires soon. Extend session?"
+   |    - User confirms → triggers session refresh
+   |    - User cancels or countdown ends → triggers logout
+   |
+   V
+[FRONTEND]
+   |
+   | 5. If refreshed successfully, resets idle timer and hides modal
+   | 6. If refresh fails or logout triggered, clears session and redirects to login
+
 ```
 
 Social Login Flow
@@ -66,35 +96,34 @@ Social Login Flow
 ```
 [BROWSER]
    |
-   | 1. User clicks "Login with Social Provider" → opens OAuth popup
+   | 1. User clicks "Login with Social Provider" → OAuth popup opens
    |
    V
 [SOCIAL PROVIDER OAUTH]
    |
-   | 2. User authenticates → provider redirects popup to Next.js callback with code
+   | 2. User authenticates and provider redirects popup to Next.js callback with code
    |
    V
 [NEXT.JS API (/api/auth/social-callback)]
    |
    | 3. Exchanges code for tokens with provider
-   | 4. Sends id_token (or equivalent) to FastAPI backend (/users/social-login)
+   | 4. Sends ID token (or equivalent) to FastAPI backend (/users/social-login)
    |
    V
 [FASTAPI]
    |
-   | 5. Verifies token, creates/gets user, returns app tokens
+   | 5. Verifies token, creates/gets user session, stores in Redis, returns session_id
    |
    V
 [NEXT.JS API]
    |
-   | 6. Sets secure httpOnly cookies with tokens
+   | 6. Sets secure, httpOnly cookie with session_id
    | 7. Redirects popup to /social-redirect
    |
    V
 [BROWSER]
    |
-   | 8. Closes popup, reloads main window to /profile with auth cookies set
-
+   | 8. Closes popup, reloads main window to /profile with session cookie set
 ```
 
 Example fetch flow with auth and Redis shared cache:
@@ -102,30 +131,32 @@ Example fetch flow with auth and Redis shared cache:
 ```text
 [BROWSER]
    |
-   | 1. Requests page or API with access_token cookie
+   | 1. Requests page or API with session_id cookie sent automatically (credentials: 'include')
    |
    V
 [NEXT.JS SERVER] (SSR or API Route)
    |
-   | 2. Reads access_token from httpOnly cookies
-   | 3. Checks Redis cache for user session data
-   |    - If cache miss, fetches user data from FastAPI and updates Redis
-   | 4. Forwards request with token to FastAPI
+   | 2. Reads session_id from httpOnly cookie
+   | 3. Queries Redis shared cache for user session data associated with session_id
+   |    - If cache miss, fetches session/user data from FastAPI and updates Redis
+   | 4. Uses session info for authorization/context
+   | 5. Forwards request or renders page accordingly
    |
    V
-[FASTAPI] (GET /posts)
+[FASTAPI] (GET /posts or any secured endpoint)
    |
-   | 5. Validates token, returns data
+   | 6. Validates session info (session_id) and permissions
+   | 7. Returns data
    |
    V
 [NEXT.JS SERVER]
    |
-   | 6. Sends SSR-rendered HTML with data
+   | 8. Sends SSR HTML or API response with data
    |
    V
 [BROWSER]
    |
-   | 7. Renders page
+   | 9. Renders page or uses API data
 ```
 
 # Authflow: Scalable, Production-Grade Auth System
@@ -136,11 +167,11 @@ Example fetch flow with auth and Redis shared cache:
 |--------------|-----------------------------------------------|
 | Frontend    | Next.js (App Router) – SSR, API Routes, Middleware, Storybook |
 | Backend     | FastAPI – Async IO, OAuth2, REST APIs, OpenAPI schema |
-| Auth        | Cookie-based (httpOnly) access/refresh tokens + rotation middleware |
+| Auth        | Cookie-based (httpOnly) session_id stored in Redis as shared session cache; backend manages session lifecycle.|
 | Worker      | Celery + Redis – async background task queue  |
 | Database    | PostgreSQL 15 (Bitnami) – Writer + Read Replica with replication |
 | Pooling     | PgBouncer – separate write/read poolers       |
-| Cache       | Redis – token/session caching + Celery broker |
+| Cache       | Redis – session caching + Celery broker |
 | Container   | Docker Compose (local), designed for EKS migration |
 
 ## Architecture Patterns
@@ -150,7 +181,7 @@ Example fetch flow with auth and Redis shared cache:
 | Split Reader/Writer DB      | Offloads reads to replicas for scalability |
 | PgBouncer Transaction Pooling | Reduces DB connection overhead          |
 | Celery Workers             | Offloads async tasks (email, cleanup, etc.) |
-| Token Rotation Middleware  | Automatic token refresh in Next.js middleware |
+| Session Middleware          | Redirects based on existence of session_id cookie to enforce authentication state for protected and auth routes |
 | Stateless Services         | Supports autoscaling without sticky sessions |
 | Env-based Configs          | Simplifies switching environments        |
 
@@ -201,7 +232,7 @@ Example fetch flow with auth and Redis shared cache:
 | Metric           | Local (Dev)                  | Production Target                |
 |------------------|------------------------------|--------------------------------|
 | RPS (API)        | ~500–1k                      | 5k–10k sustained per instance  |
-| Token Handling   | SSR cookie rotation per req  | FastAPI refresh + Redis caching |
+| Session Handling | SSR reads session_id cookie per request | FastAPI verifies session via Redis shared cache |
 | Task Queueing    | Single Celery worker          | Auto-scaled multiple workers    |
 | DB Reads         | Single read replica           | Aurora with auto-scaling replicas |
 | Pod Startup      | ~2–4 seconds Docker boot      | Pre-pulled images, warmed pods  |

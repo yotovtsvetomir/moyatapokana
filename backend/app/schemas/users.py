@@ -1,8 +1,5 @@
 import re
 from pydantic import BaseModel, EmailStr, validator
-from datetime import datetime
-from uuid import UUID
-from typing import Optional
 
 
 # --- User Models ---
@@ -38,51 +35,3 @@ class UserRead(BaseModel):
 class UserLogin(BaseModel):
     username: EmailStr
     password: str
-
-
-# --- Token Exchange Models ---
-
-
-class RefreshTokenRequest(BaseModel):
-    refresh_token: str
-
-
-class Token(BaseModel):
-    access_token: str
-    access_token_expires: datetime
-    refresh_token: str
-    refresh_token_expires: datetime
-    token_type: str
-
-
-class TokenData(BaseModel):
-    username: Optional[str] = None
-
-
-# --- Stored Token Models ---
-
-
-class AccessTokenRead(BaseModel):
-    id: UUID
-    user_id: int
-    jti: str
-    token: str
-    issued_at: datetime
-    expires_at: datetime
-    revoked: bool
-
-    class Config:
-        orm_mode = True
-
-
-class RefreshTokenRead(BaseModel):
-    id: UUID
-    user_id: int
-    jti: str
-    token: str
-    issued_at: datetime
-    expires_at: datetime
-    revoked: bool
-
-    class Config:
-        orm_mode = True

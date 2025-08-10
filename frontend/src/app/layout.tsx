@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "@/styles/global.css";
-
+import { cookies } from "next/headers";
 import Header from "@/components/Header/Header";
 import Footer from "@/components/Footer/Footer";
 import { UserProvider } from "@/context/UserContext";
 import { fetchUserSSR } from "@/server/user";
+import SessionTimeoutHandler from "@/utils/SessionTimeoutHandler";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,12 +28,15 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const user = await fetchUserSSR()
+  const cookieStore = await cookies();
+  const sessionId = cookieStore.get("session_id")?.value
+  const user = await fetchUserSSR(sessionId)
 
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <UserProvider initialUser={user}>
+          <SessionTimeoutHandler />
           <Header />
           <main>{children}</main>
           <Footer />
