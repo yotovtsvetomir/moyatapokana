@@ -6,7 +6,7 @@ import Modal from "@/ui-components/Modal/Modal";
 import { useUser } from "@/context/UserContext";
 
 const SESSION_TIMEOUT = 1000 * 60 * 15;
-const COUNTDOWN_SECONDS = 10;
+const COUNTDOWN_SECONDS = 20;
 
 export default function SessionTimeoutHandler() {
   const { user } = useUser();
@@ -18,6 +18,8 @@ export default function SessionTimeoutHandler() {
 
   // Reset timer on user activity
   const resetTimeout = () => {
+    if (showPrompt) return;
+
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
     setShowPrompt(false);
@@ -36,7 +38,7 @@ export default function SessionTimeoutHandler() {
     resetTimeout();
 
     // Events to listen for user activity
-    const events = ["mousemove", "keydown", "click", "scroll"];
+    const events = ["keydown", "click", "scroll"];
 
     // Attach event listeners to reset timer
     events.forEach((event) =>
@@ -83,11 +85,13 @@ export default function SessionTimeoutHandler() {
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     setShowPrompt(false);
-    fetch("/api/auth/logout", { method: "POST" }).catch((err) =>
-      console.error("Logout error:", err)
-    );
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch (err) {
+      console.error("Logout error:", err);
+    }
     router.push("/login");
   };
 
