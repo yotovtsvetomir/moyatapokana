@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useState, useRef } from "react";
-import { useRouter } from "next/navigation";
 import Modal from "@/ui-components/Modal/Modal";
 import { useUser } from "@/context/UserContext";
 
@@ -14,7 +13,6 @@ export default function SessionTimeoutHandler() {
   const [countdown, setCountdown] = useState(COUNTDOWN_SECONDS);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const countdownIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const router = useRouter();
 
   // Reset timer on user activity
   const resetTimeout = () => {
@@ -92,7 +90,7 @@ export default function SessionTimeoutHandler() {
     } catch (err) {
       console.error("Logout error:", err);
     }
-    router.push("/login");
+    window.location.href = "/login";
   };
 
   if (!user || !showPrompt) return null;
