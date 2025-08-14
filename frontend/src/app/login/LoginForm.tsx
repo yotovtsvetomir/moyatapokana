@@ -16,14 +16,10 @@ export function LoginForm() {
 
     if (!username) {
       errs.username = "Моля, въведете имейл";
-    } else if (!/\S+@\S+\.\S+/.test(username)) {
-      errs.username = "Невалиден имейл формат";
     }
 
     if (!password) {
       errs.password = "Моля, въведете парола";
-    } else if (password.length < 8) {
-      errs.password = "Паролата трябва да е поне 8 символа";
     }
 
     return errs;
@@ -40,7 +36,6 @@ export function LoginForm() {
     }
 
     setLoading(true);
-    setErrors({});
 
     try {
       const res = await fetch("/api/auth/login", {
@@ -51,8 +46,7 @@ export function LoginForm() {
 
       if (!res.ok) {
         const data = await res.json();
-        setErrors({ apiError: data.error || "Входът неуспешен" });
-        setLoading(false);
+        setErrors({ apiError: data.detail || "Входът неуспешен" });
         return;
       }
 

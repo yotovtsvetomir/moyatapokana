@@ -27,7 +27,7 @@ export async function POST(req: Request) {
 
     return res;
   } catch (err) {
-    console.error("Refresh session error:", err);
-    return NextResponse.json({ success: false, error: "Server error" }, { status: 500 });
+    console.error("Грешка при обновяване на сесията:", err);
+    return NextResponse.json({ success: false, error: "Грешка при сървъра" }, { status: 500 });
   }
 }

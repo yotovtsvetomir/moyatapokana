@@ -30,9 +30,8 @@ const Header = () => {
       setUser(null);
       window.location.href = "/";
     } catch (err) {
-      setError("Възникна грешка при излизане");
+      setError(`Възникна грешка при излизане: ${err}`);
     } finally {
-      // Always turn loading off
       setLoading(false);
     }
   }
@@ -40,7 +39,9 @@ const Header = () => {
   return (
     <header className={styles.header}>
       <div className={styles.container}>
-        <h1 className={styles.logo}>Auth flow</h1>
+        <Link href="/">
+          <h1 className={styles.logo}>Auth flow</h1>
+        </Link>
         <nav>
           <ul className={styles.navList}>
             <li><Link href="/" className={styles.navLink}>Начало</Link></li>

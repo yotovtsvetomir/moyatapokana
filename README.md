@@ -163,16 +163,19 @@ Example fetch flow with auth and Redis shared cache:
 
 ## Architecture Overview
 
-| Layer        | Stack                                         |
-|--------------|-----------------------------------------------|
-| Frontend    | Next.js (App Router) – SSR, API Routes, Middleware, Storybook |
-| Backend     | FastAPI – Async IO, OAuth2, REST APIs, OpenAPI schema |
-| Auth        | Cookie-based (httpOnly) session_id stored in Redis as shared session cache; backend manages session lifecycle.|
-| Worker      | Celery + Redis – async background task queue  |
-| Database    | PostgreSQL 15 (Bitnami) – Writer + Read Replica with replication |
-| Pooling     | PgBouncer – separate write/read poolers       |
-| Cache       | Redis – session caching + Celery broker |
-| Container   | Docker Compose (local), designed for EKS migration |
+| Layer       | Stack                                                                                                          |
+| ----------- | -------------------------------------------------------------------------------------------------------------- |
+| Frontend    | Next.js (App Router) – SSR, API Routes, Middleware, Storybook                                                  |
+| Backend     | FastAPI – Async IO, OAuth2, REST APIs, OpenAPI schema                                                          |
+| Auth        | Cookie-based (httpOnly) session\_id stored in Redis as shared session cache; backend manages session lifecycle |
+| Worker      | Celery + Redis – async background task queue                                                                   |
+| Database    | PostgreSQL 15 (Bitnami) – Writer + Read Replica with replication                                               |
+| **Storage** | S3 – for profile images, attachments, and static content                                                       |
+| **Email**   | SMTP / SES / SendGrid – user notifications, verification emails, password resets                               |
+| Pooling     | PgBouncer – separate write/read poolers                                                                        |
+| Cache       | Redis – session caching + Celery broker                                                                        |
+| Container   | Docker Compose (local), designed for EKS migration                                                             |
+
 
 ## Architecture Patterns
 
@@ -180,36 +183,41 @@ Example fetch flow with auth and Redis shared cache:
 |-----------------------------|------------------------------------------|
 | Split Reader/Writer DB      | Offloads reads to replicas for scalability |
 | PgBouncer Transaction Pooling | Reduces DB connection overhead          |
-| Celery Workers             | Offloads async tasks (email, cleanup, etc.) |
+| Celery Workers             | Offloads async tasks (email, S3 uploads, etc.) |
 | Session Middleware          | Redirects based on existence of session_id cookie to enforce authentication state for protected and auth routes |
 | Stateless Services         | Supports autoscaling without sticky sessions |
 | Env-based Configs          | Simplifies switching environments        |
 
 ## Local Dev Replica vs Production
 
-| Service         | Local Substitute             | Production Equivalent         |
-|-----------------|-----------------------------|------------------------------|
-| PostgreSQL      | Bitnami master + replica    | Aurora Cluster                |
-| PgBouncer       | Dockerized separate configs | Same                         |
-| FastAPI backend | Uvicorn with reload          | Gunicorn/UVLoop              |
-| Celery + Redis  | Single worker + Redis        | Multiple workers + Redis Cluster |
-| Next.js Frontend| Dev server                  | Self-hosted        |
-| Redis           | Single container             | Clustered Redis              |
-| Container Orchestration | Docker Compose           | kubectl on EKS/ECS    |
+| Service               | Local Substitute                     | Production Equivalent         |
+|-----------------------|------------------------------------|------------------------------|
+| PostgreSQL            | Bitnami master + replica            | Aurora Cluster               |
+| PgBouncer             | Dockerized separate configs         | Same                         |
+| FastAPI backend       | Uvicorn with reload                 | Gunicorn/UVLoop              |
+| Celery + Redis        | Single worker + Redis               | Multiple workers + Redis Cluster |
+| Next.js Frontend      | Dev server                          | Self-hosted                  |
+| Redis                 | Single container                    | Clustered Redis              |
+| Container Orchestration | Docker Compose                     | kubectl on EKS/ECS           |
+| S3 Storage            | Localstack or MinIO                 | AWS S3 (or equivalent cloud storage) |
+| Email Service         | Mailhog, local SMTP sandbox         | Gmail API / Google Workspace SMTP  |
+
 
 
 ## Kubernetes Pod Grouping & Deployment Strategy (Production)
 
-| Pod Group                   | Services Included           | Rationale / Notes                                                 | **Prod Pod Size**             |
-| --------------------------- | --------------------------- | ----------------------------------------------------------------- | ----------------------------- |
-| **frontend**                | Next.js app                 | Handles SSR, API routes, horizontally scalable                    | 500m–1 CPU / 512Mi–1Gi RAM    |
-| **backend**                 | FastAPI app                 | Core API service, scales for API RPS and latency                  | 1–2 CPU / 1–2Gi RAM           |
-| **pgbouncer\_writer**       | PgBouncer for write DB      | Connects to Aurora writer endpoint; handles pooled writes         | 250–500m CPU / 256–512Mi RAM  |
-| **pgbouncer\_reader**       | PgBouncer for read replicas | Pools Aurora read replicas; isolates and balances read query load | 250–500m CPU / 256–512Mi RAM  |
-| **redis**                   | Redis for Celery broker     | Single pod as message broker and frontend cache                   | 500m–1 CPU / 1–2Gi RAM        |
-| **celery\_worker**          | Celery async workers        | Stateless pods for background jobs, auto-scaled as needed         | 500m–1 CPU / 512Mi–1Gi RAM    |
-| **celery\_beat**            | Celery scheduler            | Manages periodic tasks; lightweight, single pod                   | 250m–500m CPU / 256–512Mi RAM |
-| **cms-frontend** (optional) | Next.js app (CMS UI)        | Separate frontend deployment for CMS, scales independently        | 500m–1 CPU / 512Mi–1Gi RAM    |
+| Pod Group / Service          | Services Included                  | Rationale / Notes                                                   | **Prod Pod Size**             |
+| ---------------------------- | --------------------------------- | ------------------------------------------------------------------- | ----------------------------- |
+| **frontend**                 | Next.js app                        | Handles SSR, API routes, horizontally scalable                      | 500m–1 CPU / 512Mi–1Gi RAM    |
+| **backend**                  | FastAPI app                        | Core API service, scales for API RPS and latency                    | 1–2 CPU / 1–2Gi RAM           |
+| **pgbouncer_writer**         | PgBouncer for write DB             | Connects to Aurora writer endpoint; handles pooled writes           | 250–500m CPU / 256–512Mi RAM  |
+| **pgbouncer_reader**         | PgBouncer for read replicas        | Pools Aurora read replicas; isolates and balances read query load   | 250–500m CPU / 256–512Mi RAM  |
+| **redis**                    | Redis for Celery broker            | Single pod as message broker and frontend cache                     | 500m–1 CPU / 1–2Gi RAM        |
+| **celery_worker**            | Celery async workers               | Stateless pods for background jobs, auto-scaled as needed           | 500m–1 CPU / 512Mi–1Gi RAM    |
+| **celery_beat**              | Celery scheduler                   | Manages periodic tasks; lightweight, single pod                     | 250m–500m CPU / 256–512Mi RAM |
+| **cms-frontend** (optional)  | Next.js app (CMS UI)               | Separate frontend deployment for CMS, scales independently          | 500m–1 CPU / 512Mi–1Gi RAM    |
+| **s3_storage**               | AWS S3 / MinIO (optional local)    | Object storage for media/files; external service in production      | External service (no pod)      |
+| **email_service**            | Google Workspace / Gmail API       | Handles transactional and notification emails                       | External service (no pod)      |
 
 
 ## Cost-Efficient Scaling Strategy (Production)
@@ -265,7 +273,7 @@ Example fetch flow with auth and Redis shared cache:
 |-------------------------|-------------------------------------------------------------------------------------------------|
 | **Full Production Parity** | Staging mirrors production architecture, configs, and integrations to ensure reliable testing.    |
 | **Scaled-Down Resources**  | Staging runs fewer pods and smaller node sizes but keeps all core services (DB, cache, workers). |
-| **Isolated Data Stores**   | Separate Aurora cluster, S3 buckets, and Redis instances to avoid interference with production data. |
+| **Isolated Data Stores**   | Separate Aurora cluster, S3 buckets, and email sandbox to avoid interference with production data. |
 | **Separate Domains**       | Staging served on a dedicated domain or subdomain (`staging.example.com`) for clear separation.  |
 | **Deployment Pipeline**    | Automated CI/CD deploys to staging on every merge or PR for immediate feedback and QA visibility.|
 | **Safe Testing Ground**    | Bugs, data mutations, and experiments happen in staging, preserving production stability.       |

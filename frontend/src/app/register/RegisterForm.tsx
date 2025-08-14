@@ -30,18 +30,14 @@ export function RegisterForm() {
 
     if (!values.username) {
       errs.username = "Моля, въведете имейл";
-    } else if (!/\S+@\S+\.\S+/.test(values.username)) {
-      errs.username = "Невалиден имейл формат";
     }
 
     if (!values.password) {
       errs.password = "Моля, въведете парола";
-    } else if (values.password.length < 8) {
-      errs.password = "Паролата трябва да е поне 8 символа";
     }
 
-    if (confirmPassword !== values.password) {
-      errs.confirmPassword = "Паролите не съвпадат";
+    if (!confirmPassword) {
+      errs.confirmPassword = "Моля, потвърдете паролата";
     }
 
     return errs;
@@ -68,14 +64,13 @@ export function RegisterForm() {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
+        body: JSON.stringify({ ...values, confirmPassword }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
         setErrors({ apiError: data.error || "Регистрацията неуспешна" });
-        setLoading(false);
         return;
       }
 

@@ -29,9 +29,13 @@ export default function Home() {
           <Button variant="secondary" size="middle" href="/register">
             Регистрация
           </Button>
+
+          <Button variant="secondary" size="middle" href="/password-reset/request">
+            Ресет на парола
+          </Button>
         </div>
 
-        {!user && <SocialAuth />}
+        <SocialAuth user={user} />
       </div>
     </div>
   );

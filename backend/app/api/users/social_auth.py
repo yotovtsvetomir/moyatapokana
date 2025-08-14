@@ -19,6 +19,10 @@ class GoogleLoginPayload(BaseModel):
     id_token: str
 
 
+class FacebookLoginPayload(BaseModel):
+    user: dict
+
+
 @router.post("/google-login")
 async def google_login(
     payload: GoogleLoginPayload,
@@ -51,9 +55,44 @@ async def google_login(
     user = result.scalars().first()
 
     if not user:
-        # Create new user with random password (won't be used)
         hashed_password = hash_password(secrets.token_urlsafe(16))
         user = User(username=email, hashed_password=hashed_password, role="customer")
+        db_write.add(user)
+        await db_write.commit()
+        await db_write.refresh(user)
+
+    session_id = await create_session(user.id, user.username, user.role)
+
+    return {
+        "session_id": session_id,
+        "message": "Login successful",
+    }
+
+
+@router.post("/facebook-login")
+async def facebook_login(
+    payload: FacebookLoginPayload,
+    db_read: AsyncSession = Depends(get_read_session),
+    db_write: AsyncSession = Depends(get_write_session),
+):
+    user_data = payload.user
+    email = user_data.get("email")
+    fb_id = user_data.get("id")
+
+    if not email and not fb_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Facebook user data must include email or id",
+        )
+
+    username = email if email else f"fb_{fb_id}"
+
+    result = await db_read.execute(select(User).filter_by(username=username))
+    user = result.scalars().first()
+
+    if not user:
+        hashed_password = hash_password(secrets.token_urlsafe(16))
+        user = User(username=username, hashed_password=hashed_password, role="customer")
         db_write.add(user)
         await db_write.commit()
         await db_write.refresh(user)
