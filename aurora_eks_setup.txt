@@ -1,0 +1,23 @@
+1. EKS Cluster
+ Create EKS cluster.
+ Note the VPC ID used (either create a new VPC or use an existing one).
+ Note the private subnets in at least 2 AZs (for Aurora later).
+ Ensure node security group is known (for allowing DB access).
+
+2. Aurora Cluster
+ Create a DB subnet group using at least two private subnets from the EKS VPC (different AZs).
+ Select the same VPC as EKS.
+ Choose instance type and number of replicas as needed.
+ Assign a security group that allows PostgreSQL port 5432 from EKS node/pod SGs.
+ (Optional) Enable automatic backups, monitoring, and encryption.
+
+3. Connectivity
+ Use the Aurora cluster endpoint in your EKS pods.
+ PgBouncer sidecars connect to this endpoint.
+ Verify connectivity from a test pod inside the EKS cluster.
+
+
+✅ Notes
+No NAT or VPC peering is needed since Aurora and EKS share the same VPC.
+Aurora requires multiple subnets in different AZs for high availability.
+Security groups are the main thing controlling access.
