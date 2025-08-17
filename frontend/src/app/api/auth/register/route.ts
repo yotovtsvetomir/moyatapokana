@@ -2,13 +2,13 @@ import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   const body = await req.json();
-  const { username, password } = body;
+  const { username, password, first_name, last_name } = body;
 
   try {
     const response = await fetch(`${process.env.API_URL_SERVER}/users/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password }),
+      body: JSON.stringify({ username, password, first_name, last_name }),
     });
 
     if (!response.ok) {

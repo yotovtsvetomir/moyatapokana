@@ -16,6 +16,7 @@ from app.db.models.user import User, PasswordResetToken
 from app.schemas.users import (
     UserRead,
     UserCreate,
+    UserUpdate,
     PasswordResetRequest,
     PasswordResetConfirm,
 )
@@ -23,6 +24,7 @@ from app.services.email import send_email
 from app.services.auth import (
     authenticate_user,
     create_session,
+    update_session_data,
     delete_session,
     extend_session_expiry,
     create_user,
@@ -58,7 +60,9 @@ async def register(
         raise HTTPException(status_code=400, detail="Имейлa е невалиден.")
 
     user = await create_user(user_create, db_write)
-    session_id = await create_session(user.id, user.username, user.role)
+    session_id = await create_session(
+        user.id, user.username, user.role, user.first_name, user.last_name
+    )
     expires_at = datetime.utcnow() + timedelta(seconds=SESSION_EXPIRE_SECONDS)
 
     return {
@@ -81,7 +85,9 @@ async def login(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    session_id = await create_session(user.id, user.username, user.role)
+    session_id = await create_session(
+        user.id, user.username, user.role, user.first_name, user.last_name
+    )
     expires_at = datetime.utcnow() + timedelta(seconds=SESSION_EXPIRE_SECONDS)
 
     return {
@@ -102,6 +108,35 @@ async def get_me(
     user = result.scalars().first()
     if user is None:
         raise HTTPException(status_code=401, detail="Нямате разрешение")
+
+    return user
+
+
+@router.patch("/me", response_model=UserRead)
+async def update_profile(
+    data: UserUpdate,
+    session_data: dict = Depends(is_authenticated),
+    db_write: AsyncSession = Depends(get_write_session),
+):
+    username = session_data.get("username")
+
+    result = await db_write.execute(select(User).filter(User.username == username))
+    user = result.scalars().first()
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        )
+
+    user.first_name = data.first_name
+    user.last_name = data.last_name
+    db_write.add(user)
+    await db_write.commit()
+    await db_write.refresh(user)
+
+    await update_session_data(
+        session_data["session_id"], data.first_name, data.last_name
+    )
 
     return user
 

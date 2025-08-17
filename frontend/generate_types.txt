@@ -1,1 +1,1 @@
-docker exec -it frontend sh -c "npm install --save-dev openapi-typescript && npm run gen:types"
+docker exec -it authflow-frontend-1 sh -c "npm install --save-dev openapi-typescript && npm run gen:types"

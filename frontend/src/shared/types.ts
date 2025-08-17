@@ -4,7 +4,7 @@
  */
 
 export interface paths {
-    "/users": {
+    "/users/": {
         parameters: {
             query?: never;
             header?: never;
@@ -13,8 +13,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Create User */
-        post: operations["create_user_users_post"];
+        /** Register */
+        post: operations["register_users__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Login */
+        post: operations["login_users_login_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -35,41 +52,8 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/users/login": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Login For Access Token */
-        post: operations["login_for_access_token_users_login_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/users/refresh": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Refresh Access Token */
-        post: operations["refresh_access_token_users_refresh_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
+        /** Update Profile */
+        patch: operations["update_profile_users_me_patch"];
         trace?: never;
     };
     "/users/logout": {
@@ -83,6 +67,57 @@ export interface paths {
         put?: never;
         /** Logout */
         post: operations["logout_users_logout_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/refresh-session": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Refresh Session */
+        post: operations["refresh_session_users_refresh_session_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/password-reset/request": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Password Reset Request */
+        post: operations["password_reset_request_users_password_reset_request_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/password-reset/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Password Reset Confirm */
+        post: operations["password_reset_confirm_users_password_reset_confirm_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -106,68 +141,34 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/users/google/login": {
+    "/users/google-login": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
+        get?: never;
+        put?: never;
         /** Google Login */
-        get: operations["google_login_users_google_login_get"];
-        put?: never;
-        post?: never;
+        post: operations["google_login_users_google_login_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/users/google/callback": {
+    "/users/facebook-login": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Google Callback */
-        get: operations["google_callback_users_google_callback_get"];
+        get?: never;
         put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/users/facebook/login": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
         /** Facebook Login */
-        get: operations["facebook_login_users_facebook_login_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/users/facebook/callback": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Facebook Callback */
-        get: operations["facebook_callback_users_facebook_callback_get"];
-        put?: never;
-        post?: never;
+        post: operations["facebook_login_users_facebook_login_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -178,8 +179,8 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        /** Body_login_for_access_token_users_login_post */
-        Body_login_for_access_token_users_login_post: {
+        /** Body_login_users_login_post */
+        Body_login_users_login_post: {
             /** Grant Type */
             grant_type?: string | null;
             /** Username */
@@ -202,34 +203,37 @@ export interface components {
              */
             client_secret?: string | null;
         };
+        /** FacebookLoginPayload */
+        FacebookLoginPayload: {
+            /** User */
+            user: {
+                [key: string]: unknown;
+            };
+        };
+        /** GoogleLoginPayload */
+        GoogleLoginPayload: {
+            /** Id Token */
+            id_token: string;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
         };
-        /** RefreshTokenRequest */
-        RefreshTokenRequest: {
-            /** Refresh Token */
-            refresh_token: string;
+        /** PasswordResetConfirm */
+        PasswordResetConfirm: {
+            /** Token */
+            token: string;
+            /** New Password */
+            new_password: string;
         };
-        /** Token */
-        Token: {
-            /** Access Token */
-            access_token: string;
+        /** PasswordResetRequest */
+        PasswordResetRequest: {
             /**
-             * Access Token Expires
-             * Format: date-time
+             * Email
+             * Format: email
              */
-            access_token_expires: string;
-            /** Refresh Token */
-            refresh_token: string;
-            /**
-             * Refresh Token Expires
-             * Format: date-time
-             */
-            refresh_token_expires: string;
-            /** Token Type */
-            token_type: string;
+            email: string;
         };
         /** UserCreate */
         UserCreate: {
@@ -240,6 +244,10 @@ export interface components {
             username: string;
             /** Password */
             password: string;
+            /** First Name */
+            first_name: string;
+            /** Last Name */
+            last_name: string;
         };
         /** UserRead */
         UserRead: {
@@ -250,6 +258,17 @@ export interface components {
              * Format: email
              */
             username: string;
+            /** First Name */
+            first_name: string;
+            /** Last Name */
+            last_name: string;
+        };
+        /** UserUpdate */
+        UserUpdate: {
+            /** First Name */
+            first_name: string;
+            /** Last Name */
+            last_name: string;
         };
         /** ValidationError */
         ValidationError: {
@@ -269,7 +288,7 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    create_user_users_post: {
+    register_users__post: {
         parameters: {
             query?: never;
             header?: never;
@@ -283,12 +302,45 @@ export interface operations {
         };
         responses: {
             /** @description Successful Response */
-            201: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Token"];
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    login_users_login_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/x-www-form-urlencoded": components["schemas"]["Body_login_users_login_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -307,7 +359,9 @@ export interface operations {
             query?: never;
             header?: never;
             path?: never;
-            cookie?: never;
+            cookie?: {
+                session_id?: string | null;
+            };
         };
         requestBody?: never;
         responses: {
@@ -318,30 +372,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["UserRead"];
-                };
-            };
-        };
-    };
-    login_for_access_token_users_login_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/x-www-form-urlencoded": components["schemas"]["Body_login_for_access_token_users_login_post"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Token"];
                 };
             };
             /** @description Validation Error */
@@ -355,16 +385,18 @@ export interface operations {
             };
         };
     };
-    refresh_access_token_users_refresh_post: {
+    update_profile_users_me_patch: {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
-            cookie?: never;
+            cookie?: {
+                session_id?: string | null;
+            };
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["RefreshTokenRequest"];
+                "application/json": components["schemas"]["UserUpdate"];
             };
         };
         responses: {
@@ -374,7 +406,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Token"];
+                    "application/json": components["schemas"]["UserRead"];
                 };
             };
             /** @description Validation Error */
@@ -393,7 +425,9 @@ export interface operations {
             query?: never;
             header?: never;
             path?: never;
-            cookie?: never;
+            cookie?: {
+                session_id?: string | null;
+            };
         };
         requestBody?: never;
         responses: {
@@ -404,6 +438,112 @@ export interface operations {
                 };
                 content?: never;
             };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    refresh_session_users_refresh_session_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                session_id?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    password_reset_request_users_password_reset_request_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasswordResetRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    password_reset_confirm_users_password_reset_confirm_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasswordResetConfirm"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
         };
     };
     admin_endpoint_users_admin_get: {
@@ -411,7 +551,9 @@ export interface operations {
             query?: never;
             header?: never;
             path?: never;
-            cookie?: never;
+            cookie?: {
+                session_id?: string | null;
+            };
         };
         requestBody?: never;
         responses: {
@@ -424,16 +566,29 @@ export interface operations {
                     "application/json": unknown;
                 };
             };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
         };
     };
-    google_login_users_google_login_get: {
+    google_login_users_google_login_post: {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GoogleLoginPayload"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -444,16 +599,29 @@ export interface operations {
                     "application/json": unknown;
                 };
             };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
         };
     };
-    google_callback_users_google_callback_get: {
+    facebook_login_users_facebook_login_post: {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FacebookLoginPayload"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -464,44 +632,13 @@ export interface operations {
                     "application/json": unknown;
                 };
             };
-        };
-    };
-    facebook_login_users_facebook_login_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
+            /** @description Validation Error */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
-    facebook_callback_users_facebook_callback_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

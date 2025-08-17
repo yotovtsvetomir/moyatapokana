@@ -51,17 +51,28 @@ async def google_login(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Email not available"
         )
 
+    first_name = data.get("given_name", "")
+    last_name = data.get("family_name", "")
+
     result = await db_read.execute(select(User).filter_by(username=email))
     user = result.scalars().first()
 
     if not user:
         hashed_password = hash_password(secrets.token_urlsafe(16))
-        user = User(username=email, hashed_password=hashed_password, role="customer")
+        user = User(
+            username=email,
+            hashed_password=hashed_password,
+            role="customer",
+            first_name=first_name,
+            last_name=last_name,
+        )
         db_write.add(user)
         await db_write.commit()
         await db_write.refresh(user)
 
-    session_id = await create_session(user.id, user.username, user.role)
+    session_id = await create_session(
+        user.id, user.username, user.role, user.first_name, user.last_name
+    )
 
     return {
         "session_id": session_id,
@@ -87,17 +98,28 @@ async def facebook_login(
 
     username = email if email else f"fb_{fb_id}"
 
+    first_name = user_data.get("first_name", "")
+    last_name = user_data.get("last_name", "")
+
     result = await db_read.execute(select(User).filter_by(username=username))
     user = result.scalars().first()
 
     if not user:
         hashed_password = hash_password(secrets.token_urlsafe(16))
-        user = User(username=username, hashed_password=hashed_password, role="customer")
+        user = User(
+            username=username,
+            hashed_password=hashed_password,
+            role="customer",
+            first_name=first_name,
+            last_name=last_name,
+        )
         db_write.add(user)
         await db_write.commit()
         await db_write.refresh(user)
 
-    session_id = await create_session(user.id, user.username, user.role)
+    session_id = await create_session(
+        user.id, user.username, user.role, user.first_name, user.last_name
+    )
 
     return {
         "session_id": session_id,

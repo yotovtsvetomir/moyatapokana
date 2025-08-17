@@ -1,161 +1,173 @@
 version: "3.9"
 
 services:
-
+  # -----------------------------
+  # PostgreSQL Cluster
+  # -----------------------------
   db_writer:
     image: bitnami/postgresql:15
-    container_name: db_writer
-    restart: always
     environment:
-      - POSTGRESQL_USERNAME=postgres
-      - POSTGRESQL_PASSWORD=postgres
-      - POSTGRESQL_DATABASE=app_db
-      - POSTGRESQL_REPLICATION_MODE=master
-      - POSTGRESQL_REPLICATION_USER=repl_user
-      - POSTGRESQL_REPLICATION_PASSWORD=repl_pass
+      POSTGRESQL_USERNAME: postgres
+      POSTGRESQL_PASSWORD: postgres
+      POSTGRESQL_DATABASE: app_db
+      POSTGRESQL_REPLICATION_MODE: master
+      POSTGRESQL_REPLICATION_USER: repl_user
+      POSTGRESQL_REPLICATION_PASSWORD: repl_pass
     volumes:
       - pgdata_writer:/bitnami/postgresql
-    ports:
-      - "5432:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      retries: 5
+    networks:
+      - cluster_net
 
   db_reader:
     image: bitnami/postgresql:15
-    container_name: db_reader
-    restart: always
     depends_on:
       - db_writer
     environment:
-      - POSTGRESQL_USERNAME=postgres
-      - POSTGRESQL_PASSWORD=postgres
-      - POSTGRESQL_DATABASE=app_db
-      - POSTGRESQL_REPLICATION_MODE=slave
-      - POSTGRESQL_MASTER_HOST=db_writer
-      - POSTGRESQL_REPLICATION_USER=repl_user
-      - POSTGRESQL_REPLICATION_PASSWORD=repl_pass
+      POSTGRESQL_USERNAME: postgres
+      POSTGRESQL_PASSWORD: postgres
+      POSTGRESQL_DATABASE: app_db
+      POSTGRESQL_REPLICATION_MODE: slave
+      POSTGRESQL_MASTER_HOST: db_writer
+      POSTGRESQL_REPLICATION_USER: repl_user
+      POSTGRESQL_REPLICATION_PASSWORD: repl_pass
     volumes:
       - pgdata_reader:/bitnami/postgresql
-    ports:
-      - "5433:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      retries: 5
+    networks:
+      - cluster_net
 
-  pgbouncer_writer:
-    image: edoburu/pgbouncer
-    container_name: pgbouncer_writer
-    restart: always
-    depends_on:
-      - db_writer
-    environment:
-      DB_HOST: db_writer
-      DB_PORT: 5432
-      DB_USER: postgres
-      DB_PASSWORD: postgres
-      DB_NAME: app_db
-    ports:
-      - "6432:6432"
-    volumes:
-      - ./backend/pgbouncer_writer:/etc/pgbouncer
-
-  pgbouncer_reader:
-    image: edoburu/pgbouncer
-    container_name: pgbouncer_reader
-    restart: always
-    depends_on:
-      - db_reader
-    environment:
-      DB_HOST: db_reader
-      DB_PORT: 5432
-      DB_USER: postgres
-      DB_PASSWORD: postgres
-      DB_NAME: app_db
-    ports:
-      - "6433:6432"
-    volumes:
-      - ./backend/pgbouncer_reader:/etc/pgbouncer
-
-  backend:
-    build: ./backend
-    container_name: backend
-    ports:
-      - "8000:8000"
-    env_file:
-      - ./backend/.env
-    depends_on:
-      - pgbouncer_writer
-      - pgbouncer_reader
-      - email_service
-    volumes:
-      - ./backend:/app
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-
+  # -----------------------------
+  # Redis
+  # -----------------------------
   redis:
     image: redis:7
-    container_name: redis
-    ports:
-      - "6379:6379"
-    restart: always
+    networks:
+      - cluster_net
 
-  celery_worker:
-    build:
-      context: ./backend
-    container_name: celery_worker
-    depends_on:
-      - backend
-      - redis
-    env_file:
-      - ./backend/.env
+  # -----------------------------
+  # Backend + PgBouncer Sidecars
+  # -----------------------------
+  backend:
+    build: ./backend
     volumes:
       - ./backend:/app
-    working_dir: /app
-    environment:
-      PYTHONUNBUFFERED: 1
+    env_file:
+      - ./backend/.env
+    depends_on:
+      - pgbouncer_backend_writer
+      - pgbouncer_backend_reader
+      - redis
+    ports:
+      - "8000:8000"
+    networks:
+      - cluster_net
+      - ingress_net
+
+  pgbouncer_backend_writer:
+    image: edoburu/pgbouncer
+    depends_on:
+      - db_writer
+    volumes:
+      - ./backend/pgbouncer_writer:/etc/pgbouncer
+    networks:
+      - cluster_net
+      - ingress_net
+    command: ["pgbouncer", "/etc/pgbouncer/pgbouncer.ini"]
+
+  pgbouncer_backend_reader:
+    image: edoburu/pgbouncer
+    depends_on:
+      - db_reader
+    volumes:
+      - ./backend/pgbouncer_reader:/etc/pgbouncer
+    networks:
+      - cluster_net
+      - ingress_net
+    command: ["pgbouncer", "/etc/pgbouncer/pgbouncer.ini"]
+
+  # -----------------------------
+  # Celery Worker + Beat + PgBouncer Sidecars
+  # -----------------------------
+  celery_worker:
+    build: ./backend
+    volumes:
+      - ./backend:/app
+    env_file:
+      - ./backend/.env
+    depends_on:
+      - pgbouncer_celery_writer
+      - pgbouncer_celery_reader
+      - redis
     command: celery -A app.celery_app worker --loglevel=info
+    networks:
+      - cluster_net
 
   celery_beat:
-    build:
-      context: ./backend
-    container_name: celery_beat
-    depends_on:
-      - backend
-      - redis
-    env_file:
-      - ./backend/.env
+    build: ./backend
     volumes:
       - ./backend:/app
-    working_dir: /app
-    environment:
-      PYTHONUNBUFFERED: 1
+    env_file:
+      - ./backend/.env
+    depends_on:
+      - pgbouncer_celery_writer
+      - pgbouncer_celery_reader
+      - redis
     command: celery -A app.celery_app beat --loglevel=info
+    networks:
+      - cluster_net
 
+  pgbouncer_celery_writer:
+    image: edoburu/pgbouncer
+    depends_on:
+      - db_writer
+    volumes:
+      - ./backend/pgbouncer_writer:/etc/pgbouncer
+    networks:
+      - cluster_net
+    command: ["pgbouncer", "/etc/pgbouncer/pgbouncer.ini"]
+
+  pgbouncer_celery_reader:
+    image: edoburu/pgbouncer
+    depends_on:
+      - db_reader
+    volumes:
+      - ./backend/pgbouncer_reader:/etc/pgbouncer
+    networks:
+      - cluster_net
+    command: ["pgbouncer", "/etc/pgbouncer/pgbouncer.ini"]
+
+  # -----------------------------
+  # Flower (Celery Monitoring)
+  # -----------------------------
   flower:
     image: mher/flower
-    container_name: flower
+    environment:
+      - CELERY_BROKER=redis://redis:6379/0
     ports:
       - "5555:5555"
     depends_on:
       - redis
-    entrypoint: ["celery"]
-    command: ["--broker=redis://redis:6379/0", "flower", "--address=0.0.0.0", "--port=5555"]
+    networks:
+      - cluster_net
+      - ingress_net
 
+  # -----------------------------
+  # Frontend / Next.js
+  # -----------------------------
   frontend:
     build: ./frontend
-    container_name: frontend
-    ports:
-      - "3000:3000"
     volumes:
       - ./frontend:/app
       - /app/node_modules
-    environment:
-      - NODE_ENV=development
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./frontend/.env
     command: sh -c "npm install && npm run dev"
     depends_on:
       - backend
+    networks:
+      - cluster_net
+      - ingress_net
 
   storybook:
     build:
@@ -167,28 +179,46 @@ services:
     volumes:
       - ./frontend:/app
     command: npm run storybook
+    networks:
+      - ingress_net
 
+  # -----------------------------
+  # S3 Storage (MinIO)
+  # -----------------------------
   s3_storage:
     image: minio/minio:latest
-    container_name: minio
-    ports:
-      - "9000:9000"
-      - "9001:9001"
     environment:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9000:9000"
+      - "9001:9001"
     command: server /data --console-address ":9001"
     volumes:
       - minio_data:/data
+    networks:
+      - cluster_net
+      - ingress_net
 
+  # -----------------------------
+  # Email (MailHog)
+  # -----------------------------
   email_service:
     image: mailhog/mailhog:latest
-    container_name: mailhog
     ports:
       - "1025:1025"
       - "8025:8025"
+    networks:
+      - cluster_net
+      - ingress_net
 
 volumes:
   pgdata_writer:
   pgdata_reader:
   minio_data:
+
+networks:
+  cluster_net:
+    driver: bridge
+  ingress_net:
+    driver: bridge

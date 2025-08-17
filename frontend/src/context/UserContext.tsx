@@ -8,8 +8,6 @@ type User = components["schemas"]["UserRead"];
 interface UserContextType {
   user: User | null;
   setUser: React.Dispatch<React.SetStateAction<User | null>>;
-  loading: boolean;
-  refreshUser: () => Promise<void>;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -21,15 +19,9 @@ interface UserProviderProps {
 
 export function UserProvider({ children, initialUser = null }: UserProviderProps) {
   const [user, setUser] = useState<User | null>(initialUser);
-  const loading = false; // no loading since no fetch here
-
-  // No refresh logic here, provide a dummy function to satisfy interface
-  async function refreshUser() {
-    // no-op or you can throw if you want to enforce server-only fetching
-  }
 
   return (
-    <UserContext.Provider value={{ user, setUser, loading, refreshUser }}>
+    <UserContext.Provider value={{ user, setUser }}>
       {children}
     </UserContext.Provider>
   );

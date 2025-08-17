@@ -14,7 +14,7 @@ from app.schemas.users import UserCreate
 from app.db.models.user import User
 from app.core.redis_client import get_redis_client
 
-SESSION_EXPIRE_SECONDS = 60 * 60 * 24 * 7
+SESSION_EXPIRE_SECONDS = 60 * 60 * 24 * 7  # 7 days
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -47,6 +47,8 @@ async def create_user(user_create: UserCreate, db: AsyncSession) -> User:
     new_user = User(
         username=user_create.username,
         hashed_password=hashed_password,
+        first_name=user_create.first_name,
+        last_name=user_create.last_name,
     )
 
     db.add(new_user)
@@ -68,18 +70,36 @@ async def authenticate_user(
     return user
 
 
-async def create_session(user_id: int, username: str, role: str) -> str:
+async def create_session(
+    user_id: int, username: str, role: str, first_name: str, last_name: str
+) -> str:
     redis = await get_redis_client()
     session_id = secrets.token_urlsafe(32)
     session_data = {
         "user_id": str(user_id),
         "username": username,
+        "first_name": first_name,
+        "last_name": last_name,
         "role": role,
         "created_at": isoformat_z(datetime.utcnow()),
     }
     await redis.set(f"user_session:{session_id}", json.dumps(session_data))
     await redis.expire(f"user_session:{session_id}", SESSION_EXPIRE_SECONDS)
     return session_id
+
+
+async def update_session_data(session_id: str, first_name: str, last_name: str) -> None:
+    redis = await get_redis_client()
+    key = f"user_session:{session_id}"
+    raw_data = await redis.get(key)
+    if not raw_data:
+        raise HTTPException(status_code=401, detail="Session not found")
+
+    session_data = json.loads(raw_data)
+    session_data["first_name"] = first_name
+    session_data["last_name"] = last_name
+
+    await redis.set(key, json.dumps(session_data))
 
 
 async def get_session(session_id: str) -> dict | None:

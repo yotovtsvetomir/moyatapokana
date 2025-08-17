@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 const protectedRoutes = ["/profile"];
-const authPages = ["/login", "/register"];
+const authPages = ["/login", "/register", "/password-reset/request"];
 
 export async function middleware(req: NextRequest) {
   const sessionId = req.cookies.get("session_id")?.value;

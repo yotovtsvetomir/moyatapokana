@@ -1,7 +1,7 @@
 import redis
 from app.celery_app import celery_app
 from datetime import datetime
-from app.db.session import get_write_session
+from app.db.celery_session import get_write_session
 from contextlib import asynccontextmanager
 from sqlalchemy import text
 
@@ -21,9 +21,6 @@ async def get_session():
 async def dummy_db_task_async():
     now = datetime.utcnow()
     async with get_session() as session:
-        # Just do a simple query or something trivial
-        # For demonstration, just fetch current time from DB or do a noop query
-        # If you want, do something like:
         await session.execute(text("SELECT 1"))
         print(f"Dummy task ran at {now.isoformat()}")
 

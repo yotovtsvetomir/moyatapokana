@@ -4,22 +4,17 @@ from app.services.auth import get_session
 
 async def is_authenticated(session_id: str | None = Cookie(None)):
     if not session_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Нямате разрешение"
-        )
+        raise HTTPException(status_code=401, detail="Нямате разрешение")
 
     session_data = await get_session(session_id)
     if not session_data:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Нямате разрешение"
-        )
+        raise HTTPException(status_code=401, detail="Нямате разрешение")
 
     username = session_data.get("username")
     if not username:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Нямате разрешение"
-        )
+        raise HTTPException(status_code=401, detail="Нямате разрешение")
 
+    session_data["session_id"] = session_id
     return session_data
 
 

@@ -1,5 +1,5 @@
 import re
-from pydantic import BaseModel, EmailStr, validator
+from pydantic import BaseModel, EmailStr, validator, constr
 
 
 # --- User Models ---
@@ -8,6 +8,8 @@ from pydantic import BaseModel, EmailStr, validator
 class UserCreate(BaseModel):
     username: EmailStr
     password: str
+    first_name: str
+    last_name: str
 
     @validator("password")
     def validate_password(cls, v):
@@ -27,8 +29,15 @@ class UserCreate(BaseModel):
 class UserRead(BaseModel):
     id: int
     username: EmailStr
+    first_name: str
+    last_name: str
 
     model_config = {"from_attributes": True}
+
+
+class UserUpdate(BaseModel):
+    first_name: constr(min_length=1)
+    last_name: constr(min_length=1)
 
 
 class UserLogin(BaseModel):

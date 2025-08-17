@@ -13,9 +13,9 @@ celery_app.conf.broker_connection_retry_on_startup = True
 import app.api.users.tasks  # noqa
 
 celery_app.conf.beat_schedule = {
-    "dummy-db-task-every-30-seconds": {
+    "dummy-db-task-every-10-minutes": {
         "task": "app.tasks.dummy_db_task",
-        "schedule": crontab(minute="*/10"),
+        "schedule": crontab(minute="*/1"),
     },
 }
 
