@@ -131,32 +131,35 @@ Example fetch flow with auth and Redis shared cache:
 ```text
 [BROWSER]
    |
-   | 1. Requests page or API with session_id cookie sent automatically (credentials: 'include')
-   |
+   | 1. Requests page or API (GET) or sends PATCH to update data
+   |    - session_id cookie included automatically (credentials: 'include')
    V
 [NEXT.JS SERVER] (SSR or API Route)
    |
-   | 2. Reads session_id from httpOnly cookie
-   | 3. Queries Redis shared cache for user session data associated with session_id
-   |    - If cache miss, fetches session/user data from FastAPI and updates Redis
-   | 4. Uses session info for authorization/context
-   | 5. Forwards request or renders page accordingly
+   | GET flow:
+   | 2a. Reads session_id from httpOnly cookie
+   | 3a. Queries Redis shared cache for user/session data
+   |     - Cache miss → fetches data from FastAPI → updates Redis
+   | 4a. Uses session info for authorization/context
+   | 5a. Renders page or returns API response
    |
+   | PATCH flow:
+   | 2b. Forwards PATCH request to FastAPI
    V
-[FASTAPI] (GET /posts or any secured endpoint)
+[FASTAPI] (PATCH /user or any secured endpoint)
    |
-   | 6. Validates session info (session_id) and permissions
-   | 7. Returns data
-   |
+   | 6. Validates session_id and permissions
+   | 7. Updates database (PostgreSQL)
+   | 8. Updates Redis cache with new session/user data
    V
 [NEXT.JS SERVER]
    |
-   | 8. Sends SSR HTML or API response with data
+   | 9b. Future GET requests hit Redis directly (cache already updated)
    |
    V
 [BROWSER]
    |
-   | 9. Renders page or uses API data
+   | 10. Page re-render or API consumes updated data
 ```
 
 # Authflow: Scalable, Production-Grade Auth System

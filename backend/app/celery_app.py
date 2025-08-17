@@ -15,7 +15,7 @@ import app.api.users.tasks  # noqa
 celery_app.conf.beat_schedule = {
     "dummy-db-task-every-10-minutes": {
         "task": "app.tasks.dummy_db_task",
-        "schedule": crontab(minute="*/1"),
+        "schedule": crontab(minute="*/10"),
     },
 }
 

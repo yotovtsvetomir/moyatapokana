@@ -13,6 +13,7 @@ export default function Profile() {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{ first_name?: string; last_name?: string; apiError?: string }>({});
   const [message, setMessage] = useState("");
+  const isChanged = firstName !== user.first_name || lastName !== user.last_name
 
   if (!user) {
     return <p>You are not logged in.</p>;
@@ -95,7 +96,12 @@ export default function Profile() {
             required
           />
 
-          <Button type="submit" variant="primary" size="large" disabled={loading}>
+          <Button
+            type="submit"
+            variant="primary"
+            size="large"
+            disabled={loading || !isChanged} // disabled if loading or nothing changed
+          >
             {loading ? "Обновяване..." : "Обнови профила"}
           </Button>
 
