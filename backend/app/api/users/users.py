@@ -165,7 +165,7 @@ async def refresh_session(
             status_code=401, detail="Грешка при обновяването на сесията"
         )
 
-    return {"message": "Сесията е обновена"}
+    return {"message": "Сесията е обновена", "session_id": session_id}
 
 
 @router.post("/password-reset/request")

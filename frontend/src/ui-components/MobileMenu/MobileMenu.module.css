@@ -1,0 +1,116 @@
+.drawer {
+  position: fixed;
+  top: var(--mobile-header-height);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--color-dark-100);
+  overflow-y: auto;
+  z-index: 9999;
+
+  transform-origin: top;
+  transform: scaleY(0);
+  animation: none;
+}
+
+@keyframes growDown {
+  0% {
+    transform: scaleY(0);
+  }
+  100% {
+    transform: scaleY(1);
+  }
+}
+
+.drawerOpen {
+  animation: growDown 0.7s forwards;
+}
+
+.drawerContent {
+  border-top: 1px solid white;
+  padding-top: 2rem;
+
+  min-height: calc(100dvh - var(--desktop-header-height));
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.mainLinks {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.nav a {
+  line-height: 1;
+  text-decoration: none;
+  color: white;
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-3xl);
+}
+
+.nav a:hover,
+.nav a:focus {
+  color: white;
+  outline: none;
+}
+
+.accountWrapper {
+  padding-top: 1rem;
+}
+
+.account {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.accCta {
+  font-size: var(--font-xl);
+  color: white;
+}
+
+.cta {
+  padding-top: 1rem;
+}
+
+.cta p {
+  font-size: var(--font-xl);
+  color: white;
+}
+
+.socials {
+  margin-top: 1rem;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.socialIcon {
+  background-color: white;
+  color: var(--color-dark-100) !important;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.foot {
+  margin-top: auto;
+  opacity: 0;
+  transform: translateY(-5px);
+  pointer-events: none;
+}

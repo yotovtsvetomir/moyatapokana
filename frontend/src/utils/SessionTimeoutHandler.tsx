@@ -4,7 +4,7 @@ import React, { useEffect, useState, useRef } from "react";
 import Modal from "@/ui-components/Modal/Modal";
 import { useUser } from "@/context/UserContext";
 
-const SESSION_TIMEOUT = 1000 * 60 * 15; // 15 min
+const SESSION_TIMEOUT = 1000 * 10 * 1; // 15 min / 10sec for testing
 const COUNTDOWN_SECONDS = 20;
 
 export default function SessionTimeoutHandler() {
@@ -57,7 +57,6 @@ export default function SessionTimeoutHandler() {
   const startCountdown = () => {
     let timeLeft = COUNTDOWN_SECONDS;
     setCountdown(timeLeft);
-
     countdownIntervalRef.current = setInterval(() => {
       timeLeft -= 1;
       setCountdown(timeLeft);

@@ -1,0 +1,95 @@
+.share {
+	margin-top: 1rem;
+	margin-bottom: 1rem;
+}
+
+.share h3 {
+	font-size: var(--font-2xl);
+	margin-bottom: 1rem;
+}
+
+.copy {
+	margin-bottom: 1rem;
+}
+
+.copy_feedback {
+  color: var(--color-success-1);
+  transition: opacity 0.2s ease;
+  font-size: 1.4rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.socials h5 {
+	font-size: var(--font-xl);
+	color: var(--color-dark-200);
+	margin-bottom: 0.5rem;
+}
+
+.socials_inner {
+	display: flex;
+	gap: 1rem;
+}
+
+.socials_inner a {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	gap: 0.5rem;
+	background: white;
+	border: 0;
+	padding: 1rem !important;
+	border-radius: 50%;
+	cursor: pointer;
+	transition: 0.3s ease;
+}
+
+.socials_inner p {
+	font-size: var(--font-xl);
+	color: white;
+}
+
+.socials_inner svg {
+	font-size: 1.5rem;
+}
+
+.facebook svg {
+  color: white;
+}
+
+.facebook {
+  border-color: #1877f2 !important;
+  background: #1877f2 !important;
+}
+
+.viber svg {
+  color: white;
+}
+
+.viber {
+  border-color: #665cac !important;
+  background: #665cac !important;
+}
+
+.whatsapp svg {
+  color: white;
+}
+
+.whatsapp {
+  border-color: #25D366 !important;
+  background: #25D366 !important;
+}
+
+.instagram svg {
+  color: white;
+}
+
+.instagram {
+  border-color: #E1306C !important;
+  background: #E1306C !important;
+}
+
+.socials_inner a:hover {
+	opacity: 0.77;
+}

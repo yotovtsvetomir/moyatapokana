@@ -1,0 +1,15 @@
+.link {
+  font-family: var(--font-sans);
+  font-size: var(--font-md);
+  font-weight: var(--font-weight-medium);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.accent {
+  color: var(--color-highlight-1);
+}
+
+.muted {
+  color: var(--color-dark-400);
+}

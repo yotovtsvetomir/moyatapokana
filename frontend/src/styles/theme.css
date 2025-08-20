@@ -28,14 +28,14 @@
 
   /* === COLORS === */
 
-  /* Highlight - Blueish */
-  --color-highlight-1: #3B82F6;
-  --color-highlight-2: #2563EB;
-  --color-highlight-3: #1D4ED8;
-  --color-highlight-4: #1E40AF;
-  --color-highlight-5: #60A5FA;
-  --color-highlight-6: #DBEAFE;
-  --color-highlight-7: #93C5FD;
+  /* Highlight */
+  --color-highlight-1: #FF6A5B;
+  --color-highlight-2: #FF8555;
+  --color-highlight-3: #FFA24D;
+  --color-highlight-4: #FFBC5D;
+  --color-highlight-5: #FFE2A5;
+  --color-highlight-6: #FFEAE7;
+  --color-highlight-7: #FFBFA5;
 
   /* Neutral - Light */
   --color-neutral-100: #C5C8CC;
@@ -52,19 +52,19 @@
   --color-dark-400: #71727A;
   --color-dark-500: #8F9098;
 
-  /* Support - Success (greenish) */
-  --color-success-1: #15803D; /* green-700 */
-  --color-success-2: #22C55E; /* green-500 */
-  --color-success-3: #D1FAE5; /* green-100 */
-  --color-success-4: #4ADE80; /* green-400 */
+  /* Support - Success */
+  --color-success-1: #298267;
+  --color-success-2: #3ACA9A;
+  --color-success-3: #E7F4EB;
+  --color-success-4: #2FA86B;
 
-  /* Support - Warning (yellowish) */
-  --color-warning-1: #CA8A04; /* amber-700 */
-  --color-warning-2: #FBBF24; /* amber-400 */
-  --color-warning-3: #FEF3C7; /* amber-100 */
+  /* Support - Warning */
+  --color-warning-1: #E85339;
+  --color-warning-2: #FF837C;
+  --color-warning-3: #FFF4E4;
 
-  /* Support - Error (reddish) */
-  --color-error-1: #B91C1C; /* red-700 */
-  --color-error-2: #EF4444; /* red-500 */
-  --color-error-3: #FEE2E2; /* red-100 */
+  /* Support - Error */
+  --color-error-1: #ED3241;
+  --color-error-2: #FF616D;
+  --color-error-3: #FFE2E5;
 }

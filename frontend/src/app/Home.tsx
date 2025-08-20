@@ -17,7 +17,7 @@ export default function Home() {
     <div className="container fullHeight">
       <div className={styles.page}>
         {user ? (
-          <h1>Здравейте отново, {user.username}!</h1>
+          <h1>Здравейте отново, {user.first_name} {user.last_name}!</h1>
         ) : (
           <h1>Здравейте! Моля влезте или се регистрирайте за да продължите.</h1>
         )}

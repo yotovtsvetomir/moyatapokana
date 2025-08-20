@@ -1,0 +1,127 @@
+.radioButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: var(--font-md);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-dark-100);
+  padding: 0.4rem 0.6rem;
+  position: relative;
+  user-select: none;
+  transition: color 0.2s ease;
+}
+
+.radioButton:focus-visible {
+  outline: 2px solid var(--color-highlight-1);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.radioButton:active {
+  transform: none;
+}
+
+/* Circle Container */
+.circleWrapper {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  margin-right: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* Background ripple & hover effect */
+.rippleLayer {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 50px;
+  height: 50px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: transparent;
+  transition: background 0.3s ease;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.circleWrapper:hover .rippleLayer {
+  background: var(--color-neutral-350);
+}
+
+/* The visible circle with border */
+.borderCircle {
+  position: relative;
+  width: 25px;
+  height: 25px;
+  border: 2px solid var(--color-neutral-100);
+  border-radius: 50%;
+  background-color: transparent;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.selected .borderCircle {
+  border-color: var(--color-highlight-1);
+}
+
+/* Dot inside the radio circle */
+.dot {
+  width: 13px;
+  height: 13px;
+  background-color: var(--color-highlight-1);
+  border-radius: 50%;
+  opacity: 0;
+  transform: scale(0.5);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  z-index: 2;
+}
+
+.visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Label text */
+.label {
+  font-size: var(--font-lg);
+}
+
+/* Disabled state */
+.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Ripple animation circle (injected by JS) */
+.ripple {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  border-radius: 50%;
+  background-color: var(--color-highlight-6);
+  animation: ripple-animation 0.6s ease-out;
+  pointer-events: none;
+  z-index: 1;
+}
+
+@keyframes ripple-animation {
+  to {
+    transform: translate(-50%, -50%) scale(2.2);
+    opacity: 0;
+  }
+}

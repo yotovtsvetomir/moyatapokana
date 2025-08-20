@@ -1,0 +1,76 @@
+.section {
+  display: block;
+  padding: 1.5rem 1rem;
+  border: 1px solid #eee;
+  border-top: 0;
+  background-color: var(--color-neutral-500);
+  text-decoration: none;
+  transition: background 0.2s ease;
+  cursor: pointer !important;
+}
+
+.section:first-of-type {
+  border-top: 1px solid #eee;
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
+}
+
+.last {
+  border-bottom-left-radius: 6px;
+  border-bottom-right-radius: 6px;
+}
+
+.section:hover {
+  background: var(--color-neutral-400);
+}
+
+.sectionContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sectionContent h4 {
+  font-size: var(--font-xl);
+  color: var(--color-dark-300);
+  margin-bottom: 0.5rem;
+}
+
+.sectionContent p {
+  font-size: var(--font-lg);
+  color: var(--color-dark-200);
+  margin: 0;
+}
+
+.subtitle {
+  font-size: var(--font-md);
+  color: var(--color-dark-200);
+}
+
+.sectionContent span {
+  font-size: 2rem;
+  color: var(--color-dark-300);
+}
+
+.sectionInner {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.sectionInner > div {
+  margin-top: 0;
+}
+
+.imageWrapper {
+  width: 64px;
+  height: 64px;
+  position: relative;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.imagePreview {
+  object-fit: cover;
+}

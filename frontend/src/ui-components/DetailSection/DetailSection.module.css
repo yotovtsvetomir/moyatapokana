@@ -1,0 +1,31 @@
+.detailSection {
+  border-radius: 6px;
+  border: 1px solid #eee;
+  padding: 1rem;
+  background-color: var(--color-neutral-500);
+  max-width: 590px;
+  margin: 0 auto;
+}
+
+.detailSection h4 {
+  font-size: var(--font-xl);
+  color: var(--color-dark-300);
+  margin-bottom: 1rem;
+}
+
+.editActions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.detailSection p {
+  font-size: var(--font-lg);
+  color: var(--color-dark-200);
+}
+
+.inputGroup {
+  margin-bottom: 1.5rem;
+}

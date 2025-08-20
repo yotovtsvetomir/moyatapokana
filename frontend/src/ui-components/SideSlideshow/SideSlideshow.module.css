@@ -1,0 +1,51 @@
+.wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.embla {
+  overflow: hidden;
+}
+
+.container {
+  display: flex;
+}
+
+.slide {
+  flex: 0 0 100%;
+  box-sizing: border-box;
+}
+
+.slideInner {
+  position: relative;
+  aspect-ratio: 0.5;
+  overflow: hidden;
+}
+
+.progress {
+  position: absolute;
+  bottom: 74px;
+  left: 2rem;
+  right: 2rem;
+  height: 10px;
+  border-radius: 3px;
+  background-color: white;
+  margin-top: 12px;
+  overflow: hidden;
+  z-index: 1000000000;
+}
+
+.progressBar {
+  height: 100%;
+  background: linear-gradient(
+    to right,
+    var(--color-highlight-1),
+    var(--color-highlight-2),
+    var(--color-highlight-3),
+    var(--color-highlight-4)
+  );
+  width: 0%;
+  transition: width 0.3s ease;
+}
