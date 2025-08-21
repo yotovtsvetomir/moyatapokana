@@ -1,2 +1,2 @@
-docker exec -it authflow-backend-1 alembic revision --autogenerate -m "init schema"
-docker exec -it authflow-backend-1 alembic upgrade head
+docker exec -it moyatapokana-backend-1 alembic revision --autogenerate -m "init schema"
+docker exec -it moyatapokana-backend-1 alembic upgrade head

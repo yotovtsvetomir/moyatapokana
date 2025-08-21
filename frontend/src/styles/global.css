@@ -30,6 +30,7 @@ a {
 }
 
 .fullHeight {
+  padding-top: calc(var(--desktop-header-height) + 2rem) !important;
   min-height: 100vh;
   background-color: #fff;
 }
@@ -51,6 +52,10 @@ a {
 @media (min-width: 1024px) {
   .container {
     max-width: 960px;
+  }
+
+  .fullHeight {
+    padding-top: calc(var(--desktop-header-height) + 2rem)!important;
   }
 }
 

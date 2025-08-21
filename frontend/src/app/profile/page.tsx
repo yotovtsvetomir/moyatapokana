@@ -70,7 +70,7 @@ export default function Profile() {
       <div className={styles.profile}>
         <h1>Профил</h1>
         <p>
-          <strong>Имейл:</strong> {user.username}
+          <strong>Имейл:</strong> {user.email}
         </p>
 
         <form className={styles.form} onSubmit={handleSubmit} noValidate>

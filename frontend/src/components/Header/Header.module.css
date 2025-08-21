@@ -1,58 +1,370 @@
 .header {
-  height: var(--mobile-header-height);
-  background-color: var(--color-dark-200);
-  color: var(--color-neutral-500);
+  background-color: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+  box-shadow: 0 2px 4px rgba(31, 32, 36, 0.1);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  padding: 1rem 0;
   font-family: var(--font-sans);
-  display: flex;
-  align-items: center;
-  padding: 0 1rem;
+
+  transition: transform 0.3s ease-in-out;
 }
 
-.container {
+.header.menuOpen { 
+  position: fixed !important;
   width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
 }
 
-.logo {
-  font-weight: var(--font-weight-extrabold);
+.headerContainer {
+  width: 100%;
+  margin: 0 auto;
+  max-width: 400px;
+  padding: 0 24px;
+}
+
+
+@media (min-width: 768px) {
+  .headerContainer {
+    max-width: 720px;
+    padding: 0;
+  }
+}
+
+@media (min-width: 1024px) {
+  .headerContainer {
+    max-width: 960px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .headerContainer {
+    max-width: 1200px;
+  }
+}
+
+@media (min-width: 1536px) {
+  .headerContainer {
+    max-width: 1440px;
+  }
+}
+
+.headerGrid {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.headerGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+@media (min-width: 374px) {
+  .headerGroup {
+    gap: 1rem;
+  }
+}
+
+.logoLink {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: var(--color-dark-100);
+  font-weight: var(--font-weight-bold);
   font-size: var(--font-xl);
+
+  position: relative;
+  width: 7rem;
+  height: 2rem;
+}
+
+.logoLink a {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.logoImage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transition: opacity 0.3s ease;
+  width: 100%;
+  height: auto;
+}
+
+.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.visible {
+  opacity: 1;
+}
+
+.logoLink:visited,
+.logoLink:focus,
+.logoLink:hover,
+.logoLink:active {
+  color: var(--color-dark-100);
+  outline: none;
+}
+
+.iconButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-dark-100);
+  user-select: none;
+}
+
+.iconButton:hover,
+.iconButton:focus {
+  color: var(--color-dark-100);
+  outline: none;
+}
+
+.iconButtonActive {
+  color: var(--color-highlight-1) !important;
+}
+
+.icon {
+  font-size: 1.8rem;
+}
+
+.desktopSearchButton {
+  position: relative;
+  width: 58px;
+  height: 58px;
+  border: none;
+  background: none;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  z-index: 0;
+  color: var(--color-dark-300);
+}
+
+.desktopSearchButton .icon {
+  margin-top: 2px;
+}
+
+.desktopSearchButton::before {
+  content: "";
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-color: var(--color-highlight-6);
+  border-radius: 8px;
+  transform: scale(0); /* start small */
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  z-index: -1;
+}
+
+.desktopSearchButton:hover::before {
+  transform: scale(1); /* expands to full size */
+}
+
+.menuButton {
+  display: flex;
+}
+
+.menuActive {
+  position: relative;
+}
+
+/* Background layer that animates */
+.menuActive::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--color-dark-100);
+  transform: translateY(-100%);
+  transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+  z-index: -1;
+}
+
+/* When active, slide the background down into view */
+.menuActive.menuReveal::before {
+  transform: translateY(0);
+}
+
+.menuActive .logoLink,
+.menuActive .iconButton,
+.menuActive .material-symbols-outlined {
+  color: white;
+}
+
+.menuActive .logoLink:hover,
+.menuActive .logoLink:focus,
+.menuActive .iconButton:hover,
+.menuActive .iconButton:focus {
+  color: white;
+}
+
+.profileAvatar {
+  position: relative;
+  height: 42px;
+  border: none;
+  background: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  display: none;
+}
+
+@media (min-width: 980px) {
+  .profileAvatar {
+    display: flex;
+    align-items: center;
+  }
+}
+
+.avatarImage {
+  border-radius: 50%;
+  border: 2px solid var(--color-highlight-1);
+}
+
+.statusDot {
+  position: absolute;
+  bottom: 0.2rem;
+  right: 0;
+  width: 12px;
+  height: 12px;
+  background-color: var(--color-success-2);
+  border: 2px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05);
+}
+
+.desktopNav {
+  display: none;
+  margin-right: 1rem;
 }
 
 .navList {
-  list-style: none;
   display: flex;
-  gap: 1.5rem;
-  margin: 0;
-  padding: 0;
+  align-items: center;
+  gap: 2rem;
+  list-style: none;
+  height: 100%;
 }
 
-.navLink {
-  text-decoration: none;
-  color: var(--color-neutral-500);
-  font-weight: var(--font-weight-medium);
-  font-size: var(--font-md);
-  transition: color 0.3s ease;
+.navList a {
+  position: relative;
+  padding: 0.5rem 0;
+  color: var(--color-dark-200);
+  font-size: var(--font-lg);
 }
 
-.navLink:hover {
-  color: var(--color-highlight-3);
+.navList a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  width: 100%;
+  height: 1px;
+  background-color: var(--color-highlight-1);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease, transform-origin 0s;
 }
 
-/* Responsive for desktop */
-@media (min-width: 768px) {
+.navList a:hover::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+.navList a:not(:hover)::after {
+  transform: scaleX(0);
+  transform-origin: right;
+}
+
+.navList a.selected::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+.logregDesktop {
+  display: none;
+}
+
+@media (min-width: 980px) {
   .header {
-    height: var(--desktop-header-height);
+    padding: 1.3rem 0;
   }
 
-  .logo {
-    font-size: var(--font-2xl);
+  .headerGroup {
+    gap: 0rem;
   }
 
-  .navLink {
-    font-size: var(--font-lg);
+  .navList {
+    gap: 0.8rem;
+  }
+
+  .logoLink {
+      width: 7.5rem;
+      height: 2.5rem;
+  }
+
+  .logoImage {
+    width: 7.5rem;
+    height: 2.5rem;
+  }
+
+  .iconButton {
+    display: none;
+  }
+
+  .logregDesktop {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .desktopNav {
+    display: block;
+  }
+}
+
+
+@media (min-width: 1280px) {
+  .desktopNav {
+    margin-right: 1.3rem;
+  }
+
+  .headerGroup {
+    gap: 1rem;
+  }
+
+  .logregDesktop {
+    gap: 1rem;
+  }
+
+  .navList {
+    gap: 2.3rem;
+  }
+
+  .navList a {
+    font-size: var(--font-lxl)
   }
 }

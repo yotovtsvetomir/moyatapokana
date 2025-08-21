@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import { useClickOutside } from "@/hooks/useClickOutside";
 import SearchHeader from "./SearchHeader";
 import SearchResultsBox from "./SearchResultsBox";
-import { getApiBaseUrl } from "@/utils/api";
 
 export default function SearchOverlay({ 
   open,
@@ -52,7 +51,7 @@ export default function SearchOverlay({
     searchTimeout.current = setTimeout(async () => {
       try {
         const res = await fetch(
-          `${getApiBaseUrl()}/invitations/templates/search/?q=${encodeURIComponent(searchTerm)}`
+          `${process.env.NEXT_PUBLIC_API_URL}/invitations/templates/search/?q=${encodeURIComponent(searchTerm)}`
         );
         const data = await res.json();
         setSearchResults({
@@ -73,7 +72,7 @@ export default function SearchOverlay({
 
   const handleSearchSubmit = async () => {
     if (!searchTerm.trim()) return;
-    const res = await fetch(`${getApiBaseUrl()}/invitations/templates/search/?q=${encodeURIComponent(searchTerm)}`);
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/invitations/templates/search/?q=${encodeURIComponent(searchTerm)}`);
     const data = await res.json();
     setSearchResults({
       results: data.results || [],

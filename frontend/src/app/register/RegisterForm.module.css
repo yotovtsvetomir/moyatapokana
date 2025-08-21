@@ -1,18 +1,120 @@
-.form {
-  max-width: 400px;
-  margin: auto;
-  margin-top: 2rem;
+.register {
   display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  padding: 2rem;
-  background-color: var(--color-neutral-500);
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgb(0 0 0 / 0.1);
+  justify-content: center;
 }
 
-.form h2 {
+@media (min-width: 768px) {
+  .register {
+    max-width: 330px;
+  }
+}
+
+.screen {
+  display: block;
+}
+
+.side {
+  display: none;
+}
+
+.head {
+  position: absolute;
+  top: 2rem;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.formWrapper {
+  padding-top: 80px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.formHeader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.logo {
+  margin-bottom: 0.5rem;
+}
+
+.sociallogo {
+  margin-right: 0.5rem;
+}
+
+.socialLogin button:first-child {
+  margin-bottom: 1rem;
+}
+
+.divider {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
   text-align: center;
-  font-family: var(--font-sans);
-  color: var(--color-dark-100);
+}
+
+.divider p {
+  color: var(--color-dark-400);
+}
+
+.buttonSecondaryGroup {
+  margin-top: 1rem;
+}
+
+.buttonSecondaryGroup p {
+  margin-bottom: 1rem;
+  color: var(--color-dark-500);
+}
+
+.successMessage {
+  color: var(--color-success-1);
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.errorMessage {
+  color: var(--color-error-1);
+  text-align: center;
+  margin-top: 1rem;
+}
+
+@media (min-width: 980px) {
+  .screen {
+    display: flex;
+  }
+
+  .head {
+    display: block;
+    top: 3rem;
+    left: 3rem;
+  }
+
+  .main {
+    flex: 0 0 75%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .side {
+    flex: 0 0 25%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  .logo {
+    margin-bottom: 1rem;
+  }
 }

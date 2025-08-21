@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import styles from './SearchResultsBox.module.css';
-import Blob from '@/components/ui/Blob/Blob';
+import Blob from '@/ui-components/Blob/Blob';
 
 interface SearchResult {
   id: string;

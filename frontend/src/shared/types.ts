@@ -184,7 +184,7 @@ export interface components {
             /** Grant Type */
             grant_type?: string | null;
             /** Username */
-            username: string;
+            email: string;
             /**
              * Password
              * Format: password
@@ -241,7 +241,7 @@ export interface components {
              * Username
              * Format: email
              */
-            username: string;
+            email: string;
             /** Password */
             password: string;
             /** First Name */
@@ -257,7 +257,7 @@ export interface components {
              * Username
              * Format: email
              */
-            username: string;
+            email: string;
             /** First Name */
             first_name: string;
             /** Last Name */

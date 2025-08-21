@@ -7,7 +7,7 @@ import styles from './MobileMenu.module.css';
 
 import { FaFacebookF, FaInstagram } from 'react-icons/fa';
 
-import { Button } from '@/components/ui/Button/Button'
+import { Button } from '@/ui-components/Button/Button'
 
 import type { Customer } from '@/utils/auth/types';
 

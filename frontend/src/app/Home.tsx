@@ -21,21 +21,6 @@ export default function Home() {
         ) : (
           <h1>Здравейте! Моля влезте или се регистрирайте за да продължите.</h1>
         )}
-
-        <div className={styles.buttons}>
-          <Button variant="primary" size="middle" href="/login">
-            Влез
-          </Button>
-          <Button variant="secondary" size="middle" href="/register">
-            Регистрация
-          </Button>
-
-          <Button variant="secondary" size="middle" href="/password-reset/request">
-            Ресет на парола
-          </Button>
-        </div>
-
-        <SocialAuth user={user} />
       </div>
     </div>
   );

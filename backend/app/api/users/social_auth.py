@@ -53,25 +53,27 @@ async def google_login(
 
     first_name = data.get("given_name", "")
     last_name = data.get("family_name", "")
+    profile_picture = data.get("picture")
 
-    result = await db_read.execute(select(User).filter_by(username=email))
+    result = await db_read.execute(select(User).filter_by(email=email))
     user = result.scalars().first()
 
     if not user:
         hashed_password = hash_password(secrets.token_urlsafe(16))
         user = User(
-            username=email,
+            email=email,
             hashed_password=hashed_password,
             role="customer",
             first_name=first_name,
             last_name=last_name,
+            profile_picture=profile_picture,
         )
         db_write.add(user)
         await db_write.commit()
         await db_write.refresh(user)
 
     session_id = await create_session(
-        user.id, user.username, user.role, user.first_name, user.last_name
+        user.id, user.email, user.role, user.first_name, user.last_name
     )
 
     return {
@@ -96,29 +98,35 @@ async def facebook_login(
             detail="Facebook user data must include email or id",
         )
 
-    username = email if email else f"fb_{fb_id}"
+    email = email if email else f"fb_{fb_id}"
 
     first_name = user_data.get("first_name", "")
     last_name = user_data.get("last_name", "")
 
-    result = await db_read.execute(select(User).filter_by(username=username))
+    profile_picture = None
+
+    if "picture" in user_data:
+        profile_picture = user_data["picture"].get("data", {}).get("url")
+
+    result = await db_read.execute(select(User).filter_by(email=email))
     user = result.scalars().first()
 
     if not user:
         hashed_password = hash_password(secrets.token_urlsafe(16))
         user = User(
-            username=username,
+            email=email,
             hashed_password=hashed_password,
             role="customer",
             first_name=first_name,
             last_name=last_name,
+            profile_picture=profile_picture,
         )
         db_write.add(user)
         await db_write.commit()
         await db_write.refresh(user)
 
     session_id = await create_session(
-        user.id, user.username, user.role, user.first_name, user.last_name
+        user.id, user.email, user.role, user.first_name, user.last_name
     )
 
     return {

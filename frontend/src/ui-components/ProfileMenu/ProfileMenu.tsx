@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import type { Customer } from '@/utils/auth/types';
 import Link from 'next/link';
 import Image from 'next/image';
+import DefaultAvatar from '@/assets/avatar.png';
 
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -23,11 +24,9 @@ export default function ProfileMenu({ open, onClose, customer, anchorRef }: Prof
   const [contentHeight, setContentHeight] = useState<number | null>(null);
   const pathname = usePathname();
 
-  const DEFAULT_AVATAR = 'https://moyata-pokana-s3.s3.eu-west-1.amazonaws.com/default/avatar.png';
-
   const avatarSrc = customer?.avatar?.startsWith('http')
     ? customer.avatar
-    : DEFAULT_AVATAR;
+    : DefaultAvatar;
 
   useEffect(() => {
     if (open && dropdownRef.current) {

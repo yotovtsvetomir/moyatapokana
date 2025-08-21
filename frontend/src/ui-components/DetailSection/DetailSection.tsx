@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/Button/Button'
+import { Button } from '@/ui-components/Button/Button'
 import styles from './DetailSection.module.css'
 
 type Props = {

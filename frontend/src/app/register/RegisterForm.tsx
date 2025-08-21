@@ -1,164 +1,194 @@
-"use client";
+'use client';
 
-import React, { useState } from "react";
-import styles from "./RegisterForm.module.css";
-import { Input } from "@/ui-components/Input/Input";
-import { Button } from "@/ui-components/Button/Button";
-import { components } from "@/shared/types"; 
+import Image from 'next/image';
+import Link from 'next/link';
+import { useRegister } from '@/hooks/useRegister';
+import { Input } from '@/ui-components/Input/Input';
+import { Button } from '@/ui-components/Button/Button';
+import { Heading } from '@/ui-components/Heading/Heading';
+import { TextLink } from '@/ui-components/TextLink/TextLink';
+import SideSlideshow from '@/ui-components/SideSlideshow/SideSlideshow';
 
-type RegisterFormValues = components["schemas"]["UserCreate"];
+import styles from './RegisterForm.module.css';
 
-type RegisterFormErrors = {
-  [K in keyof RegisterFormValues]?: string;
-} & {
-  confirmPassword?: string;
-  apiError?: string;
-};
+import LogoLetters from '@/assets/logo_horizontal_letters.png';
+import Logo from '@/assets/logo.png';
+import Picnic from '@/assets/picnic.png';
+import Birthday from '@/assets/birthday.png';
+import Wedding from '@/assets/wedding.png';
 
-export function RegisterForm() {
-  const [values, setValues] = useState<RegisterFormValues>({
-    username: "",
-    password: "",
-    first_name: "",
-    last_name: "",
-  });
-
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [errors, setErrors] = useState<RegisterFormErrors>({});
-  const [loading, setLoading] = useState(false);
-
-  function validate() {
-    const errs: RegisterFormErrors = {};
-
-    if (!values.first_name) {
-      errs.first_name = "Моля, въведете име";
-    }
-
-    if (!values.last_name) {
-      errs.last_name = "Моля, въведете фамилия";
-    }
-
-    if (!values.username) {
-      errs.username = "Моля, въведете имейл";
-    }
-
-    if (!values.password) {
-      errs.password = "Моля, въведете парола";
-    }
-
-    if (!confirmPassword) {
-      errs.confirmPassword = "Моля, потвърдете паролата";
-    }
-
-    return errs;
-  }
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setValues((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const onSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrors({});
-
-    const validationErrors = validate();
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const res = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...values, confirmPassword }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setErrors({ apiError: data.error || "Регистрацията неуспешна" });
-        return;
-      }
-
-      window.location.href = "/profile";
-    } catch (error) {
-      setErrors({
-        apiError:
-          error instanceof Error ? error.message : "Възникна грешка при сървъра",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+export default function RegisterPage() {
+  const {
+    values,
+    confirmPassword,
+    errors,
+    loading,
+    success,
+    handleChange,
+    handleConfirmChange,
+    handleFocus,
+    handleSubmit,
+    handleGoogleRegister,
+    handleFacebookRegister,
+    fbReady,
+  } = useRegister();
 
   return (
-    <form className={styles.form} onSubmit={onSubmit} noValidate>
-      <h2>Регистрация</h2>
+    <div className={styles.screen}>
+      <div className={styles.main}>
+        <div className={`container ${styles.register}`}>
+          <div className={styles.head}>
+            <Link href="/">
+              <Image
+                src={LogoLetters}
+                width={150}
+                height={15}
+                alt="Logo"
+                className={styles.logoLetters}
+              />
+            </Link>
+          </div>
 
-      <Input
-        id="first_name"
-        name="first_name"
-        type="text"
-        label="Име"
-        value={values.first_name}
-        onChange={handleChange}
-        error={errors.first_name}
-        required
-      />
+          <div className={styles.formWrapper}>
+            <div className={styles.formHeader}>
+              <Image src={Logo} width={44} height={34} alt="Logo" className={styles.logo} />
+              <Heading
+                marginBottom="1rem"
+                as="h1"
+                size="3xl"
+                color="--color-dark-300"
+                align="center"
+              >
+                Добре дошли
+              </Heading>
+            </div>
 
-      <Input
-        id="last_name"
-        name="last_name"
-        type="text"
-        label="Фамилия"
-        value={values.last_name}
-        onChange={handleChange}
-        error={errors.last_name}
-        required
-      />
+            <div className={styles.socialLogin}>
+              <Button onClick={handleGoogleRegister} width="100%" size="middle" variant="secondary">
+                <Image
+                  src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg"
+                  width={21}
+                  height={21}
+                  alt="Google Logo"
+                  className={styles.sociallogo}
+                />
+                <p>Регистрация с Google</p>
+              </Button>
 
-      <Input
-        id="username"
-        name="username"
-        type="email"
-        label="Имейл"
-        value={values.username}
-        onChange={handleChange}
-        error={errors.username}
-        required
-      />
+              <Button
+                disabled={!fbReady}
+                onClick={handleFacebookRegister}
+                width="100%"
+                size="middle"
+                variant="secondary"
+              >
+                <Image
+                  src="https://upload.wikimedia.org/wikipedia/en/0/04/Facebook_f_logo_%282021%29.svg"
+                  width={21}
+                  height={21}
+                  alt="Facebook Logo"
+                  className={styles.sociallogo}
+                />
+                <p>Регистрация с Facebook</p>
+              </Button>
+            </div>
 
-      <Input
-        id="password"
-        name="password"
-        type="password"
-        label="Парола"
-        value={values.password}
-        onChange={handleChange}
-        error={errors.password}
-        required
-      />
+            <div className={styles.divider}>
+              <p>или</p>
+            </div>
 
-      <Input
-        id="confirmPassword"
-        name="confirmPassword"
-        type="password"
-        label="Потвърдете паролата"
-        value={confirmPassword}
-        onChange={(e) => setConfirmPassword(e.target.value)}
-        error={errors.confirmPassword}
-        required
-      />
+            <form onSubmit={handleSubmit} noValidate>
+              <Input
+                id="first_name"
+                name="first_name"
+                type="text"
+                label="Име"
+                value={values.first_name}
+                onChange={handleChange}
+                onFocus={handleFocus('first_name')}
+                error={errors.first_name}
+                required
+              />
 
-      <Button type="submit" variant="primary" size="large" bold disabled={loading}>
-        {loading ? "Регистриране..." : "Регистрирай се"}
-      </Button>
+              <Input
+                id="last_name"
+                name="last_name"
+                type="text"
+                label="Фамилия"
+                value={values.last_name}
+                onChange={handleChange}
+                onFocus={handleFocus('last_name')}
+                error={errors.last_name}
+                required
+              />
 
-      {errors.apiError && <p className={styles.error}>{errors.apiError}</p>}
-    </form>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                label="Имейл"
+                value={values.email}
+                onChange={handleChange}
+                onFocus={handleFocus('email')}
+                error={errors.email}
+                required
+              />
+
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                label="Парола"
+                value={values.password}
+                onChange={handleChange}
+                onFocus={handleFocus('password')}
+                error={errors.password}
+                required
+              />
+
+              <Input
+                id="confirmPassword"
+                name="confirmPassword"
+                type="password"
+                label="Повтори паролата"
+                value={confirmPassword}
+                onChange={handleConfirmChange}
+                onFocus={handleFocus('confirmPassword')}
+                error={errors.confirmPassword}
+                required
+              />
+
+              <Button width="100%" type="submit" variant="primary" disabled={loading}>
+                {loading ? 'Регистрирам...' : 'Регистрация'}
+              </Button>
+
+              <div className={styles.buttonSecondaryGroup}>
+                <p>
+                  Продължавайки, вие се съгласявате с нашите{' '}
+                  <TextLink href="/terms">Условия</TextLink> и{' '}
+                  <TextLink href="/privacy">Политика за поверителност</TextLink>.
+                </p>
+                <p>
+                  Вече имате акаунт? <TextLink href="/login">Влезте от тук</TextLink>.
+                </p>
+              </div>
+
+              {errors.apiError && <p className={styles.errorMessage}>{errors.apiError}</p>}
+              {success && <p className={styles.successMessage}>Успешна регистрация!</p>}
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <div className={styles.side}>
+        <SideSlideshow
+          slides={[
+            <Image key="picnic" src={Picnic} alt="Picnic" fill style={{ objectFit: 'cover' }} />,
+            <Image key="birthday" src={Birthday} alt="Birthday" fill style={{ objectFit: 'cover' }} />,
+            <Image key="wedding" src={Wedding} alt="Wedding" fill style={{ objectFit: 'cover' }} />,
+          ]}
+        />
+      </div>
+    </div>
   );
 }

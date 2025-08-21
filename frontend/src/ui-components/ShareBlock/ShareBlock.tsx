@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 import { FaFacebookF, FaWhatsapp, FaViber } from 'react-icons/fa';
-import { Button } from '@/components/ui/Button/Button';
-import { Input } from '@/components/ui/Input/Input';
-import { Textarea } from '@/components/ui/Input/Textarea';
+import { Button } from '@/ui-components/Button/Button';
+import { Input } from '@/ui-components/Input/Input';
+import { Textarea } from '@/ui-components/Input/Textarea';
 import styles from './ShareBlock.module.css';
 
 interface ShareBlockProps {
@@ -45,14 +45,14 @@ export const ShareBlock = ({ shareUrl, invitationId }: ShareBlockProps) => {
         size="large"
       />
 
-      <Textarea
+      {/*<Textarea
         id="share-message"
         name="share-message"
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         label="Съобщение за споделяне"
         size="large"
-      />
+      />*/}
 
       <div className={styles.copy}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>

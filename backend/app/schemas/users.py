@@ -1,12 +1,14 @@
 import re
 from pydantic import BaseModel, EmailStr, validator, constr
+from fastapi import UploadFile
+from typing import Optional
 
 
 # --- User Models ---
 
 
 class UserCreate(BaseModel):
-    username: EmailStr
+    email: EmailStr
     password: str
     first_name: str
     last_name: str
@@ -28,7 +30,7 @@ class UserCreate(BaseModel):
 
 class UserRead(BaseModel):
     id: int
-    username: EmailStr
+    email: EmailStr
     first_name: str
     last_name: str
 
@@ -38,10 +40,11 @@ class UserRead(BaseModel):
 class UserUpdate(BaseModel):
     first_name: constr(min_length=1)
     last_name: constr(min_length=1)
+    profile_picture: Optional[UploadFile] = None
 
 
 class UserLogin(BaseModel):
-    username: EmailStr
+    email: EmailStr
     password: str
 
 

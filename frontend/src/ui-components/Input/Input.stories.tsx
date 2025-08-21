@@ -65,8 +65,8 @@ export const Text: Story = {
     const [value, setValue] = useState('ivan.petrov');
     return (
       <Input
-        id="username"
-        name="username"
+        id="email"
+        name="email"
         label="Потребителско име"
         type="text"
         value={value}
@@ -81,8 +81,8 @@ export const Large: Story = {
     const [value, setValue] = useState('ivan.petrov');
     return (
       <Input
-        id="username"
-        name="username"
+        id="email"
+        name="email"
         label="Потребителско име"
         type="text"
         value={value}
@@ -98,8 +98,8 @@ export const WithIcon: Story = {
     const [value, setValue] = useState('Покана за рожден ден');
     return (
       <Input
-        id="username-icon"
-        name="username"
+        id="email-icon"
+        name="email"
         label="Име на събитието"
         icon="event"
         type="text"

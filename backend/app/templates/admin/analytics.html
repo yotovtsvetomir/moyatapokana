@@ -1,0 +1,60 @@
+{% block content %}
+<div class="analytics-card">
+    <h1>Статистика</h1>
+    <ul>
+        <li><span>Активни потребители (последни 15 минути)</span> <span><b>{{ active_users }}</span></b></li>
+        <li><span>Потребители днес</span> <span><b>{{ users_today }}</span></b></li>
+        <li><span>Потребители този месец</span> <span><b>{{ users_this_month }}</b></span></li>
+        <li><span>Общо регистрирани клиенти</span> <span><b>{{ total_customers }}</b></span></li>
+    </ul>
+</div>
+{% endblock %}
+
+<style>
+body {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    background: #f0f2f5;
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding-top: 50px;
+}
+
+.analytics-card {
+    background: #fff;
+    padding: 2rem 3rem;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    max-width: 500px;
+    width: 90%;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.analytics-card h1 {
+    margin-bottom: 1.5rem;
+    color: #333;
+    font-size: 1.8rem;
+}
+
+.analytics-card ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.analytics-card li {
+    display: flex; 
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #eee;
+    font-size: 1.1rem;
+    color: #555;
+}
+
+.analytics-card li:last-child {
+    border-bottom: none;
+}
+</style>

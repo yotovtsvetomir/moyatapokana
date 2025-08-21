@@ -1,26 +1,28 @@
 import os
 import aiodns
-from datetime import datetime, timedelta
-
+import json
+from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, Depends, HTTPException, status, Cookie
-from fastapi.security import OAuth2PasswordRequestForm
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 
-from app.core.permissions import is_authenticated
+from app.core.permissions import require_role
+from app.core.redis_client import get_redis_client
 from app.db.session import get_read_session, get_write_session
-from app.db.models.user import User, PasswordResetToken
+from app.db.models.user import User, UserActivity, PasswordResetToken
 from app.schemas.users import (
     UserRead,
+    UserLogin,
     UserCreate,
     UserUpdate,
     PasswordResetRequest,
     PasswordResetConfirm,
 )
 from app.services.email import send_email
+from app.services.s3.profile_picture import ProfilePictureService
 from app.services.auth import (
     authenticate_user,
     create_session,
@@ -54,14 +56,28 @@ async def check_email_mx(email: str) -> bool:
 
 @router.post("/")
 async def register(
-    user_create: UserCreate, db_write: AsyncSession = Depends(get_write_session)
+    user_create: UserCreate,
+    db_read: AsyncSession = Depends(get_read_session),
+    db_write: AsyncSession = Depends(get_write_session),
 ):
-    if not await check_email_mx(user_create.username):
+    if not await check_email_mx(user_create.email):
         raise HTTPException(status_code=400, detail="Имейлa е невалиден.")
 
+    existing_user = (
+        (await db_read.execute(select(User).where(User.email == user_create.email)))
+        .scalars()
+        .first()
+    )
+
+    if existing_user:
+        raise HTTPException(
+            status_code=400, detail="Акаунт с този имейл вече съществува."
+        )
+
     user = await create_user(user_create, db_write)
+
     session_id = await create_session(
-        user.id, user.username, user.role, user.first_name, user.last_name
+        user.id, user.email, user.role, user.first_name, user.last_name
     )
     expires_at = datetime.utcnow() + timedelta(seconds=SESSION_EXPIRE_SECONDS)
 
@@ -74,10 +90,10 @@ async def register(
 
 @router.post("/login")
 async def login(
-    form_data: OAuth2PasswordRequestForm = Depends(),
+    form_data: UserLogin,
     db_read: AsyncSession = Depends(get_read_session),
 ):
-    user = await authenticate_user(form_data.username, form_data.password, db_read)
+    user = await authenticate_user(form_data.email, form_data.password, db_read)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -85,8 +101,14 @@ async def login(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+    if user.role != "customer":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Нямате разрешение да влезете в системата.",
+        )
+
     session_id = await create_session(
-        user.id, user.username, user.role, user.first_name, user.last_name
+        user.id, user.email, user.role, user.first_name, user.last_name
     )
     expires_at = datetime.utcnow() + timedelta(seconds=SESSION_EXPIRE_SECONDS)
 
@@ -99,12 +121,12 @@ async def login(
 
 @router.get("/me", response_model=UserRead)
 async def get_me(
-    session_data: dict = Depends(is_authenticated),
+    session_data: dict = Depends(require_role("customer")),
     db_read: AsyncSession = Depends(get_read_session),
 ):
-    username = session_data.get("username")
+    email = session_data.get("email")
 
-    result = await db_read.execute(select(User).filter(User.username == username))
+    result = await db_read.execute(select(User).filter(User.email == email))
     user = result.scalars().first()
     if user is None:
         raise HTTPException(status_code=401, detail="Нямате разрешение")
@@ -115,12 +137,12 @@ async def get_me(
 @router.patch("/me", response_model=UserRead)
 async def update_profile(
     data: UserUpdate,
-    session_data: dict = Depends(is_authenticated),
+    session_data: dict = Depends(require_role("customer")),
     db_write: AsyncSession = Depends(get_write_session),
 ):
-    username = session_data.get("username")
+    email = session_data.get("email")
 
-    result = await db_write.execute(select(User).filter(User.username == username))
+    result = await db_write.execute(select(User).filter(User.email == email))
     user = result.scalars().first()
 
     if not user:
@@ -130,6 +152,15 @@ async def update_profile(
 
     user.first_name = data.first_name
     user.last_name = data.last_name
+
+    if data.profile_picture:
+        profile_service = ProfilePictureService()
+        try:
+            url = await profile_service.upload_profile_picture(data.profile_picture)
+            user.profile_picture = url
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
+
     db_write.add(user)
     await db_write.commit()
     await db_write.refresh(user)
@@ -144,8 +175,28 @@ async def update_profile(
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
 async def logout(
     session_id: str | None = Cookie(None),
-    _=Depends(is_authenticated),
+    db_write: AsyncSession = Depends(get_write_session),
+    _=Depends(require_role("customer")),
 ):
+    if not session_id:
+        raise HTTPException(status_code=401, detail="Няма намерена сесия")
+
+    redis = await get_redis_client()
+    key = f"user_session:{session_id}"
+    raw_data = await redis.get(key)
+
+    if raw_data:
+        session_data = json.loads(raw_data)
+        user_id = int(session_data["user_id"])
+
+        activity = UserActivity(
+            user_id=user_id,
+            activity_type="logout",
+            timestamp=datetime.now(timezone.utc).replace(tzinfo=None),
+        )
+        db_write.add(activity)
+        await db_write.commit()
+
     await delete_session(session_id)
     return
 
@@ -153,7 +204,7 @@ async def logout(
 @router.post("/refresh-session")
 async def refresh_session(
     session_id: str | None = Cookie(None),
-    _=Depends(is_authenticated),
+    _=Depends(require_role("customer")),
     db_write: AsyncSession = Depends(get_write_session),
 ):
     if not session_id:
@@ -174,14 +225,20 @@ async def password_reset_request(
     db_read: AsyncSession = Depends(get_read_session),
     db_write: AsyncSession = Depends(get_write_session),
 ):
-    result = await db_read.execute(select(User).filter(User.username == request.email))
+    result = await db_read.execute(select(User).filter(User.email == request.email))
     user = result.scalars().first()
     if not user:
         raise HTTPException(
             status_code=404, detail="Акаунт с този имейл не съществува."
         )
 
-    token = serializer.dumps(user.username, salt="password-reset-salt")
+    if user.role != "customer":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Нямате разрешение да извършите това действие.",
+        )
+
+    token = serializer.dumps(user.email, salt="password-reset-salt")
     reset_token = PasswordResetToken(user_id=user.id, token=token)
     db_write.add(reset_token)
     await db_write.commit()
@@ -189,8 +246,8 @@ async def password_reset_request(
     reset_link = f"{FRONTEND_BASE_URL}/password-reset/{token}/"
 
     subject = "Ресет на парола"
-    body = f"Здравейте {user.username},\n\nНатиснете линка за да смените паролата:\n{reset_link}"
-    send_email(to=user.username, subject=subject, body=body)
+    body = f"Здравейте {user.email},\n\nНатиснете линка за да смените паролата:\n{reset_link}"
+    send_email(to=user.email, subject=subject, body=body)
 
     return {"message": "Линк за смяна на паролата беше изпратен на имейла ви."}
 
@@ -198,7 +255,7 @@ async def password_reset_request(
 @router.post("/password-reset/confirm")
 async def password_reset_confirm(
     data: PasswordResetConfirm,
-    db_write: AsyncSession = Depends(get_write_session),  # use only write session
+    db_write: AsyncSession = Depends(get_write_session),
 ):
     try:
         email = serializer.loads(
@@ -218,11 +275,17 @@ async def password_reset_confirm(
     if not reset_token:
         raise HTTPException(status_code=400, detail="Невалиден токен")
 
-    result = await db_write.execute(select(User).filter(User.username == email))
+    result = await db_write.execute(select(User).filter(User.email == email))
     user = result.scalars().first()
     if not user:
         raise HTTPException(
             status_code=404, detail="Акаунт с този имейл не съществува."
+        )
+
+    if user.role != "customer":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Нямате разрешение да извършите това действие.",
         )
 
     user.hashed_password = hash_password(data.new_password)

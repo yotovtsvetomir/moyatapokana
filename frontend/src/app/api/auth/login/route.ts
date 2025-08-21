@@ -1,27 +1,20 @@
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
-  const body = await req.json();
-  const { username, password } = body;
-
-  const formBody = new URLSearchParams();
-  formBody.append("username", username);
-  formBody.append("password", password);
-  formBody.append("scope", "");
-
   try {
+    const { email, password } = await req.json();
+
     const response = await fetch(`${process.env.API_URL_SERVER}/users/login`, {
       method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: formBody.toString(),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
     });
 
+    const data = await response.json();
+
     if (!response.ok) {
-      const data = await response.json();
       return NextResponse.json({ error: data.detail || "Login failed" }, { status: response.status });
     }
-
-    const data = await response.json();
 
     const res = NextResponse.json({ success: true, message: data.message });
 

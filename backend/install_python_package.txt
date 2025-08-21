@@ -1,0 +1,13 @@
+docker compose down
+
+cd backend
+python3 -m venv venv
+source venv/bin/activate
+
+pip install somepackage
+pip freeze > requirements.txt
+
+deactivate
+
+docker-compose build backend --no-cache
+docker-compose up

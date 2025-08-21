@@ -4,7 +4,7 @@ import React, { useEffect, useState, useRef } from "react";
 import Modal from "@/ui-components/Modal/Modal";
 import { useUser } from "@/context/UserContext";
 
-const SESSION_TIMEOUT = 1000 * 10 * 1; // 15 min / 10sec for testing
+const SESSION_TIMEOUT = 1000 * 60 * 15; // 15 min
 const COUNTDOWN_SECONDS = 20;
 
 export default function SessionTimeoutHandler() {
