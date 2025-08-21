@@ -1,2 +1,18 @@
+# Backend
+backend/venv/
 backend/.env
+backend/__pycache__/
+backend/*.pyc
+backend/*.pyo
+backend/*.pyd
+
+# Frontend
+frontend/node_modules/
+frontend/.next/
+frontend/out/
 frontend/.env
+frontend/.vercel
+
+# Misc
+*.log
+.DS_Store
