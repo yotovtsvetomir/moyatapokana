@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+  <meta charset="UTF-8" />
+  <title>Добре дошли в МоятаПокана</title>
+</head>
+<body style="margin:0;padding:0;background-color:#F8F9FE;font-family:'Nunito', Arial, sans-serif;color:#2F3038;">
+  <div style="max-width:480px;margin:40px auto;padding:32px;background:#FFFFFF;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.05);">
+    
+    <!-- Logo -->
+    <img src="{{ logo_url }}" alt="MoyataPokana Logo"
+         style="width:120px;display:block;margin-bottom:20px;" />
+
+    <!-- Welcome -->
+    <h2 style="font-size:20px;font-weight:600;color:#2F3038;margin:18px 0;">
+      Добре дошли, {{ first_name|default:email }}!
+    </h2>
+
+    <!-- Paragraph -->
+    <p style="font-size:15px;line-height:1.6;margin-bottom:12px;">
+      Вашият акаунт беше успешно създаден
+      {% if provider %} чрез <strong>{{ provider }}</strong> {% endif %}.
+    </p>
+
+    <p style="font-size:15px;line-height:1.6;margin-bottom:12px;">
+      Добре дошли в МоятаПокана! Радваме се, че избрахте нашата платформа. Пожелаваме Ви щастливи моменти и незабравими събития!
+    </p>
+
+    <p style="font-size:15px;line-height:1.6;margin-bottom:20px;">
+      Можете да използвате нашата платформа веднага. Ако това не сте били вие, моля,
+      <a href="mailto:support@moyatapokana.com" style="color:#FF6A5B;text-decoration:underline;">свържете се с нас</a>.
+    </p>
+
+    <!-- Footer -->
+    <p style="font-size:13px;color:#8F9098;margin-top:40px;">
+      Всичко най-добро,<br>
+      Екипът на МоятаПокана
+    </p>
+
+    <p style="font-size:11px;color:#C5C8CC;margin-top:20px;">
+      &copy; {{ year }} MoyataPokana. Всички права запазени.
+    </p>
+  </div>
+</body>
+</html>

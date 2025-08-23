@@ -1,6 +1,5 @@
 import re
 from pydantic import BaseModel, EmailStr, validator, constr
-from fastapi import UploadFile
 from typing import Optional
 
 
@@ -33,6 +32,7 @@ class UserRead(BaseModel):
     email: EmailStr
     first_name: str
     last_name: str
+    profile_picture: Optional[str] = None
 
     model_config = {"from_attributes": True}
 
@@ -40,7 +40,7 @@ class UserRead(BaseModel):
 class UserUpdate(BaseModel):
     first_name: constr(min_length=1)
     last_name: constr(min_length=1)
-    profile_picture: Optional[UploadFile] = None
+    profile_picture: Optional[str] = None
 
 
 class UserLogin(BaseModel):

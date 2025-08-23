@@ -2,7 +2,6 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
-import type { Customer } from '@/utils/auth/types';
 import Link from 'next/link';
 import Image from 'next/image';
 import DefaultAvatar from '@/assets/avatar.png';
@@ -11,21 +10,25 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 import styles from './ProfileMenu.module.css';
 
+import type { components } from '@/shared/types';
+
+type User = components["schemas"]["UserRead"];
+
 
 interface ProfileMenuProps {
   open: boolean;
   onClose: () => void;
   anchorRef: React.RefObject<HTMLElement>;
-  customer?: Customer | null;
+  user?: User | null;
 }
 
-export default function ProfileMenu({ open, onClose, customer, anchorRef }: ProfileMenuProps) {
+export default function ProfileMenu({ open, onClose, user, anchorRef }: ProfileMenuProps) {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [contentHeight, setContentHeight] = useState<number | null>(null);
   const pathname = usePathname();
 
-  const avatarSrc = customer?.avatar?.startsWith('http')
-    ? customer.avatar
+  const avatarSrc = user?.profile_picture?.startsWith('http')
+    ? user.profile_picture
     : DefaultAvatar;
 
   useEffect(() => {
@@ -74,18 +77,19 @@ export default function ProfileMenu({ open, onClose, customer, anchorRef }: Prof
                   alt="User Avatar"
                   width={47}
                   height={47}
+                  unoptimized
                   className={styles.avatarImage}
                 />
                 <div className={styles.statusDot} />
               </div>
               <div className={styles.profileContent}>
                 <h5>
-                  {customer?.user
-                    ? `${customer.user.first_name} ${customer.user.last_name}`.trim()
+                  {user
+                    ? `${user?.first_name} ${user?.last_name}`.trim()
                     : 'Потребител'}
                 </h5>
                 <p>
-                  {customer?.user?.email || 'example@email.com'}
+                  {user?.email || 'example@email.com'}
                 </p>    
               </div>
             </div>

@@ -47,8 +47,8 @@ export default function HeaderClient({
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const scrollYRef = useRef(0);
 
-  const avatarSrc = user?.avatar?.startsWith('http')
-    ? user.avatar
+  const avatarSrc = user?.profile_picture?.startsWith('http')
+    ? user.profile_picture
     : DefaultAvatar;
 
   const mainLinks = [

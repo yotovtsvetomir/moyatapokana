@@ -28,7 +28,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const cookieStore = await cookies();
-  const sessionId = cookieStore.get("session_id")?.value
+  const sessionId = cookieStore.get("session_id")?.value ?? null;
   const user = await fetchUserSSR(sessionId)
 
   return (

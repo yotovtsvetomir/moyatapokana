@@ -14,6 +14,8 @@
   "dependencies": {
     "embla-carousel-react": "^8.6.0",
     "flag-icons": "^7.5.0",
+    "flatpickr": "^4.6.13",
+    "formidable": "^3.5.4",
     "framer-motion": "^12.23.12",
     "ioredis": "^5.7.0",
     "material-symbols": "^0.33.0",

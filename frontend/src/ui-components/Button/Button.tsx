@@ -96,7 +96,7 @@ export const Button: React.FC<ButtonProps> = ({
         color: color || undefined,
       }}
       disabled={disabled || loading}
-      onClick={onClick}
+      onClick={type === "submit" ? undefined : onClick}
     >
       {loading && <span className={styles.spinner} />}
       <span

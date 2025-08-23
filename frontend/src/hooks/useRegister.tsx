@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { components } from "@/types/openapi"; // adjust path to your generated types
+import { components } from "@/shared/types";
 
 type RegisterFormValues = components["schemas"]["UserCreate"];
 

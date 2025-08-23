@@ -1,14 +1,13 @@
 import json
-from datetime import datetime, timedelta, timezone
-
+from datetime import datetime, timezone, timedelta
 from fastapi import APIRouter, Request, Depends
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import func, select
+from sqlalchemy import select, func
 
 from app.db.session import get_read_session
-from app.db.models.user import User, UserActivity
+from app.db.models.user import User, DailyUserStats
 from app.core.redis_client import get_redis_client
 
 router = APIRouter()
@@ -26,9 +25,9 @@ async def admin_analytics(
     today = now.date()
     first_day_month = today.replace(day=1)
 
-    # Currently active users from Redis
-    keys = await redis.keys("user_session:*")
-    active_users = set()
+    # --- Currently active sessions (last 15 minutes) ---
+    keys = await redis.keys("user_session:*") + await redis.keys("anonymous_session:*")
+    active_recent = set()  # all users/anonymous active in last 15 min
 
     if keys:
         raw_sessions = await redis.mget(*keys)
@@ -36,34 +35,39 @@ async def admin_analytics(
             if not raw:
                 continue
             session_data = json.loads(raw)
-            if session_data.get("role") != "customer":
+            created_at_str = session_data.get("created_at")
+            if not created_at_str:
                 continue
-            created_at = datetime.fromisoformat(
-                session_data["created_at"].replace("Z", "+00:00")
-            )
-            user_id = session_data["user_id"]
+            created_at = datetime.fromisoformat(created_at_str.replace("Z", "+00:00"))
             if now - created_at <= timedelta(minutes=ACTIVE_MINUTES):
-                active_users.add(user_id)
+                session_id = (
+                    session_data.get("user_id")
+                    or session_data.get("anonymous_id")
+                    or "anon"
+                )
+                active_recent.add(session_id)
 
-    # Active today
-    result_today = await db.execute(
-        select(UserActivity.user_id).where(
-            UserActivity.activity_type == "login",
-            func.date(UserActivity.timestamp) == today,
+    # --- Daily aggregates from DailyUserStats ---
+    daily_stats_result = await db.execute(
+        select(func.sum(DailyUserStats.active_count)).where(
+            DailyUserStats.date == today
         )
     )
-    users_today = {row[0] for row in result_today.all()}
+    daily_total_db = daily_stats_result.scalar() or 0
 
-    # Active this month
-    result_month = await db.execute(
-        select(UserActivity.user_id).where(
-            UserActivity.activity_type == "login",
-            UserActivity.timestamp >= first_day_month,
+    # --- Monthly aggregates from DailyUserStats ---
+    monthly_stats_result = await db.execute(
+        select(func.sum(DailyUserStats.active_count)).where(
+            DailyUserStats.date >= first_day_month
         )
     )
-    users_this_month = {row[0] for row in result_month.all()}
+    monthly_total_db = monthly_stats_result.scalar() or 0
 
-    # Total registered customers
+    # Combine Redis + DB for today
+    active_users_today = daily_total_db + len(active_recent)
+    active_users_this_month = monthly_total_db + len(active_recent)
+
+    # --- Total registered customers ---
     total_customers = await db.scalar(
         select(func.count()).select_from(User).filter(User.role == "customer")
     )
@@ -72,9 +76,9 @@ async def admin_analytics(
         "admin/analytics.html",
         {
             "request": request,
-            "active_users": len(active_users),
-            "users_today": len(users_today),
-            "users_this_month": len(users_this_month),
+            "active_users_recent": len(active_recent),
+            "active_users_today": active_users_today,
+            "active_users_this_month": active_users_this_month,
             "total_customers": total_customers,
         },
     )

@@ -58,6 +58,7 @@ export async function GET(request: NextRequest) {
   const SESSION_EXPIRE_SECONDS = parseInt(process.env.SESSION_EXPIRE_SECONDS || "604800", 10);
   const expires = new Date(Date.now() + SESSION_EXPIRE_SECONDS * 1000);
 
+  // Set real session cookie
   res.cookies.set("session_id", backendData.session_id, {
     httpOnly: true,
     secure: isProd,
@@ -65,6 +66,9 @@ export async function GET(request: NextRequest) {
     path: "/",
     expires,
   });
+
+  // Delete anonymous session cookie if it exists
+  res.cookies.delete("anonymous_session_id", { path: "/" });
 
   return res;
 }

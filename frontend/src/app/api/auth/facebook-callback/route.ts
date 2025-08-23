@@ -13,6 +13,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "No code provided" }, { status: 400 });
   }
 
+  // Exchange code for access token
   const tokenRes = await fetch(
     `https://graph.facebook.com/v18.0/oauth/access_token?client_id=${clientId}&redirect_uri=${redirectUri}&client_secret=${clientSecret}&code=${code}`,
     { method: "GET" }
@@ -30,6 +31,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "No access token returned" }, { status: 400 });
   }
 
+  // Fetch user info from Facebook
   const userRes = await fetch(
     `https://graph.facebook.com/me?fields=id,name,email,picture&access_token=${accessToken}`,
     { method: "GET" }
@@ -42,6 +44,7 @@ export async function GET(request: NextRequest) {
 
   const userData = await userRes.json();
 
+  // Send user data to backend for login/registration
   const backendRes = await fetch(`${process.env.API_URL_SERVER}/users/facebook-login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -61,6 +64,7 @@ export async function GET(request: NextRequest) {
   const SESSION_EXPIRE_SECONDS = parseInt(process.env.SESSION_EXPIRE_SECONDS || "604800", 10);
   const expires = new Date(Date.now() + SESSION_EXPIRE_SECONDS * 1000);
 
+  // Set real session cookie
   res.cookies.set("session_id", backendData.session_id, {
     httpOnly: true,
     secure: isProd,
@@ -68,6 +72,9 @@ export async function GET(request: NextRequest) {
     path: "/",
     expires,
   });
+
+  // Delete anonymous session cookie if it exists
+  res.cookies.delete("anonymous_session_id", { path: "/" });
 
   return res;
 }

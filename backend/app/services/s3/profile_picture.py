@@ -1,12 +1,13 @@
 from app.services.s3.base import S3Base
 from fastapi import UploadFile
-from PIL import Image
+from PIL import Image, ImageOps
 import io
 
 
 class ProfilePictureService(S3Base):
     ALLOWED_TYPES = ["image/jpeg", "image/png", "image/jpg"]
     MAX_SIZE_KB = 500
+    TARGET_SIZE = (300, 300)  # crop/resize target
 
     async def upload_profile_picture(
         self, file: UploadFile, folder="profile_images"
@@ -16,9 +17,12 @@ class ProfilePictureService(S3Base):
 
         image = Image.open(file.file)
 
+        # Crop & resize to 300x300, keeping the center
+        image = ImageOps.fit(image, self.TARGET_SIZE, Image.Resampling.LANCZOS)
+
         buffer = io.BytesIO()
         if file.content_type == "image/png":
-            image.save(buffer, format="PNG", quality=70, optimize=True)
+            image.save(buffer, format="PNG", optimize=True)
         else:
             image = image.convert("RGB")
             image.save(buffer, format="JPEG", quality=70, optimize=True)
@@ -30,10 +34,7 @@ class ProfilePictureService(S3Base):
             )
 
         buffer.seek(0)
-
-        optimized_file = UploadFile(
-            filename=file.filename, file=buffer, content_type=file.content_type
-        )
+        optimized_file = UploadFile(filename=file.filename, file=buffer)
 
         url = await self._upload(optimized_file, folder)
         return url

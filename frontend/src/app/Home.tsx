@@ -1,8 +1,6 @@
 "use client";
 
 import styles from './home.module.css';
-import { Button } from '@/ui-components/Button/Button';
-import SocialAuth from '@/components/SocialAuth/SocialAuth';
 import { useUser } from '@/context/UserContext';
 
 export default function Home() {

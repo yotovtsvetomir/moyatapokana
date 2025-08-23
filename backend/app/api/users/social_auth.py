@@ -1,9 +1,9 @@
-from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi import APIRouter, HTTPException, Depends, status, Cookie
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from app.db.models.user import User
 from app.db.session import get_write_session, get_read_session
-from app.services.auth import create_session, hash_password
+from app.services.auth import create_session, hash_password, delete_session
 import httpx
 import os
 from pydantic import BaseModel
@@ -23,9 +23,13 @@ class FacebookLoginPayload(BaseModel):
     user: dict
 
 
+# ------------------------------
+# Google login
+# ------------------------------
 @router.post("/google-login")
 async def google_login(
     payload: GoogleLoginPayload,
+    anonymous_session_id: str | None = Cookie(None),
     db_read: AsyncSession = Depends(get_read_session),
     db_write: AsyncSession = Depends(get_write_session),
 ):
@@ -72,9 +76,11 @@ async def google_login(
         await db_write.commit()
         await db_write.refresh(user)
 
-    session_id = await create_session(
-        user.id, user.email, user.role, user.first_name, user.last_name
-    )
+    # Delete anonymous session if it exists
+    if anonymous_session_id:
+        await delete_session(anonymous_session_id, anonymous=True)
+
+    session_id = await create_session(user)
 
     return {
         "session_id": session_id,
@@ -82,9 +88,13 @@ async def google_login(
     }
 
 
+# ------------------------------
+# Facebook login
+# ------------------------------
 @router.post("/facebook-login")
 async def facebook_login(
     payload: FacebookLoginPayload,
+    anonymous_session_id: str | None = Cookie(None),
     db_read: AsyncSession = Depends(get_read_session),
     db_write: AsyncSession = Depends(get_write_session),
 ):
@@ -99,14 +109,14 @@ async def facebook_login(
         )
 
     email = email if email else f"fb_{fb_id}"
-
     first_name = user_data.get("first_name", "")
     last_name = user_data.get("last_name", "")
 
-    profile_picture = None
-
-    if "picture" in user_data:
-        profile_picture = user_data["picture"].get("data", {}).get("url")
+    profile_picture = (
+        user_data.get("picture", {}).get("data", {}).get("url")
+        if "picture" in user_data
+        else None
+    )
 
     result = await db_read.execute(select(User).filter_by(email=email))
     user = result.scalars().first()
@@ -125,9 +135,11 @@ async def facebook_login(
         await db_write.commit()
         await db_write.refresh(user)
 
-    session_id = await create_session(
-        user.id, user.email, user.role, user.first_name, user.last_name
-    )
+    # Delete anonymous session if it exists
+    if anonymous_session_id:
+        await delete_session(anonymous_session_id, anonymous=True)
+
+    session_id = await create_session(user)
 
     return {
         "session_id": session_id,

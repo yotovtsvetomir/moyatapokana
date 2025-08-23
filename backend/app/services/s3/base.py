@@ -1,37 +1,43 @@
-# services/s3/base.py
 from minio import Minio
 from minio.error import S3Error
+from urllib.parse import urlparse
 import os
 import uuid
 from fastapi import UploadFile
-from urllib.parse import urlparse
+import io
 
-S3_ENDPOINT_URL = os.getenv("S3_ENDPOINT_URL", "http://s3_storage:9000")
-S3_ACCESS_KEY = os.getenv("S3_ACCESS_KEY", "minioadmin")
-S3_SECRET_KEY = os.getenv("S3_SECRET_KEY", "minioadmin")
-S3_BUCKET = os.getenv("S3_BUCKET", "moyatapokana")
-
-# Parse the endpoint URL
-parsed_url = urlparse(S3_ENDPOINT_URL)
-host = parsed_url.netloc
-secure = parsed_url.scheme == "https"
+# ----------------------------
+# Configuration (Env Variables)
+# ----------------------------
+S3_ENDPOINT_URL = os.getenv("S3_ENDPOINT_URL")
+S3_ACCESS_KEY = os.getenv("S3_ACCESS_KEY")
+S3_SECRET_KEY = os.getenv("S3_SECRET_KEY")
+S3_BUCKET = os.getenv("S3_BUCKET")
+S3_REGION = os.getenv("S3_REGION")
+S3_SECURE = os.getenv("S3_SECURE").lower() == "true"
 
 minio_client = Minio(
-    host,
+    endpoint="minio.local:9000",
     access_key=S3_ACCESS_KEY,
     secret_key=S3_SECRET_KEY,
-    secure=secure,
+    secure=S3_SECURE,
+    region=S3_REGION,
 )
 
 
+# ----------------------------
+# S3 Base Class
+# ----------------------------
 class S3Base:
     def __init__(self, bucket: str = S3_BUCKET):
         self.bucket = bucket
         self.client = minio_client
-
-        # Ensure bucket exists
-        if not self.client.bucket_exists(self.bucket):
-            self.client.make_bucket(self.bucket)
+        # Create bucket if it doesn't exist (skip errors in prod)
+        if not self.client.bucket_exists(bucket):
+            try:
+                self.client.make_bucket(bucket)
+            except S3Error as e:
+                print(f"Bucket creation skipped: {e}")
 
     async def _upload(
         self, file: UploadFile, folder: str = "", allowed_types=None, max_size_mb=None
@@ -40,31 +46,61 @@ class S3Base:
         if allowed_types and file.content_type not in allowed_types:
             raise ValueError(f"File type {file.content_type} not allowed")
 
-        # Validate size
-        if max_size_mb:
-            file.file.seek(0, 2)
-            size_mb = file.file.tell() / (1024 * 1024)
-            file.file.seek(0)
-            if size_mb > max_size_mb:
-                raise ValueError(
-                    f"File size {size_mb:.2f}MB exceeds max allowed {max_size_mb}MB"
-                )
+        # Read file data
+        data = await file.read()
+        size_mb = len(data) / (1024 * 1024)
+        if max_size_mb and size_mb > max_size_mb:
+            raise ValueError(
+                f"File size {size_mb:.2f}MB exceeds max allowed {max_size_mb}MB"
+            )
 
+        buffer = io.BytesIO(data)
         file_id = str(uuid.uuid4())
         extension = file.filename.split(".")[-1]
         object_name = (
             f"{folder}/{file_id}.{extension}" if folder else f"{file_id}.{extension}"
         )
 
+        # Upload to S3 / MinIO
         try:
             self.client.put_object(
                 self.bucket,
                 object_name,
-                file.file,
-                length=-1,
-                part_size=10 * 1024 * 1024,
+                buffer,
+                length=len(data),
+                part_size=5 * 1024 * 1024,
             )
         except S3Error as e:
             raise RuntimeError(f"Failed to upload file: {e}")
 
-        return f"{S3_ENDPOINT_URL}/{self.bucket}/{object_name}"
+        # Return presigned URL (works for local MinIO or AWS S3)
+        try:
+            url = f"http://localhost:9000/{self.bucket}/{object_name}"
+            return url
+        except S3Error:
+            # Fallback for public buckets
+            scheme = "https" if S3_SECURE else "http"
+            url = f"{scheme}://{S3_ENDPOINT_URL}/{self.bucket}/{object_name}"
+
+        return url
+
+    async def _delete(self, file_url: str):
+        parsed = urlparse(file_url)
+        object_name = None
+
+        # Handle virtual-host style: bucket in hostname
+        if parsed.netloc.startswith(self.bucket):
+            object_name = parsed.path.lstrip("/")
+        else:
+            # Handle path-style: /bucket/object
+            path_parts = parsed.path.lstrip("/").split("/", 1)
+            if len(path_parts) == 2 and path_parts[0] == self.bucket:
+                object_name = path_parts[1]
+
+        if object_name:
+            try:
+                self.client.remove_object(self.bucket, object_name)
+            except S3Error as e:
+                print(f"Failed to delete {object_name}: {e}")
+        else:
+            print(f"Cannot determine object key from URL: {file_url}")

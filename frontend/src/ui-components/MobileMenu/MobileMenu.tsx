@@ -8,20 +8,21 @@ import styles from './MobileMenu.module.css';
 import { FaFacebookF, FaInstagram } from 'react-icons/fa';
 
 import { Button } from '@/ui-components/Button/Button'
+import type { components } from '@/shared/types';
 
-import type { Customer } from '@/utils/auth/types';
+type User = components["schemas"]["UserRead"];
 
 interface MobileMenuProps {
   open: boolean;
   onClose: () => void;
-  customer?: Customer | null;
+  user?: User | null;
   mainLinks: { href: string; label: string }[];
 }
 
 export default function MobileMenu({
   open,
   onClose,
-  customer,
+  user,
   mainLinks,
 }: MobileMenuProps) {
   const footControls = useAnimation();
@@ -63,7 +64,7 @@ export default function MobileMenu({
           </motion.ul>
         </motion.nav>
 
-        {!customer && (
+        {!user && (
           <div style={{marginTop: 'auto'}}>
             <hr/>
             <motion.div

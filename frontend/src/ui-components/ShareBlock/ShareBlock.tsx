@@ -45,14 +45,14 @@ export const ShareBlock = ({ shareUrl, invitationId }: ShareBlockProps) => {
         size="large"
       />
 
-      {/*<Textarea
+      <Textarea
         id="share-message"
         name="share-message"
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         label="Съобщение за споделяне"
         size="large"
-      />*/}
+      />
 
       <div className={styles.copy}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>

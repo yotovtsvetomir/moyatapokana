@@ -10,7 +10,7 @@ from app.db.session import get_read_session
 router = APIRouter()
 
 SESSION_EXPIRE_SECONDS = int(os.getenv("SESSION_EXPIRE_SECONDS", 604800))
-ADMIN_SESSION_COOKIE_NAME = "admin_session_id"
+ADMIN_SESSION_COOKIE_NAME = os.getenv("ADMIN_SESSION_COOKIE_NAME", "admin_session_id")
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
 SESSION_COOKIE_SECURE = ENVIRONMENT == "production"
 
@@ -41,9 +41,7 @@ async def admin_login(
             {"request": request, "error": "Невалиден админ акаунт или парола"},
         )
 
-    session_id = await create_session(
-        user.id, user.email, user.role, user.first_name, user.last_name
-    )
+    session_id = await create_session(user)
 
     response = RedirectResponse(url="/admin/dashboard", status_code=302)
     response.set_cookie(

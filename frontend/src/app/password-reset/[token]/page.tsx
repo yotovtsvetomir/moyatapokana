@@ -65,7 +65,7 @@ export default function ResetPassword() {
           errorMessage = data.detail;
         }
 
-        setError(errorMessage);
+        setErrors({ apiError: errorMessage });
       }
     } catch (err) {
       console.error('Reset error:', err);

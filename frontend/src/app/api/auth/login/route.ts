@@ -8,6 +8,7 @@ export async function POST(req: Request) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
+      credentials: "include",
     });
 
     const data = await response.json();
@@ -20,6 +21,7 @@ export async function POST(req: Request) {
 
     const isProd = process.env.NODE_ENV === "production";
 
+    // Set the real session cookie
     res.cookies.set("session_id", data.session_id, {
       httpOnly: true,
       secure: isProd,
@@ -27,6 +29,9 @@ export async function POST(req: Request) {
       path: "/",
       expires: new Date(data.expires_at),
     });
+
+    // Delete the anonymous session cookie if it exists
+    res.cookies.delete("anonymous_session_id", { path: "/" });
 
     return res;
   } catch (err) {

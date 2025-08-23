@@ -195,8 +195,12 @@ services:
     volumes:
       - minio_data:/data
     networks:
-      - cluster_net
-      - ingress_net
+      cluster_net:
+        aliases:
+          - minio.local
+      ingress_net:
+        aliases:
+          - minio.local
 
   # -----------------------------
   # Email (MailHog)

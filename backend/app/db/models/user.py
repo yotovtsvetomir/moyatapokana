@@ -1,5 +1,5 @@
 from app.db.session import Base
-from sqlalchemy import Column, String, Integer, Boolean, DateTime, ForeignKey
+from sqlalchemy import Column, String, Integer, Boolean, DateTime, ForeignKey, Date
 from datetime import datetime
 
 
@@ -15,15 +15,6 @@ class User(Base):
     profile_picture = Column(String, nullable=True, default=None)
 
 
-class UserActivity(Base):
-    __tablename__ = "user_activity"
-
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
-    activity_type = Column(String, nullable=False, default="login")
-    timestamp = Column(DateTime, nullable=False, default=datetime.utcnow, index=True)
-
-
 class PasswordResetToken(Base):
     __tablename__ = "password_reset_tokens"
 
@@ -34,3 +25,14 @@ class PasswordResetToken(Base):
     token = Column(String, unique=True, nullable=False)
     used = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class DailyUserStats(Base):
+    __tablename__ = "daily_user_stats"
+
+    id = Column(Integer, primary_key=True, index=True)
+    date = Column(Date, default=datetime.utcnow().date, index=True)
+    user_type = Column(String, default="customer")  # "customer" or "anonymous"
+    active_count = Column(Integer, default=0)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
