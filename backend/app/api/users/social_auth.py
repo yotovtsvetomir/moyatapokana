@@ -1,7 +1,9 @@
-from fastapi import APIRouter, HTTPException, Depends, status, Cookie
+from fastapi import APIRouter, HTTPException, Depends, status, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy import func
 from app.db.models.user import User
+from app.db.models.invitation import Invitation
 from app.db.session import get_write_session, get_read_session
 from app.services.auth import create_session, hash_password, delete_session
 import httpx
@@ -29,10 +31,22 @@ class FacebookLoginPayload(BaseModel):
 @router.post("/google-login")
 async def google_login(
     payload: GoogleLoginPayload,
-    anonymous_session_id: str | None = Cookie(None),
+    request: Request,  # <-- add this
     db_read: AsyncSession = Depends(get_read_session),
     db_write: AsyncSession = Depends(get_write_session),
 ):
+    # manually extract the anonymous_session_id from cookies
+    anon_session_id = None
+    cookie_header = request.headers.get("cookie")
+    if cookie_header:
+        from http.cookies import SimpleCookie
+
+        cookies = SimpleCookie(cookie_header)
+        if "anonymous_session_id" in cookies:
+            anon_session_id = cookies["anonymous_session_id"].value
+
+    print("anonymous_session_id from header:", anon_session_id)
+
     id_token = payload.id_token
     verify_url = f"https://oauth2.googleapis.com/tokeninfo?id_token={id_token}"
     async with httpx.AsyncClient() as client:
@@ -76,10 +90,32 @@ async def google_login(
         await db_write.commit()
         await db_write.refresh(user)
 
-    # Delete anonymous session if it exists
-    if anonymous_session_id:
-        await delete_session(anonymous_session_id, anonymous=True)
+    # -------------------- Claim drafts before deleting anon session --------------------
+    if anon_session_id:
+        result_user_invites = await db_read.execute(
+            select(func.count(Invitation.id)).where(Invitation.owner_id == user.id)
+        )
+        user_invite_count = result_user_invites.scalar() or 0
 
+        result_drafts = await db_read.execute(
+            select(Invitation).where(Invitation.anon_session_id == anon_session_id)
+        )
+        drafts = result_drafts.scalars().all()
+
+        max_allowed = 3 - user_invite_count
+        drafts_to_transfer = drafts[:max_allowed] if max_allowed > 0 else []
+
+        for draft in drafts_to_transfer:
+            draft = await db_write.merge(draft)
+            draft.owner_id = user.id
+            draft.anon_session_id = None
+
+        if drafts_to_transfer:
+            await db_write.commit()
+
+        await delete_session(anon_session_id, anonymous=True)
+
+    # -------------------- Create new session --------------------
     session_id = await create_session(user)
 
     return {
@@ -94,10 +130,22 @@ async def google_login(
 @router.post("/facebook-login")
 async def facebook_login(
     payload: FacebookLoginPayload,
-    anonymous_session_id: str | None = Cookie(None),
+    request: Request,  # <-- add Request
     db_read: AsyncSession = Depends(get_read_session),
     db_write: AsyncSession = Depends(get_write_session),
 ):
+    # Extract anonymous_session_id from headers
+    anon_session_id = None
+    cookie_header = request.headers.get("cookie")
+    if cookie_header:
+        from http.cookies import SimpleCookie
+
+        cookies = SimpleCookie(cookie_header)
+        if "anonymous_session_id" in cookies:
+            anon_session_id = cookies["anonymous_session_id"].value
+
+    print("anonymous_session_id from header:", anon_session_id)
+
     user_data = payload.user
     email = user_data.get("email")
     fb_id = user_data.get("id")
@@ -135,10 +183,32 @@ async def facebook_login(
         await db_write.commit()
         await db_write.refresh(user)
 
-    # Delete anonymous session if it exists
-    if anonymous_session_id:
-        await delete_session(anonymous_session_id, anonymous=True)
+    # -------------------- Claim drafts before deleting anon session --------------------
+    if anon_session_id:
+        result_user_invites = await db_read.execute(
+            select(func.count(Invitation.id)).where(Invitation.owner_id == user.id)
+        )
+        user_invite_count = result_user_invites.scalar() or 0
 
+        result_drafts = await db_read.execute(
+            select(Invitation).where(Invitation.anon_session_id == anon_session_id)
+        )
+        drafts = result_drafts.scalars().all()
+
+        max_allowed = 3 - user_invite_count
+        drafts_to_transfer = drafts[:max_allowed] if max_allowed > 0 else []
+
+        for draft in drafts_to_transfer:
+            draft = await db_write.merge(draft)
+            draft.owner_id = user.id
+            draft.anon_session_id = None
+
+        if drafts_to_transfer:
+            await db_write.commit()
+
+        await delete_session(anon_session_id, anonymous=True)
+
+    # -------------------- Create new session --------------------
     session_id = await create_session(user)
 
     return {

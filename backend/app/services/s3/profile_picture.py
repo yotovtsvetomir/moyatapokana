@@ -7,10 +7,10 @@ import io
 class ProfilePictureService(S3Base):
     ALLOWED_TYPES = ["image/jpeg", "image/png", "image/jpg"]
     MAX_SIZE_KB = 500
-    TARGET_SIZE = (300, 300)  # crop/resize target
+    TARGET_SIZE = (300, 300)
 
     async def upload_profile_picture(
-        self, file: UploadFile, folder="profile_images"
+        self, file: UploadFile, folder="profile-images"
     ) -> str:
         if file.content_type not in self.ALLOWED_TYPES:
             raise ValueError(f"File type {file.content_type} not allowed")

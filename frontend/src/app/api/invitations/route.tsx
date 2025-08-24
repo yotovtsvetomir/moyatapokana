@@ -8,6 +8,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Missing invitation ID" }, { status: 400 });
   }
 
+  console.log(req.headers.get("cookie"))
+
   const res = await fetch(`${process.env.API_URL_SERVER}/invitations/${invitationId}`, {
     headers: { cookie: req.headers.get("cookie") || "" },
   });

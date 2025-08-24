@@ -1,7 +1,7 @@
 'use client'
 
 import { HexColorPicker } from 'react-colorful'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import styles from './ColorPicker.module.css'
 
 interface Props {
@@ -11,6 +11,10 @@ interface Props {
 
 export default function ColorPicker({ color, onChange }: Props) {
   const [inputValue, setInputValue] = useState(color)
+
+  useEffect(() => {
+    setInputValue(color)
+  }, [color])
 
   const handleInputChange = (val: string) => {
     setInputValue(val)

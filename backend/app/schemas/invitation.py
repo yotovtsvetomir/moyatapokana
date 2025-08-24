@@ -115,7 +115,7 @@ class EventRead(EventBase):
 
 # -------------------- Invitation --------------------
 class InvitationBase(BaseModel):
-    title: str
+    title: Optional[str] = None
     slug: Optional[str] = None
     description: Optional[str] = None
     extra_info: Optional[str] = None

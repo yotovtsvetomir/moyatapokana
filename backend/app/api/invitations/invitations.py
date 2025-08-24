@@ -1,11 +1,22 @@
-from fastapi import APIRouter, HTTPException, Depends, Cookie, Query
+from fastapi import (
+    APIRouter,
+    HTTPException,
+    Depends,
+    Cookie,
+    Query,
+    Request,
+    UploadFile,
+    File,
+)
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 from app.db.session import get_write_session, get_read_session
+from app.services.s3.wallpaper import WallpaperService
 from app.db.models.invitation import Invitation, RSVP, Event, SlideshowImage
 from app.schemas.invitation import InvitationUpdate, InvitationRead
 from app.services.auth import get_session
+from http.cookies import SimpleCookie
 
 router = APIRouter()
 
@@ -20,13 +31,23 @@ async def get_current_user(session_id: str | None = Cookie(None)) -> dict | None
 
 
 # -------------------- Helper to fetch invitation with ownership --------------------
+
+
 async def fetch_invitation(
     invitation_id: int,
+    request: Request,
     db: AsyncSession = Depends(get_read_session),
     current_user: dict | None = Depends(get_current_user),
-    anon_session_id: str | None = Cookie(None),
 ) -> Invitation:
-    """Fetch invitation and verify ownership by user or anon session"""
+    anon_session_id = None
+    cookie_header = request.headers.get("cookie")
+    if cookie_header:
+        from http.cookies import SimpleCookie
+
+        cookies = SimpleCookie(cookie_header)
+        if "anonymous_session_id" in cookies:
+            anon_session_id = cookies["anonymous_session_id"].value
+
     result = await db.execute(
         select(Invitation)
         .options(
@@ -41,13 +62,12 @@ async def fetch_invitation(
     if not invitation:
         raise HTTPException(status_code=404, detail="Invitation not found")
 
-    # Registered user ownership
+    # Ownership check
     if invitation.owner_id:
         if not current_user or invitation.owner_id != int(current_user.get("user_id")):
             raise HTTPException(status_code=403, detail="Access denied")
     else:
-        # Anonymous invitation ownership
-        if invitation.anon_session_id != anon_session_id:
+        if not anon_session_id or invitation.anon_session_id != anon_session_id:
             raise HTTPException(status_code=403, detail="Access denied")
 
     return invitation
@@ -62,34 +82,40 @@ async def get_invitation(invitation: Invitation = Depends(fetch_invitation)):
 # -------------------- Create Empty Invitation --------------------
 @router.post("/create", response_model=InvitationRead)
 async def create_empty_invitation(
+    request: Request,
     db: AsyncSession = Depends(get_write_session),
     current_user: dict | None = Depends(get_current_user),
-    anon_session_id: str | None = Cookie(None),
 ):
+    # -------------------- Extract anonymous_session_id from header --------------------
+    anononymous_session_id = None
+    cookie_header = request.headers.get("cookie")
+    if cookie_header:
+        cookies = SimpleCookie(cookie_header)
+        if "anonymous_session_id" in cookies:
+            anononymous_session_id = cookies["anonymous_session_id"].value
+
     owner_id = int(current_user.get("user_id")) if current_user else None
 
     # -------------------- Check Draft Limits --------------------
     query = select(Invitation).where(
         (Invitation.owner_id == owner_id)
         if owner_id
-        else (Invitation.anon_session_id == anon_session_id)
+        else (Invitation.anon_session_id == anononymous_session_id)
     )
     result = await db.execute(query)
     existing_drafts = result.scalars().all()
 
     limit = 3 if current_user else 1
-
     if len(existing_drafts) >= limit:
         user_type = (
             "регистриран потребител" if current_user else "нерегистриран потребител"
         )
         draft_word = "чернова" if limit == 1 else "чернови"
-        existing_draft_id = existing_drafts[0].id
         raise HTTPException(
             status_code=400,
             detail={
                 "error": f"Достигнахте лимита от {limit} {draft_word} за {user_type}",
-                "existingDraftId": existing_draft_id,
+                "existingDraftId": existing_drafts[0].id,
             },
         )
 
@@ -106,7 +132,7 @@ async def create_empty_invitation(
         rsvp_id=rsvp_obj.id,
         is_active=False,
         owner_id=owner_id,
-        anon_session_id=None if current_user else anon_session_id,
+        anon_session_id=None if current_user else anononymous_session_id,
     )
 
     db.add(invitation_obj)
@@ -130,11 +156,15 @@ async def create_empty_invitation(
 # -------------------- Update Invitation --------------------
 @router.patch("/update/{invitation_id}", response_model=InvitationRead)
 async def update_invitation(
+    invitation_id: int,
     payload: InvitationUpdate,
-    invitation: Invitation = Depends(fetch_invitation),
     db: AsyncSession = Depends(get_write_session),
 ):
-    # -------------------- Update Invitation Fields --------------------
+    invitation = await db.get(Invitation, invitation_id)
+    if not invitation:
+        raise HTTPException(status_code=404, detail="Invitation not found")
+
+    # -------------------- Update invitation fields --------------------
     update_data = payload.dict(
         exclude_unset=True,
         exclude={
@@ -153,7 +183,7 @@ async def update_invitation(
     for key, value in update_data.items():
         setattr(invitation, key, value)
 
-    # -------------------- Update RSVP --------------------
+    # -------------------- RSVP / Events / Slideshow --------------------
     if payload.rsvp:
         rsvp_obj = invitation.rsvp
         if not rsvp_obj:
@@ -166,23 +196,34 @@ async def update_invitation(
         for key, value in rsvp_data.items():
             setattr(rsvp_obj, key, value)
 
-    # -------------------- Update Events --------------------
     if payload.events is not None:
         for e in invitation.events:
             await db.delete(e)
         for event in payload.events:
             db.add(Event(**event.dict(), invitation_id=invitation.id))
 
-    # -------------------- Update Slideshow Images --------------------
     if hasattr(payload, "slideshow_images") and payload.slideshow_images is not None:
         for img in invitation.slideshow_images:
             await db.delete(img)
         for img_data in payload.slideshow_images:
             db.add(SlideshowImage(**img_data.dict(), invitation_id=invitation.id))
 
+    # -------------------- Commit --------------------
     await db.commit()
-    await db.refresh(invitation)
-    return invitation
+
+    # -------------------- Re-fetch invitation with eager-loaded relationships --------------------
+    result = await db.execute(
+        select(Invitation)
+        .options(
+            selectinload(Invitation.rsvp).selectinload(RSVP.guests),
+            selectinload(Invitation.selected_game_obj),
+            selectinload(Invitation.selected_slideshow_obj),
+        )
+        .where(Invitation.id == invitation_id)
+    )
+    invitation_with_rel = result.scalars().first()
+
+    return invitation_with_rel
 
 
 # -------------------- List Invitations with Pagination --------------------
@@ -248,3 +289,42 @@ async def delete_invitation(
     await db.delete(invitation)
     await db.commit()
     return
+
+
+@router.post("/wallpaper/{invitation_id}", response_model=InvitationRead)
+async def upload_invitation_wallpaper(
+    invitation_id: int,
+    wallpaper: UploadFile = File(...),
+    db: AsyncSession = Depends(get_write_session),
+):
+    invitation = await db.get(Invitation, invitation_id)
+    if not invitation:
+        raise HTTPException(status_code=404, detail="Invitation not found")
+
+    wallpaper_service = WallpaperService()
+
+    if invitation.wallpaper:
+        try:
+            await wallpaper_service._delete(invitation.wallpaper)
+        except Exception as e:
+            print(f"Failed to delete old wallpaper: {e}")
+
+    url = await wallpaper_service.upload_wallpaper(wallpaper)
+    invitation.wallpaper = url
+
+    db.add(invitation)
+    await db.commit()
+
+    result = await db.execute(
+        select(Invitation)
+        .options(
+            selectinload(Invitation.rsvp).selectinload(RSVP.guests),
+            selectinload(Invitation.events),
+            selectinload(Invitation.selected_game_obj),
+            selectinload(Invitation.selected_slideshow_obj),
+        )
+        .where(Invitation.id == invitation.id)
+    )
+    invitation_with_rel = result.scalars().first()
+
+    return invitation_with_rel

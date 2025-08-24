@@ -14,11 +14,13 @@ from fastapi import (
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy import func
 
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 
 from app.core.permissions import require_role
 from app.db.session import get_read_session, get_write_session
+from app.db.models.invitation import Invitation
 from app.db.models.user import User, PasswordResetToken
 from app.schemas.user import (
     UserRead,
@@ -70,6 +72,7 @@ async def check_email_mx(email: str) -> bool:
 @router.post("/")
 async def register(
     user_create: UserCreate,
+    anonymous_session_id: str | None = Cookie(None),
     db_read: AsyncSession = Depends(get_read_session),
     db_write: AsyncSession = Depends(get_write_session),
 ):
@@ -91,6 +94,32 @@ async def register(
     session_id = await create_session(user)
     expires_at = datetime.utcnow() + timedelta(seconds=SESSION_EXPIRE_SECONDS)
 
+    # -------------------- Claim drafts before deleting anon session --------------------
+    if anonymous_session_id:
+        result_user_invites = await db_read.execute(
+            select(func.count(Invitation.id)).where(Invitation.owner_id == user.id)
+        )
+        user_invite_count = result_user_invites.scalar() or 0
+
+        result_drafts = await db_read.execute(
+            select(Invitation).where(Invitation.anon_session_id == anonymous_session_id)
+        )
+        drafts = result_drafts.scalars().all()
+
+        max_allowed = 3 - user_invite_count
+        drafts_to_transfer = drafts[:max_allowed] if max_allowed > 0 else []
+
+        for draft in drafts_to_transfer:
+            draft = await db_write.merge(draft)
+            draft.owner_id = user.id
+            draft.anon_session_id = None
+
+        if drafts_to_transfer:
+            await db_write.commit()
+
+        await delete_session(anonymous_session_id, anonymous=True)
+
+    # -------------------- Send Welcome Email --------------------
     html_content = render_email(
         "welcome.html",
         {

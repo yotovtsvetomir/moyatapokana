@@ -47,7 +47,10 @@ export async function GET(request: NextRequest) {
   // Send user data to backend for login/registration
   const backendRes = await fetch(`${process.env.API_URL_SERVER}/users/facebook-login`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "Cookie": request.headers.get("cookie") || "",
+    },
     body: JSON.stringify({ user: userData }),
   });
 

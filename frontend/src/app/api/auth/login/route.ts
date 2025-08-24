@@ -6,9 +6,11 @@ export async function POST(req: Request) {
 
     const response = await fetch(`${process.env.API_URL_SERVER}/users/login`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "Cookie": req.headers.get("cookie") || "",
+      },
       body: JSON.stringify({ email, password }),
-      credentials: "include",
     });
 
     const data = await response.json();

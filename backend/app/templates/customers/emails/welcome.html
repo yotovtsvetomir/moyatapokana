@@ -13,7 +13,7 @@
 
     <!-- Welcome -->
     <h2 style="font-size:20px;font-weight:600;color:#2F3038;margin:18px 0;">
-      Добре дошли, {{ first_name|default:email }}!
+      Добре дошли, {{ first_name | default(email) }}!
     </h2>
 
     <!-- Paragraph -->

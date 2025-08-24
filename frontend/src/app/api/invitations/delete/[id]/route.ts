@@ -9,8 +9,10 @@ export async function DELETE(
   try {
     const res = await fetch(`${process.env.API_URL_SERVER}/invitations/delete/${id}`, {
       method: "DELETE",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        cookie: req.headers.get("cookie") || "",
+      },
     });
 
     if (!res.ok) {

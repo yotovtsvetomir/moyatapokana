@@ -44,6 +44,7 @@ export default function OverviewSection({
                   width={64}
                   height={64}
                   className={styles.imagePreview}
+                  unoptimized
                 />
               </div>
             ) : (

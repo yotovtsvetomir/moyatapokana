@@ -23,13 +23,7 @@ import MobileMenu from '@/ui-components/MobileMenu/MobileMenu';
 import ProfileMenu from '@/ui-components/ProfileMenu/ProfileMenu';
 import SearchOverlay from '@/ui-components/SearchOverlay/SearchOverlay';
 
-export default function HeaderClient({
-  draftId,
-  creatorToken,
-}: {
-  draftId: string | null;
-  creatorToken: string | null;
-}) {
+export default function HeaderClient() {
   const { user } = useUser();
   const pathname = usePathname();
   const isXL = useMediaQuery('(min-width: 1280px)');
@@ -96,8 +90,6 @@ export default function HeaderClient({
   }, [isMenuOpen]);
 
   if (!isClient) return null;
-
-  const showAnonDraft = !user && draftId && creatorToken;
 
   return (
     <>
@@ -171,16 +163,6 @@ export default function HeaderClient({
               {/* Desktop */}
               <nav className={styles.desktopNav}>
                 <ul className={styles.navList}>
-                  {showAnonDraft && (
-                    <li className={styles.navItem}>
-                      <Link 
-                        href={`/invitations/edit/${draftId}/settings/step1`}
-                        className={styles.navLink}
-                      >
-                        Чернова
-                      </Link>
-                    </li>
-                  )}
                   {mainLinks.slice(1).map((link) => (
                     <li key={link.href} className={styles.navItem}>
                       <Link 
@@ -271,14 +253,7 @@ export default function HeaderClient({
       <MobileMenu
         open={isMenuOpen}
         onClose={() => setIsMenuOpen(false)}
-        mainLinks={
-          showAnonDraft
-            ? [
-                { href: `/invitations/edit/${draftId}/settings/step1`, label: "Чернова" },
-                ...mainLinks.slice(1),
-              ]
-            : mainLinks
-        }
+        mainLinks={mainLinks}
         user={user}
       />
 

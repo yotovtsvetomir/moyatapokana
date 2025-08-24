@@ -40,7 +40,10 @@ export async function GET(request: NextRequest) {
 
   const backendRes = await fetch(`${process.env.API_URL_SERVER}/users/google-login`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "Cookie": request.headers.get("cookie") || "",
+    },
     body: JSON.stringify({ id_token }),
   });
 

@@ -40,6 +40,14 @@ export async function middleware(req: NextRequest) {
       const data = await res.json();
       const response = NextResponse.next();
 
+      response.cookies.set("anonymous_session_id", "", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+        expires: new Date(0),
+      });
+
       response.cookies.set("anonymous_session_id", data.anonymous_session_id, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",

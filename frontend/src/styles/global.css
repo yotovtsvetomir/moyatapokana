@@ -30,7 +30,7 @@ a {
 }
 
 .fullHeight {
-  padding-top: calc(var(--desktop-header-height) + 2rem) !important;
+  padding-top: calc(var(--mobile-header-height) + 1rem) !important;
   min-height: 100vh;
   background-color: #fff;
 }
@@ -69,4 +69,66 @@ a {
   .container {
     max-width: 1440px;
   }
+}
+
+.centerWrapper {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-neutral-500);
+  font-family: var(--font-sans);
+  color: var(--color-dark-100);
+
+  max-width: 590px;
+  margin: 0 auto;
+}
+
+.centerWrapper h1 {
+  font-size: var(--font-2xl);
+  font-weight: var(--font-weight-bold);
+  margin-bottom: 1rem;
+}
+
+@media (min-width: 1024px) {
+  .centerWrapper h1 {
+    font-size: var(--font-3xl);
+  }
+}
+
+@media (min-width: 1280px) {
+  .centerWrapper {
+    max-width: 700px;
+  }
+}
+
+.editActions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1.5rem;
+}
+
+.uploadButton {
+  display: inline-flex;
+  gap: 0.5rem;
+  align-items: center;
+  cursor: pointer;
+}
+
+.uploadButton {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background-color: var(--color-highlight-1);
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 0.2s ease;
+}
+
+.uploadButton .material-icons {
+  font-size: 20px;
 }
