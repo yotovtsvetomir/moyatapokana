@@ -8,7 +8,7 @@ import OverviewSection from "@/ui-components/OverviewSection/OverviewSection";
 import type { components } from "@/shared/types";
 import { useInvitation } from "@/context/InvitationContext";
 
-export default function InvitationBasePage() {
+export default function EffectsPage() {
   const { id } = useParams<{ id: string }>();
   const { invitation, setInvitation, loading, setLoading } = useInvitation();
 
@@ -22,7 +22,7 @@ export default function InvitationBasePage() {
         const data: components["schemas"]["InvitationRead"] = await res.json();
         setInvitation(data);
       } catch (err) {
-        console.error("Неуспешно зареждане на поканата", err);
+        console.error("Неуспешно зареждане на ефектите", err);
       } finally {
         setLoading(false);
       }
@@ -32,34 +32,34 @@ export default function InvitationBasePage() {
   }, [id, invitation, setInvitation, setLoading]);
 
   if (loading) return <Spinner size={60} />;
-  if (!invitation) return <p>Не е намерена покана</p>;
+  if (!invitation) return <p>Не са намерени ефекти</p>;
 
   return (
     <div className="container fullHeight centerWrapper">
       <h1>Редакция на покана #{invitation.id}</h1>
 
       <OverviewSection
-        href={`/invitations/edit/${id}/base/text`}
-        title="Текст"
-        value={invitation.title || invitation.description || invitation.extra_info ||"—"}
+        href={`/invitations/edit/${id}/effects/game`}
+        title="Игра"
+        value={invitation.game_effect || "—"}
       />
 
       <OverviewSection
-        href={`/invitations/edit/${id}/base/style`}
-        title="Стил"
-        value={invitation.primary_color || invitation.secondary_color || "—"}
+        href={`/invitations/edit/${id}/effects/music`}
+        title="Музика"
+        value={invitation.music_effect || "—"}
+      />
+
+      <OverviewSection
+        href={`/invitations/edit/${id}/effects/slideshow`}
+        title="Слайдшоу"
+        value={invitation.slideshow_effect || "—"}
         last
-      />
-
-      <OverviewSection
-        href={`/invitations/edit/${id}/base/wallpaper`}
-        title="Фон"
-        value={invitation.wallpaper || "—"}
       />
 
       <div className="editActions">
         <Button
-          href={`/invitations/edit/${invitation.id}/effects`}
+          href={`/invitations/edit/${id}/events`}
           variant="primary"
           width="100%"
           size="large"

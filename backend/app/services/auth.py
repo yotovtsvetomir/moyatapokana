@@ -2,7 +2,7 @@ import os
 import secrets
 import json
 from datetime import datetime, timezone
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, Cookie
 from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from passlib.context import CryptContext
@@ -71,7 +71,6 @@ async def _set_session(key: str, data: dict):
 
 async def create_session(user: User) -> str:
     """Create a regular user session"""
-    redis = await get_redis_client()
     session_id = secrets.token_urlsafe(32)
     now = datetime.utcnow()
     session_data = {
@@ -89,7 +88,6 @@ async def create_session(user: User) -> str:
 
 async def create_anonymous_session() -> str:
     """Create an anonymous session"""
-    redis = await get_redis_client()
     anonymous_session_id = secrets.token_urlsafe(32)
     now = datetime.utcnow()
     session_data = {
@@ -108,6 +106,14 @@ async def get_session(session_id: str, anonymous: bool = False) -> dict | None:
     if not raw_data:
         return None
     return json.loads(raw_data)
+
+
+async def get_current_user(session_id: str | None = Cookie(None)) -> dict | None:
+    """Return current logged-in user session data or None"""
+    if not session_id:
+        return None
+    session_data = await get_session(session_id)
+    return session_data
 
 
 async def update_session_data(session_id: str, user: User):

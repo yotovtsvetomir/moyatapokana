@@ -4,12 +4,12 @@ from PIL import Image
 import io
 
 
-class WallpaperService(S3Base):
+class SlideService(S3Base):
     ALLOWED_TYPES = ["image/jpeg", "image/png", "image/jpg"]
     MAX_SIZE_MB = 5
     OPTIMIZE_QUALITY = 80
 
-    async def upload_wallpaper(self, file: UploadFile, folder="wallpapers") -> str:
+    async def upload_slide(self, file: UploadFile, folder="slides") -> str:
         if file.content_type not in self.ALLOWED_TYPES:
             raise ValueError(f"File type {file.content_type} not allowed")
 
@@ -37,9 +37,9 @@ class WallpaperService(S3Base):
         buffer.seek(0)
         optimized_file = UploadFile(filename=file.filename, file=buffer)
 
-        # Upload to S3 / MinIO using _upload from S3Base
+        # Upload to S3/MinIO using S3Base
         url = await self._upload(optimized_file, folder)
         return url
 
-    async def delete_wallpaper(self, file_url: str):
+    async def delete_slide(self, file_url: str):
         await self._delete(file_url)

@@ -45,8 +45,6 @@ async def google_login(
         if "anonymous_session_id" in cookies:
             anon_session_id = cookies["anonymous_session_id"].value
 
-    print("anonymous_session_id from header:", anon_session_id)
-
     id_token = payload.id_token
     verify_url = f"https://oauth2.googleapis.com/tokeninfo?id_token={id_token}"
     async with httpx.AsyncClient() as client:
@@ -143,8 +141,6 @@ async def facebook_login(
         cookies = SimpleCookie(cookie_header)
         if "anonymous_session_id" in cookies:
             anon_session_id = cookies["anonymous_session_id"].value
-
-    print("anonymous_session_id from header:", anon_session_id)
 
     user_data = payload.user
     email = user_data.get("email")

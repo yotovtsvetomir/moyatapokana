@@ -244,15 +244,15 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/invitations/invitations/{invitation_id}": {
+    "/invitations/games": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Get Invitation */
-        get: operations["get_invitation_invitations_invitations__invitation_id__get"];
+        /** List Games */
+        get: operations["list_games_invitations_games_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -261,7 +261,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/invitations/invitations/create": {
+    "/invitations/slideshows": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Slideshows */
+        get: operations["list_slideshows_invitations_slideshows_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/invitations/{invitation_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Invitation */
+        get: operations["get_invitation_invitations__invitation_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/invitations/create": {
         parameters: {
             query?: never;
             header?: never;
@@ -271,14 +305,14 @@ export interface paths {
         get?: never;
         put?: never;
         /** Create Empty Invitation */
-        post: operations["create_empty_invitation_invitations_invitations_create_post"];
+        post: operations["create_empty_invitation_invitations_create_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/invitations/invitations/update/{invitation_id}": {
+    "/invitations/update/{invitation_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -292,10 +326,10 @@ export interface paths {
         options?: never;
         head?: never;
         /** Update Invitation */
-        patch: operations["update_invitation_invitations_invitations_update__invitation_id__patch"];
+        patch: operations["update_invitation_invitations_update__invitation_id__patch"];
         trace?: never;
     };
-    "/invitations/invitations/": {
+    "/invitations/": {
         parameters: {
             query?: never;
             header?: never;
@@ -303,9 +337,60 @@ export interface paths {
             cookie?: never;
         };
         /** List Invitations */
-        get: operations["list_invitations_invitations_invitations__get"];
+        get: operations["list_invitations_invitations__get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/invitations/delete/{invitation_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Invitation */
+        delete: operations["delete_invitation_invitations_delete__invitation_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/invitations/wallpaper/{invitation_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Upload Invitation Wallpaper */
+        post: operations["upload_invitation_wallpaper_invitations_wallpaper__invitation_id__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/invitations/slides/{invitation_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Upload Slides */
+        post: operations["upload_slides_invitations_slides__invitation_id__post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -328,17 +413,45 @@ export interface components {
             /** Profile Picture */
             profile_picture?: string | null;
         };
-        /** CategoryRead */
-        CategoryRead: {
+        /** Body_upload_invitation_wallpaper_invitations_wallpaper__invitation_id__post */
+        Body_upload_invitation_wallpaper_invitations_wallpaper__invitation_id__post: {
+            /**
+             * Wallpaper
+             * Format: binary
+             */
+            wallpaper: string;
+        };
+        /** Body_upload_slides_invitations_slides__invitation_id__post */
+        Body_upload_slides_invitations_slides__invitation_id__post: {
+            /** Slides */
+            slides?: string[];
+            /** Selected Slideshow */
+            selected_slideshow?: number | null;
+        };
+        /** EventRead */
+        EventRead: {
+            /** Title */
+            title: string;
+            /**
+             * Start Datetime
+             * Format: date-time
+             */
+            start_datetime: string;
+            /**
+             * Finish Datetime
+             * Format: date-time
+             */
+            finish_datetime: string;
+            /** Location */
+            location?: string | null;
+            /** Description */
+            description?: string | null;
+            /** Calendar Link */
+            calendar_link?: string | null;
+            /** Location Link */
+            location_link?: string | null;
             /** Id */
             id: number;
-            /** Name */
-            name: string;
-            /**
-             * Subcategories
-             * @default []
-             */
-            subcategories: components["schemas"]["SubCategoryRead"][] | null;
         };
         /** EventUpdate */
         EventUpdate: {
@@ -426,7 +539,7 @@ export interface components {
         /** InvitationRead */
         InvitationRead: {
             /** Title */
-            title: string;
+            title?: string | null;
             /** Slug */
             slug?: string | null;
             /** Description */
@@ -435,8 +548,10 @@ export interface components {
             extra_info?: string | null;
             /** Selected Game */
             selected_game?: string | null;
+            selected_game_obj?: components["schemas"]["GameRead"] | null;
             /** Selected Slideshow */
             selected_slideshow?: string | null;
+            selected_slideshow_obj?: components["schemas"]["SlideshowRead"] | null;
             /** Primary Color */
             primary_color?: string | null;
             /** Secondary Color */
@@ -473,10 +588,16 @@ export interface components {
             /** Status */
             status: string;
             rsvp: components["schemas"]["RSVPRead"];
-            category?: components["schemas"]["CategoryRead"] | null;
-            subcategory?: components["schemas"]["SubCategoryRead"] | null;
-            selected_game_obj?: components["schemas"]["GameRead"] | null;
-            selected_slideshow_obj?: components["schemas"]["SlideshowRead"] | null;
+            /**
+             * Events
+             * @default []
+             */
+            events: components["schemas"]["EventRead"][];
+            /**
+             * Slideshow Images
+             * @default []
+             */
+            slideshow_images: components["schemas"]["SlideshowImageRead"][];
             /**
              * Created At
              * Format: date-time
@@ -491,7 +612,7 @@ export interface components {
         /** InvitationUpdate */
         InvitationUpdate: {
             /** Title */
-            title: string;
+            title?: string | null;
             /** Slug */
             slug?: string | null;
             /** Description */
@@ -500,8 +621,10 @@ export interface components {
             extra_info?: string | null;
             /** Selected Game */
             selected_game?: string | null;
+            selected_game_obj?: components["schemas"]["GameRead"] | null;
             /** Selected Slideshow */
             selected_slideshow?: string | null;
+            selected_slideshow_obj?: components["schemas"]["SlideshowRead"] | null;
             /** Primary Color */
             primary_color?: string | null;
             /** Secondary Color */
@@ -596,6 +719,32 @@ export interface components {
             /** Invitation Id */
             invitation_id: number;
         };
+        /** SlideshowImageRead */
+        SlideshowImageRead: {
+            /** File Url */
+            file_url: string;
+            /**
+             * Order
+             * @default 0
+             */
+            order: number | null;
+            /** Slideshow Id */
+            slideshow_id: number;
+            /** Invitation Id */
+            invitation_id: number;
+            /** Id */
+            id: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
         /** SlideshowRead */
         SlideshowRead: {
             /** Id */
@@ -604,13 +753,6 @@ export interface components {
             name: string;
             /** Key */
             key: string;
-        };
-        /** SubCategoryRead */
-        SubCategoryRead: {
-            /** Id */
-            id: number;
-            /** Name */
-            name: string;
         };
         /** UserCreate */
         UserCreate: {
@@ -684,7 +826,9 @@ export interface operations {
             query?: never;
             header?: never;
             path?: never;
-            cookie?: never;
+            cookie?: {
+                anonymous_session_id?: string | null;
+            };
         };
         requestBody: {
             content: {
@@ -717,7 +861,9 @@ export interface operations {
             query?: never;
             header?: never;
             path?: never;
-            cookie?: never;
+            cookie?: {
+                anonymous_session_id?: string | null;
+            };
         };
         requestBody: {
             content: {
@@ -1136,7 +1282,47 @@ export interface operations {
             };
         };
     };
-    get_invitation_invitations_invitations__invitation_id__get: {
+    list_games_invitations_games_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GameRead"][];
+                };
+            };
+        };
+    };
+    list_slideshows_invitations_slideshows_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SlideshowRead"][];
+                };
+            };
+        };
+    };
+    get_invitation_invitations__invitation_id__get: {
         parameters: {
             query?: never;
             header?: never;
@@ -1144,7 +1330,6 @@ export interface operations {
                 invitation_id: number;
             };
             cookie?: {
-                anon_session_id?: string | null;
                 session_id?: string | null;
             };
         };
@@ -1170,13 +1355,12 @@ export interface operations {
             };
         };
     };
-    create_empty_invitation_invitations_invitations_create_post: {
+    create_empty_invitation_invitations_create_post: {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: {
-                anon_session_id?: string | null;
                 session_id?: string | null;
             };
         };
@@ -1202,17 +1386,14 @@ export interface operations {
             };
         };
     };
-    update_invitation_invitations_invitations_update__invitation_id__patch: {
+    update_invitation_invitations_update__invitation_id__patch: {
         parameters: {
             query?: never;
             header?: never;
             path: {
                 invitation_id: number;
             };
-            cookie?: {
-                anon_session_id?: string | null;
-                session_id?: string | null;
-            };
+            cookie?: never;
         };
         requestBody: {
             content: {
@@ -1240,7 +1421,7 @@ export interface operations {
             };
         };
     };
-    list_invitations_invitations_invitations__get: {
+    list_invitations_invitations__get: {
         parameters: {
             query?: {
                 page?: number;
@@ -1264,6 +1445,105 @@ export interface operations {
                     "application/json": {
                         [key: string]: unknown;
                     };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_invitation_invitations_delete__invitation_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invitation_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    upload_invitation_wallpaper_invitations_wallpaper__invitation_id__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invitation_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_upload_invitation_wallpaper_invitations_wallpaper__invitation_id__post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvitationRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    upload_slides_invitations_slides__invitation_id__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invitation_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_upload_slides_invitations_slides__invitation_id__post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvitationRead"];
                 };
             };
             /** @description Validation Error */

@@ -120,7 +120,9 @@ class InvitationBase(BaseModel):
     description: Optional[str] = None
     extra_info: Optional[str] = None
     selected_game: Optional[str] = None
+    selected_game_obj: Optional[GameRead] = None
     selected_slideshow: Optional[str] = None
+    selected_slideshow_obj: Optional[SlideshowRead] = None
     primary_color: Optional[str] = None
     secondary_color: Optional[str] = None
     wallpaper: Optional[str] = None
@@ -156,12 +158,11 @@ class InvitationRead(InvitationBase):
     id: int
     status: str
     rsvp: RSVPRead
-    category: Optional[CategoryRead] = None
-    subcategory: Optional[SubCategoryRead] = None
-    selected_game_obj: Optional[GameRead] = None
-    selected_slideshow_obj: Optional[SlideshowRead] = None
+    events: List[EventRead] = []
+    slideshow_images: List[SlideshowImageRead] = []
     created_at: datetime
     updated_at: datetime
+
     model_config = {"from_attributes": True}
 
 

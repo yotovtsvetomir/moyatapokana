@@ -28,9 +28,7 @@ async def dummy_db_task_async():
 @celery_app.task(name="app.tasks.dummy_db_task")
 def dummy_db_task():
     lock_key = "lock:dummy_db_task"
-    have_lock = redis_client.set(
-        lock_key, "locked", nx=True, ex=60
-    )  # lock expires after 60 sec
+    have_lock = redis_client.set(lock_key, "locked", nx=True, ex=60)
     if not have_lock:
         print("Lock exists, skipping the task.")
         return

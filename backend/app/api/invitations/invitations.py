@@ -1,3 +1,4 @@
+import json
 from fastapi import (
     APIRouter,
     HTTPException,
@@ -7,32 +8,35 @@ from fastapi import (
     Request,
     UploadFile,
     File,
+    Form,
 )
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 from app.db.session import get_write_session, get_read_session
 from app.services.s3.wallpaper import WallpaperService
-from app.db.models.invitation import Invitation, RSVP, Event, SlideshowImage
-from app.schemas.invitation import InvitationUpdate, InvitationRead
-from app.services.auth import get_session
+from app.services.s3.slide import SlideService
+from app.db.models.invitation import (
+    Invitation,
+    RSVP,
+    Event,
+    SlideshowImage,
+    Game,
+    Slideshow,
+)
+from app.schemas.invitation import (
+    InvitationUpdate,
+    InvitationRead,
+    GameRead,
+    SlideshowRead,
+)
+from app.services.auth import get_current_user
 from http.cookies import SimpleCookie
 
 router = APIRouter()
 
 
-# -------------------- Helper to get current user session --------------------
-async def get_current_user(session_id: str | None = Cookie(None)) -> dict | None:
-    """Return current logged-in user session data or None"""
-    if not session_id:
-        return None
-    session_data = await get_session(session_id)
-    return session_data
-
-
 # -------------------- Helper to fetch invitation with ownership --------------------
-
-
 async def fetch_invitation(
     invitation_id: int,
     request: Request,
@@ -55,6 +59,7 @@ async def fetch_invitation(
             selectinload(Invitation.events),
             selectinload(Invitation.selected_game_obj),
             selectinload(Invitation.selected_slideshow_obj),
+            selectinload(Invitation.slideshow_images),
         )
         .where(Invitation.id == invitation_id)
     )
@@ -71,6 +76,21 @@ async def fetch_invitation(
             raise HTTPException(status_code=403, detail="Access denied")
 
     return invitation
+
+
+# -------------------- List all games --------------------
+@router.get("/games", response_model=list[GameRead])
+async def list_games(db: AsyncSession = Depends(get_read_session)):
+    result = await db.execute(select(Game))
+    games = result.scalars().all()
+    return games
+
+
+@router.get("/slideshows", response_model=list[SlideshowRead])
+async def list_slideshows(db: AsyncSession = Depends(get_read_session)):
+    result = await db.execute(select(Slideshow))
+    slideshows = result.scalars().all()
+    return slideshows
 
 
 # -------------------- Get Invitation --------------------
@@ -146,6 +166,7 @@ async def create_empty_invitation(
             selectinload(Invitation.rsvp).selectinload(RSVP.guests),
             selectinload(Invitation.selected_game_obj),
             selectinload(Invitation.selected_slideshow_obj),
+            selectinload(Invitation.slideshow_images),
         )
         .where(Invitation.id == invitation_obj.id)
     )
@@ -218,6 +239,7 @@ async def update_invitation(
             selectinload(Invitation.rsvp).selectinload(RSVP.guests),
             selectinload(Invitation.selected_game_obj),
             selectinload(Invitation.selected_slideshow_obj),
+            selectinload(Invitation.slideshow_images),
         )
         .where(Invitation.id == invitation_id)
     )
@@ -295,36 +317,139 @@ async def delete_invitation(
 async def upload_invitation_wallpaper(
     invitation_id: int,
     wallpaper: UploadFile = File(...),
-    db: AsyncSession = Depends(get_write_session),
+    write_db: AsyncSession = Depends(get_write_session),
+    read_db: AsyncSession = Depends(get_read_session),
 ):
-    invitation = await db.get(Invitation, invitation_id)
+    # --- WRITE PART ---
+    invitation = await write_db.get(Invitation, invitation_id)
     if not invitation:
         raise HTTPException(status_code=404, detail="Invitation not found")
 
     wallpaper_service = WallpaperService()
 
+    # delete old wallpaper if exists
     if invitation.wallpaper:
         try:
             await wallpaper_service._delete(invitation.wallpaper)
         except Exception as e:
             print(f"Failed to delete old wallpaper: {e}")
 
+    # upload new one
     url = await wallpaper_service.upload_wallpaper(wallpaper)
     invitation.wallpaper = url
 
-    db.add(invitation)
-    await db.commit()
+    write_db.add(invitation)
+    await write_db.commit()
+    await write_db.refresh(invitation)
 
-    result = await db.execute(
+    # --- READ PART (fresh session) ---
+    result = await read_db.execute(
         select(Invitation)
         .options(
             selectinload(Invitation.rsvp).selectinload(RSVP.guests),
             selectinload(Invitation.events),
             selectinload(Invitation.selected_game_obj),
             selectinload(Invitation.selected_slideshow_obj),
+            selectinload(Invitation.slideshow_images),
         )
         .where(Invitation.id == invitation.id)
     )
     invitation_with_rel = result.scalars().first()
 
     return invitation_with_rel
+
+
+# -------------------- Upload slides (save) --------------------
+@router.post("/slides/{invitation_id}", response_model=InvitationRead)
+async def upload_slides(
+    invitation_id: int,
+    slides: list[UploadFile] = File(None),
+    existing_slides: str = Form("[]"),  # JSON string from frontend
+    selected_slideshow: str | None = Form(None),
+    write_db: AsyncSession = Depends(get_write_session),
+    read_db: AsyncSession = Depends(get_read_session),
+):
+    # Fetch invitation
+    result = await write_db.execute(
+        select(Invitation)
+        .options(selectinload(Invitation.slideshow_images))
+        .where(Invitation.id == invitation_id)
+    )
+    invitation = result.scalars().first()
+    if not invitation:
+        raise HTTPException(404, "Invitation not found")
+
+    slide_service = SlideService()
+
+    # Parse existing slides list (file_urls or null)
+    try:
+        existing_urls: list[str | None] = json.loads(existing_slides)
+    except json.JSONDecodeError:
+        raise HTTPException(400, "Invalid existing_slides data")
+
+    # Delete slides that are no longer kept
+    for idx, url in enumerate(existing_urls):
+        if url is None and idx < len(invitation.slideshow_images):
+            old_slide = invitation.slideshow_images[idx]
+            await slide_service._delete(old_slide.file_url)
+            await write_db.delete(old_slide)
+
+    # Keep only the slides still present
+    invitation.slideshow_images = [
+        s for s in invitation.slideshow_images if s.file_url in existing_urls
+    ]
+
+    # Handle selected slideshow
+    selected_slideshow_obj = None
+    if selected_slideshow not in (None, ""):
+        result = await read_db.execute(
+            select(Slideshow).where(Slideshow.id == int(selected_slideshow))
+        )
+        selected_slideshow_obj = result.scalars().first()
+        if not selected_slideshow_obj:
+            raise HTTPException(404, "Slideshow not found")
+        invitation.selected_slideshow_obj = selected_slideshow_obj
+        invitation.selected_slideshow = selected_slideshow_obj.key
+    else:
+        invitation.selected_slideshow = None
+        invitation.selected_slideshow_obj = None
+
+    # Upload new slides (new files in frontend)
+    if slides:
+        for idx, file in enumerate(slides):
+            file_url = await slide_service.upload_slide(
+                file, folder=f"slides/{invitation_id}"
+            )
+            invitation.slideshow_images.append(
+                SlideshowImage(
+                    file_url=file_url,
+                    invitation_id=invitation.id,
+                    slideshow_id=selected_slideshow_obj.id
+                    if selected_slideshow_obj
+                    else None,
+                    order=len(invitation.slideshow_images),
+                )
+            )
+
+    await write_db.commit()
+
+    # Fetch full invitation with all relationships
+    result = await read_db.execute(
+        select(Invitation)
+        .options(
+            selectinload(Invitation.rsvp).selectinload(RSVP.guests),
+            selectinload(Invitation.events),
+            selectinload(Invitation.selected_game_obj),
+            selectinload(Invitation.selected_slideshow_obj),
+            selectinload(Invitation.slideshow_images),
+        )
+        .where(Invitation.id == invitation.id)
+    )
+    invitation_full = result.scalars().first()
+
+    if invitation_full.selected_slideshow_obj:
+        invitation_full.selected_slideshow = invitation_full.selected_slideshow_obj.key
+    else:
+        invitation_full.selected_slideshow = None
+
+    return InvitationRead.from_orm(invitation_full)

@@ -54,6 +54,7 @@ export default function ReactSelect({
           height: 48,
           boxShadow: 'none',
           padding: '0 1rem',
+          cursor: 'pointer',
           '&:hover': {
             borderColor: 'var(--color-highlight-1)',
           },
