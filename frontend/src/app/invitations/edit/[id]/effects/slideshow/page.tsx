@@ -159,7 +159,7 @@ export default function Page() {
     else router.back()
   }
 
-  const confirmBack = () => { setShowBackModal(false); router.back() }
+  const confirmBack = () => { setShowBackModal(false); router.push(`/invitations/edit/${id}/effects/`) }
   const cancelBack = () => setShowBackModal(false)
   const confirmOverwrite = () => { setShowOverwriteModal(false); setSelectedSlideshow(null) }
   const cancelOverwrite = () => setShowOverwriteModal(false)

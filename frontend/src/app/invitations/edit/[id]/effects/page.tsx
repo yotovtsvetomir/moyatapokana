@@ -59,9 +59,20 @@ export default function EffectsPage() {
 
       <div className="editActions">
         <Button
+          variant="secondary"
+          width="47%"
+          size="large"
+          href={`/invitations/edit/${id}/base`}
+          icon="arrow_back"
+          iconPosition="left"
+        >
+          Назад
+        </Button>
+
+        <Button
           href={`/invitations/edit/${id}/events`}
           variant="primary"
-          width="100%"
+          width="47%"
           size="large"
           icon="arrow_forward"
           iconPosition="right"
