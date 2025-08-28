@@ -166,6 +166,7 @@ async def create_empty_invitation(
             selectinload(Invitation.rsvp).selectinload(RSVP.guests),
             selectinload(Invitation.selected_game_obj),
             selectinload(Invitation.selected_slideshow_obj),
+            selectinload(Invitation.events),
             selectinload(Invitation.slideshow_images),
         )
         .where(Invitation.id == invitation_obj.id)
@@ -240,6 +241,7 @@ async def update_invitation(
             selectinload(Invitation.selected_game_obj),
             selectinload(Invitation.selected_slideshow_obj),
             selectinload(Invitation.slideshow_images),
+            selectinload(Invitation.events),
         )
         .where(Invitation.id == invitation_id)
     )

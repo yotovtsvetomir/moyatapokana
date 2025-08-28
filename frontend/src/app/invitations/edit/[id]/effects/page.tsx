@@ -12,6 +12,8 @@ export default function EffectsPage() {
   const { id } = useParams<{ id: string }>();
   const { invitation, setInvitation, loading, setLoading } = useInvitation();
 
+  console.log(invitation)
+
   useEffect(() => {
     const fetchInvitation = async () => {
       if (invitation?.id === Number(id)) return;
@@ -41,7 +43,7 @@ export default function EffectsPage() {
       <OverviewSection
         href={`/invitations/edit/${id}/effects/game`}
         title="Игра"
-        value={invitation.game_effect || "—"}
+        value={invitation.selected_game_obj?.name || "—"}
       />
 
       <OverviewSection
@@ -53,7 +55,7 @@ export default function EffectsPage() {
       <OverviewSection
         href={`/invitations/edit/${id}/effects/slideshow`}
         title="Слайдшоу"
-        value={invitation.slideshow_effect || "—"}
+        value={invitation.selected_slideshow_obj?.name || "—"}
         last
       />
 

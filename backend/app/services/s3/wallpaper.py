@@ -2,12 +2,14 @@ from app.services.s3.base import S3Base
 from fastapi import UploadFile
 from PIL import Image
 import io
+import os
 
 
 class WallpaperService(S3Base):
     ALLOWED_TYPES = ["image/jpeg", "image/png", "image/jpg"]
-    MAX_SIZE_MB = 5
+    MAX_SIZE_MB = 7
     OPTIMIZE_QUALITY = 80
+    TARGET_SIZE = (1920, 1080)
 
     async def upload_wallpaper(self, file: UploadFile, folder="wallpapers") -> str:
         if file.content_type not in self.ALLOWED_TYPES:
@@ -15,27 +17,27 @@ class WallpaperService(S3Base):
 
         image = Image.open(file.file)
 
-        max_width, max_height = 1920, 1080
-        image.thumbnail((max_width, max_height), Image.Resampling.LANCZOS)
+        # Resize maintaining aspect ratio
+        image.thumbnail(self.TARGET_SIZE, Image.Resampling.LANCZOS)
 
-        # Save to buffer with optimization
-        buffer = io.BytesIO()
-        if file.content_type == "image/png":
-            image.save(buffer, format="PNG", optimize=True)
-        else:
+        # Convert to RGB for JPEG/WebP
+        if image.mode in ("RGBA", "P"):
             image = image.convert("RGB")
-            image.save(
-                buffer, format="JPEG", quality=self.OPTIMIZE_QUALITY, optimize=True
-            )
 
+        # Save as WebP to buffer
+        buffer = io.BytesIO()
+        webp_filename = os.path.splitext(file.filename)[0] + ".webp"
+        image.save(buffer, format="WEBP", quality=self.OPTIMIZE_QUALITY, optimize=True)
+
+        # Check size
         size_mb = buffer.tell() / (1024 * 1024)
         if size_mb > self.MAX_SIZE_MB:
             raise ValueError(
-                f"File size {size_mb:.2f} MB exceeds max allowed {self.MAX_SIZE_MB} MB"
+                f"Размерът на файла {size_mb:.2f} MB надвишава максимално разрешените {self.MAX_SIZE_MB} MB"
             )
 
         buffer.seek(0)
-        optimized_file = UploadFile(filename=file.filename, file=buffer)
+        optimized_file = UploadFile(filename=webp_filename, file=buffer)
 
         # Upload to S3 / MinIO using _upload from S3Base
         url = await self._upload(optimized_file, folder)

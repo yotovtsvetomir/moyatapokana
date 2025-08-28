@@ -2,12 +2,13 @@ from app.services.s3.base import S3Base
 from fastapi import UploadFile
 from PIL import Image, ImageOps
 import io
+import os
 
 
 class ProfilePictureService(S3Base):
     ALLOWED_TYPES = ["image/jpeg", "image/png", "image/jpg"]
     MAX_SIZE_KB = 500
-    TARGET_SIZE = (300, 300)
+    TARGET_SIZE = (300, 300)  # Resize/crop to 300x300
 
     async def upload_profile_picture(
         self, file: UploadFile, folder="profile-images"
@@ -17,16 +18,19 @@ class ProfilePictureService(S3Base):
 
         image = Image.open(file.file)
 
-        # Crop & resize to 300x300, keeping the center
+        # Crop & resize to TARGET_SIZE, keeping the center
         image = ImageOps.fit(image, self.TARGET_SIZE, Image.Resampling.LANCZOS)
 
-        buffer = io.BytesIO()
-        if file.content_type == "image/png":
-            image.save(buffer, format="PNG", optimize=True)
-        else:
+        # Convert to RGB for JPEG/WebP
+        if image.mode in ("RGBA", "P"):
             image = image.convert("RGB")
-            image.save(buffer, format="JPEG", quality=70, optimize=True)
 
+        # Save as WebP
+        buffer = io.BytesIO()
+        webp_filename = os.path.splitext(file.filename)[0] + ".webp"
+        image.save(buffer, format="WEBP", quality=70, optimize=True)
+
+        # Check file size
         size_kb = buffer.tell() / 1024
         if size_kb > self.MAX_SIZE_KB:
             raise ValueError(
@@ -34,7 +38,8 @@ class ProfilePictureService(S3Base):
             )
 
         buffer.seek(0)
-        optimized_file = UploadFile(filename=file.filename, file=buffer)
+        optimized_file = UploadFile(filename=webp_filename, file=buffer)
 
+        # Upload to S3/MinIO
         url = await self._upload(optimized_file, folder)
         return url

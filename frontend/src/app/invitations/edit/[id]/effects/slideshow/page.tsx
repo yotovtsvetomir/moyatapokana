@@ -10,6 +10,7 @@ import Modal from '@/ui-components/Modal/Modal'
 import type { components } from '@/shared/types'
 import ReactSelect from '@/ui-components/Select/ReactSelect'
 import type { Option } from '@/ui-components/Select/ReactSelect'
+import styles from './Slideshow.module.css'
 
 type SlideshowRead = components['schemas']['SlideshowRead']
 
@@ -178,32 +179,28 @@ export default function Page() {
       />
 
       {selectedSlideshow && selectedSlideshow.value !== '' && (
-        <div className="slidesContainer" style={{ display: 'flex', gap: 16, margin: '2rem 0' }}>
+        <div className={styles.slidesContainer}>
           {slides.map((s, i) => (
-            <div key={i} style={{
-              width: 120, height: 80, position: 'relative', border: '2px dashed #ccc',
-              borderRadius: 8, overflow: 'hidden', backgroundColor: '#f9f9f9',
-              display: 'flex', alignItems: 'center', justifyContent: 'center'
-            }}>
+            <div key={i} className={styles.slideCard}>
               {s.file_url || s.file ? (
                 <>
                   {s.file_url ? (
-                    <Image src={s.file_url} alt={`Slide ${i+1}`} fill style={{ objectFit: 'cover' }} unoptimized />
+                    <Image src={s.file_url} alt={`Slide ${i + 1}`} fill style={{ objectFit: 'cover' }} unoptimized />
                   ) : (
-                    <Image src={previews[i]!} alt={`Slide ${i+1}`} fill style={{ objectFit: 'cover' }} unoptimized />
+                    <Image src={previews[i]!} alt={`Slide ${i + 1}`} fill style={{ objectFit: 'cover' }} unoptimized />
                   )}
-                  <button onClick={() => handleDelete(i)} style={{
-                    position: 'absolute', top: 4, right: 4, background: 'rgba(0,0,0,0.6)',
-                    color: 'white', border: 'none', borderRadius: '50%', width: 24, height: 24,
-                    cursor: 'pointer'
-                  }}>✕</button>
+                  <button onClick={() => handleDelete(i)} className={styles.deleteButton}>✕</button>
                 </>
               ) : (
-                <label style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                <label className={styles.addLabel}>
                   <span className="material-symbols-outlined" style={{ fontSize: 40 }}>add_a_photo</span>
-                  <input type="file" accept="image/*" multiple
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
                     onChange={e => e.target.files && handleAddFiles(e.target.files)}
-                    style={{ display: 'none' }} />
+                    style={{ display: 'none' }}
+                  />
                 </label>
               )}
             </div>
@@ -211,10 +208,14 @@ export default function Page() {
         </div>
       )}
 
-      <div className="editActions" style={{ display: 'flex', gap: 16 }}>
-        <Button variant="secondary" size="large" onClick={handleBack} style={{ flex: 1 }}>Назад</Button>
-        <Button variant="primary" size="large" style={{ flex: 1 }} onClick={handleSave}
-          disabled={loading || (selectedSlideshow?.value !== '' && (totalSlides !== MAX_SLIDES || !hasNewFiles))}>
+      <div className={styles.editActions}>
+        <Button variant="secondary" size="large" onClick={handleBack}>Назад</Button>
+        <Button
+          variant="primary"
+          size="large"
+          onClick={handleSave}
+          disabled={loading || (selectedSlideshow?.value !== '' && (totalSlides !== MAX_SLIDES || !hasNewFiles))}
+        >
           {loading ? 'Запазване...' : 'Запази'}
         </Button>
       </div>
