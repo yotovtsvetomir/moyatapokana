@@ -1,0 +1,113 @@
+.stepper {
+  position: fixed;
+  top: var(--mobile-header-height);
+  left: 0;
+  right: 0;
+  background-color: rgba(255, 237, 235, 0.7);
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+  z-index: 1000;
+  padding: 1.5rem 0 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s ease, opacity 0.3s ease;
+
+  max-width: 590px;
+  margin: 0 auto;
+  border-radius: 6px;
+}
+
+.hidden {
+  opacity: 0;
+  transform: translateY(-100%);
+  pointer-events: none;
+}
+
+.stepperInner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+}
+
+.stepWrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-decoration: none;
+  text-align: center;
+  z-index: 5;
+}
+
+.circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--color-highlight-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+  background-color: white;
+  transition: all 0.3s ease;
+  color: var(--color-highlight-2);
+  font-size: 1rem;
+}
+
+.circle.active {
+  border-color: var(--color-highlight-2);
+  font-weight: bold;
+  transform: scale(1.2);
+}
+
+.circle.completed {
+  background: var(--color-success-4);
+  color: white;
+  border-color: var(--color-success-4);
+  transform: scale(0.8);
+}
+
+.label {
+  font-size: var(--font-md);
+  margin-top: 0.3rem;
+  white-space: nowrap;
+}
+
+.activeLabel {
+  font-weight: bold;
+  font-size: var(--font-lg);
+}
+
+.connectorLine {
+  position: absolute;
+  top: 1.1rem;
+  left: 50%;
+  width: 100%;
+  height: 2px;
+  background-color: var(--color-highlight-7);
+  z-index: 0;
+}
+
+.filled {
+  background-color: var(--color-success-4);
+}
+
+@media (min-width: 1024px) {
+  .stepper {
+    position: static;
+    margin-bottom: 1rem;
+    max-width: 700px;
+  }
+
+  .hidden {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}

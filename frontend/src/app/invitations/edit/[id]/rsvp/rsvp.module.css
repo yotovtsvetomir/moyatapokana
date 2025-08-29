@@ -1,0 +1,82 @@
+.rsvp {
+	display: flex;
+	flex-direction: column;
+	background-color: var(--color-neutral-500);
+	font-family: var(--font-sans);
+	padding-bottom: 1rem;
+}
+
+.rsvp h1 {
+  font-size: var(--font-2xl);
+  margin-bottom: 1rem;
+}
+
+.rsvp p {
+	font-size: var(--font-xl);
+	color: var(--color-dark-300);
+	margin-bottom: 1rem;
+}
+
+.menu {
+	margin-bottom: 1rem;
+}
+
+.menu h5 {
+	font-size: var(--font-2xl);
+	color: var(--color-dark-300);
+	margin-bottom: 0.5rem;
+}
+
+.menu ul {
+	list-style: none;
+}
+
+.menu li {
+	position: relative;
+	font-size: var(--font-xl);
+	color: var(--color-dark-300);
+	margin-bottom: 0.25rem;
+	padding-left: 1.5rem;
+}
+
+.menu li:before {
+	content: "";
+	position: absolute;
+	left: 0.3rem;
+	top: 50%;
+	transform: translateY(-50%);
+	width: 9px;
+	height: 9px;
+	border-radius: 50%;
+	background-color: var(--color-highlight-1);
+}
+
+.choice {
+	margin-bottom: 1.5rem;
+}
+
+.choice h4 {
+	font-size: var(--font-2xl);
+	color: var(--color-dark-300);
+	margin-bottom: 0.5rem;
+}
+
+.choice p {
+	margin-bottom: 0;
+	margin-top: 0.5rem;
+  color: var(--color-error-1) !important;
+}
+
+.buttons {
+	margin-top: 1rem;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 1rem;
+}
+
+@media (min-width: 1024px) {
+	.rsvp h1 {
+	  font-size: var(--font-3xl);
+	}
+}

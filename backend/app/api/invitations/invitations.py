@@ -16,6 +16,7 @@ from sqlalchemy.orm import selectinload
 from app.db.session import get_write_session, get_read_session
 from app.services.s3.wallpaper import WallpaperService
 from app.services.s3.slide import SlideService
+from app.services.s3.music import MusicService
 from app.db.models.invitation import (
     Invitation,
     RSVP,
@@ -175,18 +176,19 @@ async def create_empty_invitation(
     return invitation_with_rel
 
 
-# -------------------- Update Invitation --------------------
 @router.patch("/update/{invitation_id}", response_model=InvitationRead)
 async def update_invitation(
     invitation_id: int,
     payload: InvitationUpdate,
-    db: AsyncSession = Depends(get_write_session),
+    write_db: AsyncSession = Depends(get_write_session),
+    read_db: AsyncSession = Depends(get_read_session),
 ):
-    invitation = await db.get(Invitation, invitation_id)
+    # -------------------- WRITE PART --------------------
+    invitation = await write_db.get(Invitation, invitation_id)
     if not invitation:
         raise HTTPException(status_code=404, detail="Invitation not found")
 
-    # -------------------- Update invitation fields --------------------
+    # Update main invitation fields
     update_data = payload.dict(
         exclude_unset=True,
         exclude={
@@ -205,43 +207,56 @@ async def update_invitation(
     for key, value in update_data.items():
         setattr(invitation, key, value)
 
-    # -------------------- RSVP / Events / Slideshow --------------------
+    # RSVP handling
     if payload.rsvp:
-        rsvp_obj = invitation.rsvp
+        rsvp_obj = None
+        if invitation.rsvp_id:
+            rsvp_obj = await write_db.get(RSVP, invitation.rsvp_id)
+
         if not rsvp_obj:
             rsvp_obj = RSVP(ask_menu=payload.rsvp.ask_menu)
-            db.add(rsvp_obj)
-            await db.flush()
+            write_db.add(rsvp_obj)
+            await write_db.flush()
             invitation.rsvp_id = rsvp_obj.id
 
         rsvp_data = payload.rsvp.dict(exclude_unset=True, exclude={"guests"})
         for key, value in rsvp_data.items():
             setattr(rsvp_obj, key, value)
 
+    # Events handling
     if payload.events is not None:
-        for e in invitation.events:
-            await db.delete(e)
+        events_result = await write_db.execute(
+            select(Event).where(Event.invitation_id == invitation.id)
+        )
+        for e in events_result.scalars().all():
+            await write_db.delete(e)
+
         for event in payload.events:
-            db.add(Event(**event.dict(), invitation_id=invitation.id))
+            write_db.add(Event(**event.dict(), invitation_id=invitation.id))
 
+    # Slideshow images
     if hasattr(payload, "slideshow_images") and payload.slideshow_images is not None:
-        for img in invitation.slideshow_images:
-            await db.delete(img)
+        images_result = await write_db.execute(
+            select(SlideshowImage).where(SlideshowImage.invitation_id == invitation.id)
+        )
+        for img in images_result.scalars().all():
+            await write_db.delete(img)
+
         for img_data in payload.slideshow_images:
-            db.add(SlideshowImage(**img_data.dict(), invitation_id=invitation.id))
+            write_db.add(SlideshowImage(**img_data.dict(), invitation_id=invitation.id))
 
-    # -------------------- Commit --------------------
-    await db.commit()
+    # Commit all writes
+    await write_db.commit()
 
-    # -------------------- Re-fetch invitation with eager-loaded relationships --------------------
-    result = await db.execute(
+    # -------------------- READ PART (fresh session) --------------------
+    result = await read_db.execute(
         select(Invitation)
         .options(
             selectinload(Invitation.rsvp).selectinload(RSVP.guests),
+            selectinload(Invitation.events),
             selectinload(Invitation.selected_game_obj),
             selectinload(Invitation.selected_slideshow_obj),
             selectinload(Invitation.slideshow_images),
-            selectinload(Invitation.events),
         )
         .where(Invitation.id == invitation_id)
     )
@@ -455,3 +470,51 @@ async def upload_slides(
         invitation_full.selected_slideshow = None
 
     return InvitationRead.from_orm(invitation_full)
+
+
+@router.post("/upload-audio/{invitation_id}", response_model=InvitationRead)
+async def upload_invitation_audio(
+    invitation_id: int,
+    audio: UploadFile | None = File(None),
+    write_db: AsyncSession = Depends(get_write_session),
+    read_db: AsyncSession = Depends(get_read_session),
+):
+    music_service = MusicService()
+
+    # --- WRITE PART ---
+    invitation = await write_db.get(Invitation, invitation_id)
+    if not invitation:
+        raise HTTPException(status_code=404, detail="Invitation not found")
+
+    # Delete old background audio if exists
+    if invitation.background_audio:
+        try:
+            await music_service.delete_music(invitation.background_audio)
+        except Exception as e:
+            print(f"Failed to delete old audio: {e}")
+        invitation.background_audio = None
+
+    # Upload new audio only if provided
+    if audio is not None:
+        url = await music_service.upload_music(audio)
+        invitation.background_audio = url
+
+    write_db.add(invitation)
+    await write_db.commit()
+    await write_db.refresh(invitation)
+
+    # --- READ PART (fresh session) ---
+    result = await read_db.execute(
+        select(Invitation)
+        .options(
+            selectinload(Invitation.rsvp).selectinload(RSVP.guests),
+            selectinload(Invitation.events),
+            selectinload(Invitation.selected_game_obj),
+            selectinload(Invitation.selected_slideshow_obj),
+            selectinload(Invitation.slideshow_images),
+        )
+        .where(Invitation.id == invitation.id)
+    )
+    invitation_with_rel = result.scalars().first()
+
+    return invitation_with_rel

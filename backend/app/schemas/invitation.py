@@ -93,7 +93,7 @@ class SlideshowImageRead(SlideshowImageBase):
 class EventBase(BaseModel):
     title: str
     start_datetime: datetime
-    finish_datetime: datetime
+    finish_datetime: Optional[datetime] = None
     location: Optional[str] = None
     description: Optional[str] = None
     calendar_link: Optional[str] = None

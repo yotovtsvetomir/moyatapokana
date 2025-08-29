@@ -156,12 +156,12 @@ class Invitation(Base):
     is_active = Column(Boolean, default=False)
 
     # RSVP
-    rsvp_id = Column(Integer, ForeignKey("rsvps.id"), nullable=False)
+    rsvp_id = Column(
+        Integer, ForeignKey("rsvps.id", ondelete="CASCADE"), nullable=False, unique=True
+    )
     rsvp = relationship(
         "RSVP",
         back_populates="invitation",
-        cascade="all, delete-orphan",
-        single_parent=True,
     )
 
     # Timestamps
@@ -204,8 +204,8 @@ class Event(Base):
     )
 
     title = Column(String, nullable=False)
-    start_datetime = Column(DateTime, nullable=False)
-    finish_datetime = Column(DateTime, nullable=False)
+    start_datetime = Column(DateTime(timezone=True), nullable=False)
+    finish_datetime = Column(DateTime(timezone=True), nullable=True)
     location = Column(String, nullable=True)
     description = Column(Text, nullable=True)
     calendar_link = Column(String, nullable=True)

@@ -70,7 +70,7 @@ export default function StylingSettingsPage() {
       </div>
 
       <div className="editActions">
-        <Link href={`/invitations/edit/${id}/base`} style={{ width: '47%' }}>
+        <Link href={`/invitations/edit/${id}/settings`} style={{ width: '47%' }}>
           <Button variant="secondary" size="large" width="100%">
             Назад
           </Button>

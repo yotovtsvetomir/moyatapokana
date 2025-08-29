@@ -4,6 +4,7 @@ import { ReactNode, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useInvitation } from "@/context/InvitationContext";
 import { Spinner } from "@/ui-components/Spinner/Spinner";
+import Stepper from "@/components/Stepper/Stepper";
 
 export default function EditInvitationLayout({ children }: { children: ReactNode }) {
   const { id } = useParams<{ id: string }>();
@@ -42,5 +43,10 @@ export default function EditInvitationLayout({ children }: { children: ReactNode
 
   if (localLoading) return <Spinner size={60} />;
 
-  return <>{children}</>;
+  return (
+    <div style={{ marginTop: "7rem" }}>
+      <Stepper />
+      <div>{children}</div>
+    </div>
+  );
 }

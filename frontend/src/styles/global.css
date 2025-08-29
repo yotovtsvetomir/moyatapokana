@@ -132,3 +132,9 @@ a {
 .uploadButton .material-icons {
   font-size: 20px;
 }
+
+@media (min-width: 1024px) {
+  .steps {
+    padding-top: 0 !important;
+  }
+}

@@ -1,11 +1,11 @@
 import React, { useRef, useEffect } from 'react'
 import Flatpickr from 'flatpickr'
 import 'flatpickr/dist/themes/material_orange.css'
+import 'flatpickr/dist/l10n/bg.js'
 import styles from '../Input/Input.module.css'
 
 interface DateInputProps {
   id: string
-  name: string
   value: string
   label: string
   error?: string
@@ -17,7 +17,6 @@ interface DateInputProps {
 
 const DateInput: React.FC<DateInputProps> = ({
   id,
-  name,
   value,
   label,
   error,
@@ -30,40 +29,41 @@ const DateInput: React.FC<DateInputProps> = ({
   const fpRef = useRef<Flatpickr.Instance | null>(null)
 
   useEffect(() => {
-    if (inputRef.current) {
-      fpRef.current?.destroy()
+    if (!inputRef.current) return;
 
-      fpRef.current = Flatpickr(inputRef.current, {
-        enableTime: true,
-        time_24hr: true,
-        dateFormat: 'Y-m-d H:i',
-        defaultDate: value || undefined,
-        onChange: ([date]) => {
-          onChange(date || null)
-        }
-      })
-    }
+    fpRef.current = Flatpickr(inputRef.current, {
+      enableTime: true,
+      time_24hr: true,
+      dateFormat: 'Y-m-d H:i',
+      locale: 'bg', // set locale to Bulgarian
+      defaultDate: value || undefined,
+      allowInput: true,
+      clickOpens: true,
+      onChange: ([date]) => onChange(date || null),
+      onClose: ([date]) => onChange(date || null)
+    });
 
-    return () => {
-      fpRef.current?.destroy()
+    return () => fpRef.current?.destroy();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (fpRef.current) {
+      fpRef.current.setDate(value || null, false);
     }
-  }, [value, onChange])
+  }, [value]);
 
   return (
     <div className={`${styles.inputGroup} ${error ? styles.hasMessage : ''}`}>
       <input
         ref={inputRef}
-        id={id}
-        name={name}
+        value={value ? new Date(value).toLocaleString('bg-BG') : ''}
+        onChange={() => {}}
         placeholder={placeholder}
         autoComplete="off"
         required={required}
         disabled={disabled}
-        value={value ? new Date(value).toLocaleString('bg-BG') : ''}
-        readOnly
-        className={`${styles.input} ${styles.floatingInput} ${
-          error ? styles.inputError : ''
-        }`}
+        className={`${styles.input} ${styles.floatingInput} ${error ? styles.inputError : ''}`}
       />
       <label htmlFor={id} className={styles.floatingLabel}>
         {label}
