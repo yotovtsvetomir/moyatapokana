@@ -1,4 +1,9 @@
 import json
+import uuid
+import re
+from typing import Dict
+from datetime import datetime
+from unidecode import unidecode
 from fastapi import (
     APIRouter,
     HTTPException,
@@ -13,10 +18,12 @@ from fastapi import (
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
+from sqlalchemy.exc import IntegrityError
 from app.db.session import get_write_session, get_read_session
 from app.services.s3.wallpaper import WallpaperService
 from app.services.s3.slide import SlideService
 from app.services.s3.music import MusicService
+from app.services.pagination import paginate
 from app.db.models.invitation import (
     Invitation,
     RSVP,
@@ -24,17 +31,29 @@ from app.db.models.invitation import (
     SlideshowImage,
     Game,
     Slideshow,
+    Guest,
 )
 from app.schemas.invitation import (
     InvitationUpdate,
     InvitationRead,
     GameRead,
     SlideshowRead,
+    GuestCreate,
+    GuestRead,
+    RSVPWithStats,
+    Stats,
 )
 from app.services.auth import get_current_user
 from http.cookies import SimpleCookie
 
 router = APIRouter()
+
+
+def generate_slug(title: str) -> str:
+    title_ascii = unidecode(title)
+    slug_base = re.sub(r"[^a-zA-Z0-9]+", "-", title_ascii.lower()).strip("-")
+    slug = f"{slug_base}-{uuid.uuid4().hex[:16]}"
+    return slug
 
 
 # -------------------- Helper to fetch invitation with ownership --------------------
@@ -56,7 +75,7 @@ async def fetch_invitation(
     result = await db.execute(
         select(Invitation)
         .options(
-            selectinload(Invitation.rsvp).selectinload(RSVP.guests),
+            selectinload(Invitation.rsvp),
             selectinload(Invitation.events),
             selectinload(Invitation.selected_game_obj),
             selectinload(Invitation.selected_slideshow_obj),
@@ -164,7 +183,7 @@ async def create_empty_invitation(
     result = await db.execute(
         select(Invitation)
         .options(
-            selectinload(Invitation.rsvp).selectinload(RSVP.guests),
+            selectinload(Invitation.rsvp),
             selectinload(Invitation.selected_game_obj),
             selectinload(Invitation.selected_slideshow_obj),
             selectinload(Invitation.events),
@@ -186,7 +205,17 @@ async def update_invitation(
     # -------------------- WRITE PART --------------------
     invitation = await write_db.get(Invitation, invitation_id)
     if not invitation:
-        raise HTTPException(status_code=404, detail="Invitation not found")
+        raise HTTPException(status_code=404, detail="Поканата не е намерена")
+
+    # -------------------- FORBID EDIT ON ACTIVE --------------------
+    now = datetime.utcnow()
+    if invitation.is_active and (
+        (invitation.active_from and invitation.active_from <= now)
+        and (invitation.active_until is None or invitation.active_until >= now)
+    ):
+        raise HTTPException(
+            status_code=403, detail="Не можете да редактирате активна покана"
+        )
 
     # Update main invitation fields
     update_data = payload.dict(
@@ -204,10 +233,14 @@ async def update_invitation(
             "status",
         },
     )
+
+    if "title" in update_data and update_data["title"]:
+        update_data["slug"] = generate_slug(update_data["title"])
+
     for key, value in update_data.items():
         setattr(invitation, key, value)
 
-    # RSVP handling
+    # -------------------- RSVP, Events, Slideshow handling --------------------
     if payload.rsvp:
         rsvp_obj = None
         if invitation.rsvp_id:
@@ -223,7 +256,6 @@ async def update_invitation(
         for key, value in rsvp_data.items():
             setattr(rsvp_obj, key, value)
 
-    # Events handling
     if payload.events is not None:
         events_result = await write_db.execute(
             select(Event).where(Event.invitation_id == invitation.id)
@@ -234,7 +266,6 @@ async def update_invitation(
         for event in payload.events:
             write_db.add(Event(**event.dict(), invitation_id=invitation.id))
 
-    # Slideshow images
     if hasattr(payload, "slideshow_images") and payload.slideshow_images is not None:
         images_result = await write_db.execute(
             select(SlideshowImage).where(SlideshowImage.invitation_id == invitation.id)
@@ -252,7 +283,7 @@ async def update_invitation(
     result = await read_db.execute(
         select(Invitation)
         .options(
-            selectinload(Invitation.rsvp).selectinload(RSVP.guests),
+            selectinload(Invitation.rsvp),
             selectinload(Invitation.events),
             selectinload(Invitation.selected_game_obj),
             selectinload(Invitation.selected_slideshow_obj),
@@ -274,44 +305,28 @@ async def list_invitations(
     page: int = Query(1, ge=1),
     page_size: int = Query(10, ge=1, le=100),
 ):
-    offset = (page - 1) * page_size
     owner_id = int(current_user.get("user_id")) if current_user else None
 
-    query = select(Invitation).options(
-        selectinload(Invitation.rsvp).selectinload(RSVP.guests),
+    options = [
+        selectinload(Invitation.rsvp),
         selectinload(Invitation.events),
-        selectinload(Invitation.category),
-        selectinload(Invitation.subcategory),
         selectinload(Invitation.selected_game_obj),
         selectinload(Invitation.selected_slideshow_obj),
+        selectinload(Invitation.slideshow_images),
+    ]
+
+    return await paginate(
+        model=Invitation,
+        db=db,
+        page=page,
+        page_size=page_size,
+        owner_field="owner_id",
+        owner_id=owner_id,
+        anon_field="anon_session_id",
+        anon_session_id=anon_session_id,
+        options=options,
+        schema=InvitationRead,  # <-- Pydantic schema here
     )
-
-    if owner_id:
-        query = query.where(Invitation.owner_id == owner_id)
-        total_result = await db.execute(
-            select(Invitation).where(Invitation.owner_id == owner_id)
-        )
-    else:
-        query = query.where(Invitation.anon_session_id == anon_session_id)
-        total_result = await db.execute(
-            select(Invitation).where(Invitation.anon_session_id == anon_session_id)
-        )
-
-    total_count = total_result.scalars().count()
-
-    query = query.offset(offset).limit(page_size)
-    result = await db.execute(query)
-    invitations = result.scalars().all()
-
-    total_pages = (total_count + page_size - 1) // page_size
-
-    return {
-        "total_count": total_count,
-        "current_page": page,
-        "page_size": page_size,
-        "total_pages": total_pages,
-        "items": invitations,
-    }
 
 
 # -------------------- Delete Invitation --------------------
@@ -363,7 +378,7 @@ async def upload_invitation_wallpaper(
     result = await read_db.execute(
         select(Invitation)
         .options(
-            selectinload(Invitation.rsvp).selectinload(RSVP.guests),
+            selectinload(Invitation.rsvp),
             selectinload(Invitation.events),
             selectinload(Invitation.selected_game_obj),
             selectinload(Invitation.selected_slideshow_obj),
@@ -454,7 +469,7 @@ async def upload_slides(
     result = await read_db.execute(
         select(Invitation)
         .options(
-            selectinload(Invitation.rsvp).selectinload(RSVP.guests),
+            selectinload(Invitation.rsvp),
             selectinload(Invitation.events),
             selectinload(Invitation.selected_game_obj),
             selectinload(Invitation.selected_slideshow_obj),
@@ -507,7 +522,7 @@ async def upload_invitation_audio(
     result = await read_db.execute(
         select(Invitation)
         .options(
-            selectinload(Invitation.rsvp).selectinload(RSVP.guests),
+            selectinload(Invitation.rsvp),
             selectinload(Invitation.events),
             selectinload(Invitation.selected_game_obj),
             selectinload(Invitation.selected_slideshow_obj),
@@ -518,3 +533,103 @@ async def upload_invitation_audio(
     invitation_with_rel = result.scalars().first()
 
     return invitation_with_rel
+
+
+# -------------------- RSVP / Guest Endpoints --------------------
+@router.post("/guest/{slug}", response_model=GuestRead)
+async def add_guest(
+    slug: str,
+    payload: GuestCreate,
+    db: AsyncSession = Depends(get_write_session),
+):
+    result = await db.execute(select(Invitation).where(Invitation.slug == slug))
+    invitation = result.scalars().first()
+
+    if not invitation or not invitation.is_active:
+        raise HTTPException(status_code=404, detail="Invitation not found or inactive")
+
+    # Create guest
+    guest = Guest(**payload.dict(), rsvp_id=invitation.rsvp_id)
+    db.add(guest)
+    try:
+        await db.commit()
+        await db.refresh(guest)
+    except IntegrityError:
+        await db.rollback()
+        raise HTTPException(status_code=400, detail="Failed to add guest")
+
+    return guest
+
+
+@router.get("/rsvp/{invitation_id}", response_model=RSVPWithStats)
+async def get_rsvp_for_owner(
+    invitation_id: int,
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_read_session),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(10, ge=1, le=100),
+):
+    # validate invitation
+    result = await db.execute(
+        select(Invitation)
+        .where(Invitation.id == invitation_id)
+        .options(selectinload(Invitation.rsvp))
+    )
+    invitation = result.scalars().first()
+
+    if not invitation:
+        raise HTTPException(status_code=404, detail="Invitation not found")
+
+    if invitation.owner_id != int(current_user.get("user_id")):
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    rsvp = invitation.rsvp
+
+    # ---------- Stats (full dataset, not paginated) ----------
+    guests_all = (
+        (await db.execute(select(Guest).where(Guest.rsvp_id == rsvp.id)))
+        .scalars()
+        .all()
+    )
+
+    total_attending = len(guests_all)
+    total_adults = len([g for g in guests_all if g.guest_type != "kid"])
+    total_kids = len([g for g in guests_all if g.guest_type == "kid"])
+
+    menu_counts: Dict[str, int] = {}
+    for g in guests_all:
+        if g.menu_choice:
+            menu_counts[g.menu_choice] = menu_counts.get(g.menu_choice, 0) + 1
+
+    rsvp_stats = Stats(
+        total_attending=total_attending,
+        total_adults=total_adults,
+        total_kids=total_kids,
+        menu_counts=menu_counts,
+    )
+
+    # ---------- Paginated Guests ----------
+    guests_paginated = await paginate(
+        model=Guest,
+        db=db,
+        page=page,
+        page_size=page_size,
+    )
+
+    # Filter only this RSVP’s guests
+    guests_paginated = await paginate(
+        model=Guest,
+        db=db,
+        page=page,
+        page_size=page_size,
+        owner_field="rsvp_id",
+        owner_id=rsvp.id,
+        schema=GuestRead,
+    )
+
+    return RSVPWithStats(
+        id=rsvp.id,
+        ask_menu=rsvp.ask_menu,
+        stats=rsvp_stats,
+        guests=guests_paginated,
+    )

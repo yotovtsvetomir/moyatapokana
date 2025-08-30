@@ -56,7 +56,7 @@ export default function StylingSettingsPage() {
     secondaryColor === (invitation?.secondary_color || '#000000')
 
   return (
-    <div className="container fullHeight centerWrapper">
+    <div className="container fullHeight centerWrapper steps">
       <h1>Настройки на цветовете #{invitation.id}</h1>
 
       <div style={{ marginBottom: '2rem', width: '100%' }}>

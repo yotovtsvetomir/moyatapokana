@@ -62,7 +62,7 @@ export default function TextSettingsPage() {
     extraInfo === (invitation?.extra_info || '')
 
   return (
-    <div className="container fullHeight centerWrapper">
+    <div className="container fullHeight centerWrapper steps">
       <h1>Редакция на текста #{invitation.id}</h1>
 
       <Input

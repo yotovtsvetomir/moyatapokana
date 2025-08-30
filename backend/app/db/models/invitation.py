@@ -18,6 +18,7 @@ from app.db.session import Base
 class InvitationStatus(PyEnum):
     DRAFT = "draft"
     ACTIVE = "active"
+    EXPIRED = "expired"
 
 
 class TemplateStatus(PyEnum):

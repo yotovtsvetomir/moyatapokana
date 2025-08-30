@@ -52,7 +52,7 @@ export default function Stepper() {
                   className={`${styles.connectorLine} ${index < activeIndex ? styles.filled : ""}`}
                 />
               )}
-              <Link href={step.href(id as string)} className={styles.step}>
+              <div className={styles.step}>
                 <div
                   className={`${styles.circle} ${
                     isCompleted ? styles.completed : isActive ? styles.active : ""
@@ -67,7 +67,7 @@ export default function Stepper() {
                 <span className={`${styles.label} ${isActive ? styles.activeLabel : ""}`}>
                   {step.label}
                 </span>
-              </Link>
+              </div>
             </div>
           );
         })}

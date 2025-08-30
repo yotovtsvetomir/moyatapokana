@@ -20,7 +20,7 @@ export async function DELETE(
       return NextResponse.json({ error: data?.detail || "Failed to delete invitation" }, { status: res.status });
     }
 
-    return NextResponse.json({}, { status: 204 });
+    return NextResponse.json({ success: true });
   } catch (err: unknown) {
     console.error(err);
     return NextResponse.json({ error: "Server error" }, { status: 500 });

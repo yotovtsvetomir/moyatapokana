@@ -38,8 +38,8 @@ export default function EditEventPage() {
     setFinishDatetime(event.finish_datetime ?? "");
   }, [invitation, eventId]);
 
-  const handleSave = async () => {
-    if (!invitation) return;
+  const handleSave = async (): Promise<boolean> => {
+    if (!invitation) return false;
 
     const updatedEvents = invitation.events.map((e) =>
       e.id === Number(eventId)
@@ -66,9 +66,11 @@ export default function EditEventPage() {
 
       const data: components["schemas"]["InvitationRead"] = await res.json();
       setInvitation(data);
+      return true;
     } catch (err) {
       console.error("Error saving event:", err);
       setError("Грешка при запазване на събитието");
+      return false;
     } finally {
       setLoading(false);
     }

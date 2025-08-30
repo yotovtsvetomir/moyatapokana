@@ -21,7 +21,7 @@ export function useRegister() {
   const [errors, setErrors] = useState<RegisterFormErrors>({});
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [fbReady, setFbReady] = useState(true);
+  const [fbReady] = useState(true);
 
   const validate = () => {
     const newErrors: RegisterFormErrors = {};

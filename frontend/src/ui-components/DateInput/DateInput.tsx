@@ -49,9 +49,13 @@ const DateInput: React.FC<DateInputProps> = ({
 
   useEffect(() => {
     if (fpRef.current) {
-      fpRef.current.setDate(value || null, false);
+      if (value) {
+        fpRef.current.setDate(value, false)
+      } else {
+        fpRef.current.clear()
+      }
     }
-  }, [value]);
+  }, [value])
 
   return (
     <div className={`${styles.inputGroup} ${error ? styles.hasMessage : ''}`}>

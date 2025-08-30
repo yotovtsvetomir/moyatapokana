@@ -397,6 +397,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/invitations/upload-audio/{invitation_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Upload Invitation Audio */
+        post: operations["upload_invitation_audio_invitations_upload_audio__invitation_id__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/invitations/guest/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add Guest */
+        post: operations["add_guest_invitations_guest__slug__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/invitations/rsvp/{invitation_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Rsvp For Owner */
+        get: operations["get_rsvp_for_owner_invitations_rsvp__invitation_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -413,6 +464,11 @@ export interface components {
             /** Profile Picture */
             profile_picture?: string | null;
         };
+        /** Body_upload_invitation_audio_invitations_upload_audio__invitation_id__post */
+        Body_upload_invitation_audio_invitations_upload_audio__invitation_id__post: {
+            /** Audio */
+            audio?: string | null;
+        };
         /** Body_upload_invitation_wallpaper_invitations_wallpaper__invitation_id__post */
         Body_upload_invitation_wallpaper_invitations_wallpaper__invitation_id__post: {
             /**
@@ -425,8 +481,13 @@ export interface components {
         Body_upload_slides_invitations_slides__invitation_id__post: {
             /** Slides */
             slides?: string[];
+            /**
+             * Existing Slides
+             * @default []
+             */
+            existing_slides: string;
             /** Selected Slideshow */
-            selected_slideshow?: number | null;
+            selected_slideshow?: string | null;
         };
         /** EventRead */
         EventRead: {
@@ -437,11 +498,8 @@ export interface components {
              * Format: date-time
              */
             start_datetime: string;
-            /**
-             * Finish Datetime
-             * Format: date-time
-             */
-            finish_datetime: string;
+            /** Finish Datetime */
+            finish_datetime?: string | null;
             /** Location */
             location?: string | null;
             /** Description */
@@ -462,11 +520,8 @@ export interface components {
              * Format: date-time
              */
             start_datetime: string;
-            /**
-             * Finish Datetime
-             * Format: date-time
-             */
-            finish_datetime: string;
+            /** Finish Datetime */
+            finish_datetime?: string | null;
             /** Location */
             location?: string | null;
             /** Description */
@@ -587,7 +642,7 @@ export interface components {
             id: number;
             /** Status */
             status: string;
-            rsvp: components["schemas"]["RSVPRead"];
+            rsvp: components["schemas"]["RSVPInvitationRead"];
             /**
              * Events
              * @default []
@@ -656,11 +711,24 @@ export interface components {
             subcategory_id?: number | null;
             /** Template Id */
             template_id?: number | null;
-            rsvp?: components["schemas"]["RSVPCreate"] | null;
+            rsvp?: components["schemas"]["RSVPInvitationUpdate"] | null;
             /** Events */
             events?: components["schemas"]["EventUpdate"][] | null;
             /** Slideshow Images */
             slideshow_images?: components["schemas"]["SlideshowImageCreate"][] | null;
+        };
+        /** PaginatedResponse[GuestRead] */
+        PaginatedResponse_GuestRead_: {
+            /** Total Count */
+            total_count: number;
+            /** Current Page */
+            current_page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total Pages */
+            total_pages: number;
+            /** Items */
+            items: components["schemas"]["GuestRead"][];
         };
         /** PasswordResetConfirm */
         PasswordResetConfirm: {
@@ -677,33 +745,26 @@ export interface components {
              */
             email: string;
         };
-        /** RSVPCreate */
-        RSVPCreate: {
-            /**
-             * Ask Menu
-             * @default false
-             */
-            ask_menu: boolean;
-            /**
-             * Guests
-             * @default []
-             */
-            guests: components["schemas"]["GuestCreate"][];
-        };
-        /** RSVPRead */
-        RSVPRead: {
-            /**
-             * Ask Menu
-             * @default false
-             */
-            ask_menu: boolean;
+        /** RSVPInvitationRead */
+        RSVPInvitationRead: {
             /** Id */
             id: number;
-            /**
-             * Guests
-             * @default []
-             */
-            guests: components["schemas"]["GuestRead"][];
+            /** Ask Menu */
+            ask_menu: boolean;
+        };
+        /** RSVPInvitationUpdate */
+        RSVPInvitationUpdate: {
+            /** Ask Menu */
+            ask_menu: boolean;
+        };
+        /** RSVPWithStats */
+        RSVPWithStats: {
+            /** Id */
+            id: number;
+            guests: components["schemas"]["PaginatedResponse_GuestRead_"];
+            /** Ask Menu */
+            ask_menu: boolean;
+            stats: components["schemas"]["Stats"];
         };
         /** SlideshowImageCreate */
         SlideshowImageCreate: {
@@ -753,6 +814,22 @@ export interface components {
             name: string;
             /** Key */
             key: string;
+        };
+        /** Stats */
+        Stats: {
+            /** Total Attending */
+            total_attending: number;
+            /** Total Adults */
+            total_adults: number;
+            /** Total Kids */
+            total_kids: number;
+            /**
+             * Menu Counts
+             * @default {}
+             */
+            menu_counts: {
+                [key: string]: number;
+            };
         };
         /** UserCreate */
         UserCreate: {
@@ -1544,6 +1621,112 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["InvitationRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    upload_invitation_audio_invitations_upload_audio__invitation_id__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invitation_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_upload_invitation_audio_invitations_upload_audio__invitation_id__post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvitationRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_guest_invitations_guest__slug__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GuestCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GuestRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_rsvp_for_owner_invitations_rsvp__invitation_id__get: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                invitation_id: number;
+            };
+            cookie?: {
+                session_id?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RSVPWithStats"];
                 };
             };
             /** @description Validation Error */

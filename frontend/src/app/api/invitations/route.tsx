@@ -1,17 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const invitationId = searchParams.get("id");
+  try {
+    const url = new URL(req.url);
+    const page = url.searchParams.get("page") || "1";
+    const page_size = url.searchParams.get("page_size") || "10";
+    const cookieHeader = req.headers.get("cookie") || "";
+    const fastApiUrl = `${process.env.API_URL_SERVER}/invitations/?page=${page}&page_size=${page_size}`;
 
-  if (!invitationId) {
-    return NextResponse.json({ error: "Missing invitation ID" }, { status: 400 });
+    const res = await fetch(fastApiUrl, {
+      headers: {
+        "Content-Type": "application/json",
+        "Cookie": cookieHeader,
+      },
+    });
+
+    const data = await res.json();
+    return NextResponse.json(data, { status: res.status });
+  } catch (err) {
+    console.error("Error fetching invitations:", err);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
   }
-
-  const res = await fetch(`${process.env.API_URL_SERVER}/invitations/${invitationId}`, {
-    headers: { cookie: req.headers.get("cookie") || "" },
-  });
-
-  const data = await res.json();
-  return NextResponse.json(data, { status: res.status });
 }

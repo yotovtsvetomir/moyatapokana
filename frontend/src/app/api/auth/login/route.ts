@@ -33,7 +33,7 @@ export async function POST(req: Request) {
     });
 
     // Delete the anonymous session cookie if it exists
-    res.cookies.delete("anonymous_session_id", { path: "/" });
+    res.cookies.delete("anonymous_session_id");
 
     return res;
   } catch (err) {

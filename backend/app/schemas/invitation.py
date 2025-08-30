@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List, Optional, Annotated
+from typing import List, Dict, Optional, Annotated, TypeVar, Generic
 from pydantic import BaseModel, Field
 
 
@@ -18,7 +18,20 @@ class GuestCreate(GuestBase):
 
 class GuestRead(GuestBase):
     id: int
+
     model_config = {"from_attributes": True}
+
+
+# -------------------- Pagination --------------------
+T = TypeVar("T")
+
+
+class PaginatedResponse(BaseModel, Generic[T]):
+    total_count: int
+    current_page: int
+    page_size: int
+    total_pages: int
+    items: List[T]
 
 
 # -------------------- RSVP --------------------
@@ -27,12 +40,38 @@ class RSVPBase(BaseModel):
 
 
 class RSVPCreate(RSVPBase):
-    guests: List[GuestCreate] = []
+    guests: Optional[List[GuestCreate]] = None
 
 
 class RSVPRead(RSVPBase):
     id: int
-    guests: List[GuestRead] = []
+    guests: Optional[List[GuestRead]] = None
+
+    model_config = {"from_attributes": True}
+
+
+class Stats(BaseModel):
+    total_attending: int
+    total_adults: int
+    total_kids: int
+    menu_counts: Dict[str, int] = {}
+
+
+class RSVPWithStats(BaseModel):
+    id: int
+    guests: PaginatedResponse[GuestRead]
+    ask_menu: bool
+    stats: Stats
+
+
+class RSVPInvitationUpdate(BaseModel):
+    ask_menu: bool
+
+
+class RSVPInvitationRead(BaseModel):
+    id: int
+    ask_menu: bool
+
     model_config = {"from_attributes": True}
 
 
@@ -146,7 +185,7 @@ class InvitationCreate(InvitationBase):
 
 
 class InvitationUpdate(InvitationBase):
-    rsvp: Optional[RSVPCreate] = None
+    rsvp: Optional[RSVPInvitationUpdate] = None
     events: Optional[List[EventUpdate]] = None
     slideshow_images: Optional[List[SlideshowImageCreate]] = None
 
@@ -157,7 +196,7 @@ class InvitationUpdate(InvitationBase):
 class InvitationRead(InvitationBase):
     id: int
     status: str
-    rsvp: RSVPRead
+    rsvp: RSVPInvitationRead
     events: List[EventRead] = []
     slideshow_images: List[SlideshowImageRead] = []
     created_at: datetime

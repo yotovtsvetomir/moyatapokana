@@ -5,7 +5,7 @@ export function useLogin() {
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [fbReady, setFbReady] = useState(true); // or false if you want to lazy-load FB SDK
+  const [fbReady] = useState(true); 
 
   const validate = () => {
     const errors: { [key: string]: string } = {};

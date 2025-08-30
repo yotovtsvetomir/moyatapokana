@@ -83,7 +83,7 @@ export default function GameSettingsPage() {
     (invitation?.selected_game || null) === (selectedGame?.value || null)
 
   return (
-    <div className="container fullHeight centerWrapper">
+    <div className="container fullHeight centerWrapper steps">
       <h1>Избор на игра за покана #{invitation.id}</h1>
 
       <ReactSelect

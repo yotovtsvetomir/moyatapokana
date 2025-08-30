@@ -22,7 +22,7 @@ export default function EditInvitationLayout({ children }: { children: ReactNode
           return;
         }
 
-        const res = await fetch(`/api/invitations?id=${id}`, { credentials: "include" });
+        const res = await fetch(`/api/invitations/${id}`, { credentials: "include" });
         if (!res.ok) throw new Error("Invitation not found");
 
         const data = await res.json();

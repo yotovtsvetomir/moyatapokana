@@ -63,7 +63,7 @@ export default function WallpaperSettingsPage() {
   }
 
   return (
-    <div className="container fullHeight centerWrapper">
+    <div className="container fullHeight centerWrapper steps">
       <h1>Редакция на тапета #{invitation.id}</h1>
 
       <div
@@ -72,7 +72,7 @@ export default function WallpaperSettingsPage() {
           width: '100%',
           maxWidth: 800,
           height: 400,
-          margin: '2rem auto',
+          marginBottom: '2rem',
           borderRadius: 12,
           overflow: 'hidden',
           border: '2px dashed #ccc',

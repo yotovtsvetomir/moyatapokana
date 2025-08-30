@@ -78,6 +78,8 @@ tortoise-orm==0.25.1
 typing-inspection==0.4.1
 typing_extensions==4.14.1
 tzdata==2025.2
+unicode==2.9
+Unidecode==1.4.0
 urllib3==1.26.20
 uvicorn==0.22.0
 uvloop==0.21.0

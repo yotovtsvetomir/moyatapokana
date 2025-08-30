@@ -42,7 +42,7 @@ export async function POST(req: Request) {
       expires: new Date(data.expires_at),
     });
 
-    res.cookies.delete("anonymous_session_id", { path: "/" });
+    res.cookies.delete("anonymous_session_id");
 
     return res;
   } catch (err) {

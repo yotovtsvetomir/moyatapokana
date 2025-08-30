@@ -12,7 +12,8 @@ import ReactSelect from '@/ui-components/Select/ReactSelect'
 import type { Option } from '@/ui-components/Select/ReactSelect'
 import styles from './Slideshow.module.css'
 
-type SlideshowRead = components['schemas']['SlideshowRead']
+type SlideshowImageRead = components["schemas"]["SlideshowImageRead"]
+type SlideshowRead = components["schemas"]["SlideshowRead"]
 
 type SlideState = {
   file?: File
@@ -45,7 +46,7 @@ export default function Page() {
     const fetchSlideshows = async () => {
       try {
         const res = await fetch("/api/invitations/slideshows", { credentials: 'include' })
-        const data: SlideshowRead[] = await res.json()
+        const data: SlideshowRead[] = await res.json();
         setSlideshows(data)
       } catch (err) {
         console.error('Failed to load slideshows', err)
@@ -58,18 +59,20 @@ export default function Page() {
   useEffect(() => {
     if (!invitation || slideshows.length === 0) return
 
-    const imgs = invitation.slideshow_images.slice(0, MAX_SLIDES)
+    const imgs: SlideshowImageRead[] = invitation.slideshow_images.slice(0, MAX_SLIDES)
     const newSlides: SlideState[] = [
-      ...imgs.map(s => ({ file_url: s.file_url })),
-      ...Array(MAX_SLIDES - imgs.length).fill({})
+      ...imgs.map((s) => ({ file_url: s.file_url })),
+      ...Array(MAX_SLIDES - imgs.length).fill({}),
     ]
     setSlides(newSlides)
-    setPreviews(newSlides.map(s => s.file_url || null))
+    setPreviews(newSlides.map((s) => s.file_url || null))
 
     if (invitation.selected_slideshow) {
       const match = slideshows.find(s => s.key === invitation.selected_slideshow)
       setSelectedSlideshow(match ? toOption(match) : { label: 'Без', value: '' })
-    } else setSelectedSlideshow({ label: 'Без', value: '' })
+    } else {
+      setSelectedSlideshow({ label: 'Без', value: '' })
+    }
   }, [invitation, slideshows])
 
   // -------------------- Add files locally --------------------
@@ -130,7 +133,7 @@ export default function Page() {
         credentials: "include",
       })
 
-      const data = await res.json()
+      const data: typeof invitation = await res.json();
       if (!res.ok) throw data
 
       const imgs = data.slideshow_images.slice(0, MAX_SLIDES)
@@ -168,7 +171,7 @@ export default function Page() {
   if (!invitation) return <Spinner size={60} />
 
   return (
-    <div className="container fullHeight centerWrapper">
+    <div className="container fullHeight centerWrapper steps">
       <h1>Качи слайдове за покана #{invitation.id}</h1>
 
       <ReactSelect

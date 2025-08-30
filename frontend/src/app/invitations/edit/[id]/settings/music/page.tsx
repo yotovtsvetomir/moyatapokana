@@ -85,7 +85,7 @@ export default function MusicSettingsPage() {
   };
 
   return (
-    <div className="container fullHeight centerWrapper">
+    <div className="container fullHeight centerWrapper steps">
       <div className={styles.music}>
         <h1>Фонова музика</h1>
 

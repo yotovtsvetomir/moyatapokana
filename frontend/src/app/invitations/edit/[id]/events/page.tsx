@@ -24,7 +24,7 @@ export default function EventsPage() {
 
       setLoading(true);
       try {
-        const res = await fetch(`/api/invitations?id=${id}`, { credentials: "include" });
+        const res = await fetch(`/api/invitations/${id}`, { credentials: "include" });
         const data: components["schemas"]["InvitationRead"] = await res.json();
         setInvitation(data);
       } catch (err) {
@@ -242,6 +242,7 @@ export default function EventsPage() {
           size="large"
           icon="arrow_forward"
           iconPosition="right"
+          disabled={!hasEvents}
         >
           Продължи
         </Button>

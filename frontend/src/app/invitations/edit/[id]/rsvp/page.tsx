@@ -17,25 +17,6 @@ export default function RSVPPage() {
   const [wasSubmitted, setWasSubmitted] = useState(false);
 
   useEffect(() => {
-    const fetchInvitation = async () => {
-      if (invitation?.id === Number(id)) return;
-
-      setLoading(true);
-      try {
-        const res = await fetch(`/api/invitations/${id}`, { credentials: "include" });
-        const data = await res.json();
-        setInvitation(data);
-      } catch (err) {
-        console.error("Неуспешно зареждане на поканата", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchInvitation();
-  }, [id, invitation, setInvitation, setLoading]);
-
-  useEffect(() => {
     if (invitation?.rsvp) {
       setMenuEnabled(invitation.rsvp.ask_menu ? "yes" : "no");
     }
