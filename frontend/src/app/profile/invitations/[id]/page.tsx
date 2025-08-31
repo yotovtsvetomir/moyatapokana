@@ -110,6 +110,7 @@ export default function InvitationDetail() {
               src={invitation.wallpaper}
               alt="Преглед на поканата"
               fill
+              unoptimized
               className={styles.thumbnail}
             />
           ) : (

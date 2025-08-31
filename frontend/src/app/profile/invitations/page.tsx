@@ -102,6 +102,7 @@ export default function ProfileInvitationsList() {
                             src={invitation.wallpaper}
                             alt="Преглед на поканата"
                             fill
+                            unoptimized
                             className={styles.thumbnail}
                           />
                         ) : (

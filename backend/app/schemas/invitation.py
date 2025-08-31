@@ -10,14 +10,19 @@ class GuestBase(BaseModel):
     guest_type: str
     is_main_guest: bool = False
     menu_choice: Optional[str] = None
+    main_guest_id: Optional[int] = None
+    attending: bool = False
+    created_at: Optional[datetime] = None
 
 
 class GuestCreate(GuestBase):
-    pass
+    sub_guests: Optional[List["GuestCreate"]] = None
 
 
 class GuestRead(GuestBase):
     id: int
+    full_name: Optional[str] = None
+    sub_guests: Optional[List["GuestRead"]] = []
 
     model_config = {"from_attributes": True}
 

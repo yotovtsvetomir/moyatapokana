@@ -1,27 +1,17 @@
 from minio import Minio
 from minio.error import S3Error
 from urllib.parse import urlparse
-import os
+from app.core.settings import settings
 import uuid
 from fastapi import UploadFile
 import io
 
-# ----------------------------
-# Configuration (Env Variables)
-# ----------------------------
-S3_ENDPOINT_URL = os.getenv("S3_ENDPOINT_URL")
-S3_ACCESS_KEY = os.getenv("S3_ACCESS_KEY")
-S3_SECRET_KEY = os.getenv("S3_SECRET_KEY")
-S3_BUCKET = os.getenv("S3_BUCKET")
-S3_REGION = os.getenv("S3_REGION")
-S3_SECURE = os.getenv("S3_SECURE").lower() == "true"
-
 minio_client = Minio(
     endpoint="minio.local:9000",
-    access_key=S3_ACCESS_KEY,
-    secret_key=S3_SECRET_KEY,
-    secure=S3_SECURE,
-    region=S3_REGION,
+    access_key=settings.S3_ACCESS_KEY,
+    secret_key=settings.S3_SECRET_KEY,
+    secure=settings.S3_SECURE,
+    region=settings.S3_REGION,
 )
 
 
@@ -29,7 +19,7 @@ minio_client = Minio(
 # S3 Base Class
 # ----------------------------
 class S3Base:
-    def __init__(self, bucket: str = S3_BUCKET):
+    def __init__(self, bucket: str = settings.S3_BUCKET):
         self.bucket = bucket
         self.client = minio_client
         # Create bucket if it doesn't exist (skip errors in prod)
@@ -79,8 +69,8 @@ class S3Base:
             return url
         except S3Error:
             # Fallback for public buckets
-            scheme = "https" if S3_SECURE else "http"
-            url = f"{scheme}://{S3_ENDPOINT_URL}/{self.bucket}/{object_name}"
+            scheme = "https" if settings.S3_SECURE else "http"
+            url = f"{scheme}://{settings.S3_ENDPOINT_URL}/{self.bucket}/{object_name}"
 
         return url
 

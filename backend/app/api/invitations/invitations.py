@@ -24,6 +24,7 @@ from app.services.s3.wallpaper import WallpaperService
 from app.services.s3.slide import SlideService
 from app.services.s3.music import MusicService
 from app.services.pagination import paginate
+from app.services.search import apply_filters_search_ordering
 from app.db.models.invitation import (
     Invitation,
     RSVP,
@@ -45,6 +46,7 @@ from app.schemas.invitation import (
 )
 from app.services.auth import get_current_user
 from http.cookies import SimpleCookie
+
 
 router = APIRouter()
 
@@ -340,6 +342,11 @@ async def delete_invitation(
     if not invitation:
         raise HTTPException(status_code=404, detail="Invitation not found")
 
+    if invitation.is_active:
+        raise HTTPException(
+            status_code=403, detail="Cannot delete an active invitation"
+        )
+
     await db.delete(invitation)
     await db.commit()
     return
@@ -542,23 +549,49 @@ async def add_guest(
     payload: GuestCreate,
     db: AsyncSession = Depends(get_write_session),
 ):
+    # Fetch invitation
     result = await db.execute(select(Invitation).where(Invitation.slug == slug))
     invitation = result.scalars().first()
 
     if not invitation or not invitation.is_active:
-        raise HTTPException(status_code=404, detail="Invitation not found or inactive")
+        raise HTTPException(
+            status_code=404, detail="Поканата не може да бъде намерена или е неактивна."
+        )
 
-    # Create guest
-    guest = Guest(**payload.dict(), rsvp_id=invitation.rsvp_id)
-    db.add(guest)
+    # Create main guest
+    main_guest = Guest(
+        first_name=payload.first_name,
+        last_name=payload.last_name,
+        guest_type=payload.guest_type,
+        is_main_guest=True,
+        menu_choice=payload.menu_choice,
+        rsvp_id=invitation.rsvp_id,
+    )
+    db.add(main_guest)
+    await db.flush()
+
+    # Add sub-guests if provided
+    if payload.sub_guests:
+        for sub in payload.sub_guests:
+            sub_guest = Guest(
+                first_name=sub.first_name,
+                last_name=sub.last_name,
+                guest_type=sub.guest_type,
+                is_main_guest=False,
+                menu_choice=sub.menu_choice,
+                main_guest_id=main_guest.id,
+                rsvp_id=invitation.rsvp_id,
+            )
+            db.add(sub_guest)
+
     try:
         await db.commit()
-        await db.refresh(guest)
+        await db.refresh(main_guest)
     except IntegrityError:
         await db.rollback()
-        raise HTTPException(status_code=400, detail="Failed to add guest")
+        raise HTTPException(status_code=400, detail="Failed to add guest(s)")
 
-    return guest
+    return main_guest
 
 
 @router.get("/rsvp/{invitation_id}", response_model=RSVPWithStats)
@@ -568,31 +601,38 @@ async def get_rsvp_for_owner(
     db: AsyncSession = Depends(get_read_session),
     page: int = Query(1, ge=1),
     page_size: int = Query(10, ge=1, le=100),
+    attending: str | None = Query(None),
+    search: str | None = Query(None),
+    ordering: str = Query("-created_at"),
 ):
-    # validate invitation
+    # --- Validate invitation ---
     result = await db.execute(
         select(Invitation)
         .where(Invitation.id == invitation_id)
         .options(selectinload(Invitation.rsvp))
     )
     invitation = result.scalars().first()
-
     if not invitation:
         raise HTTPException(status_code=404, detail="Invitation not found")
-
     if invitation.owner_id != int(current_user.get("user_id")):
         raise HTTPException(status_code=403, detail="Access denied")
 
     rsvp = invitation.rsvp
 
-    # ---------- Stats (full dataset, not paginated) ----------
+    # --- Stats (all guests) ---
     guests_all = (
-        (await db.execute(select(Guest).where(Guest.rsvp_id == rsvp.id)))
+        (
+            await db.execute(
+                select(Guest)
+                .where(Guest.rsvp_id == rsvp.id)
+                .options(selectinload(Guest.sub_guests))
+            )
+        )
         .scalars()
         .all()
     )
 
-    total_attending = len(guests_all)
+    total_attending = len([g for g in guests_all if g.attending])
     total_adults = len([g for g in guests_all if g.guest_type != "kid"])
     total_kids = len([g for g in guests_all if g.guest_type == "kid"])
 
@@ -608,28 +648,38 @@ async def get_rsvp_for_owner(
         menu_counts=menu_counts,
     )
 
-    # ---------- Paginated Guests ----------
-    guests_paginated = await paginate(
+    # --- Extra filters for pagination ---
+    extra_filters = [Guest.is_main_guest, Guest.rsvp_id == rsvp.id]
+
+    if attending is not None:
+        is_attending = attending.lower() == "true"
+        extra_filters.append(Guest.attending == is_attending)
+
+    # --- Use generic helper for search + ordering ---
+    extra_filters, order_by = await apply_filters_search_ordering(
         model=Guest,
         db=db,
-        page=page,
-        page_size=page_size,
+        search=search,
+        search_columns=[Guest.full_name],
+        filters=extra_filters,
+        ordering=ordering,
     )
 
-    # Filter only this RSVP’s guests
-    guests_paginated = await paginate(
+    # --- Paginate main guests ---
+    paginated_main_guests = await paginate(
         model=Guest,
         db=db,
         page=page,
         page_size=page_size,
-        owner_field="rsvp_id",
-        owner_id=rsvp.id,
+        extra_filters=extra_filters,
         schema=GuestRead,
+        options=[selectinload(Guest.sub_guests)],
+        ordering=order_by,
     )
 
     return RSVPWithStats(
         id=rsvp.id,
         ask_menu=rsvp.ask_menu,
         stats=rsvp_stats,
-        guests=guests_paginated,
+        guests=paginated_main_guests,
     )

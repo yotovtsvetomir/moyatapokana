@@ -2,12 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: Promise<{ slug: string }> }
+  { params }: { params: Promise<{ param: string }> }
 ) {
 
-  const { slug } = await params;
+  const { param } = await params;
   const cookieHeader = req.headers.get("cookie") || "";
-  const fastApiUrl = `${process.env.API_URL_SERVER}/invitations/guest/${slug}`;
+  const fastApiUrl = `${process.env.API_URL_SERVER}/invitations/guest/${param}`;
 
   const res = await fetch(fastApiUrl, {
     headers: {

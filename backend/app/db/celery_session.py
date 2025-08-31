@@ -1,12 +1,9 @@
-import os
+from app.core.settings import settings
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
-CELERY_DATABASE_URL_WRITER = os.getenv("DATABASE_URL_WRITER")
-CELERY_DATABASE_URL_READER = os.getenv("DATABASE_URL_READER")
-
-engine_writer = create_async_engine(CELERY_DATABASE_URL_WRITER, echo=False)
-engine_reader = create_async_engine(CELERY_DATABASE_URL_READER, echo=False)
+engine_writer = create_async_engine(settings.CELERY_DATABASE_URL_WRITER, echo=False)
+engine_reader = create_async_engine(settings.CELERY_DATABASE_URL_READER, echo=False)
 
 AsyncSessionLocalWriter = sessionmaker(
     bind=engine_writer, class_=AsyncSession, expire_on_commit=False

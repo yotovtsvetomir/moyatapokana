@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { Input } from "@/ui-components/Input/Input";
 import { Button } from "@/ui-components/Button/Button";
+import { TextLink } from "@/ui-components/TextLink/TextLink";
 import DateInput from "@/ui-components/DateInput/DateInput";
 import DetailSection from "@/ui-components/DetailSection/DetailSection";
 import styles from "../../Events.module.css";
@@ -133,14 +134,9 @@ export default function EditEventPage() {
           />
 
           {locationLink && (
-            <a
-              className={styles.testLink}
-              href={locationLink}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
+            <TextLink href={locationLink} external color="accent">
               Тествай линка
-            </a>
+            </TextLink>
           )}
 
           <p style={{ fontSize: "0.9rem", marginTop: "1rem", color: "#555" }}>

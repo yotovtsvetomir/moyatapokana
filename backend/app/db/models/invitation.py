@@ -8,6 +8,7 @@ from sqlalchemy import (
     Enum,
     Text,
     Boolean,
+    Computed,
 )
 from sqlalchemy.orm import relationship
 from enum import Enum as PyEnum
@@ -179,6 +180,9 @@ class RSVP(Base):
     invitation = relationship("Invitation", uselist=False, back_populates="rsvp")
     guests = relationship("Guest", back_populates="rsvp", cascade="all, delete-orphan")
 
+    def __str__(self):
+        return f"RSVP #{self.id}"
+
 
 class Guest(Base):
     __tablename__ = "guests"
@@ -191,8 +195,18 @@ class Guest(Base):
     guest_type = Column(String, nullable=False)
     is_main_guest = Column(Boolean, default=False)
     menu_choice = Column(String, nullable=True)
+    attending = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    full_name = Column(Text, Computed("first_name || ' ' || last_name", persisted=True))
 
     rsvp = relationship("RSVP", back_populates="guests")
+
+    main_guest_id = Column(Integer, ForeignKey("guests.id"), nullable=True)
+    main_guest = relationship("Guest", remote_side=[id], backref="sub_guests")
+
+    def __str__(self):
+        return f"Guest #{self.id}, #{self.first_name} #{self.last_name}"
 
 
 # -------------------- Event --------------------

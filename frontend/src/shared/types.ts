@@ -567,6 +567,17 @@ export interface components {
             is_main_guest: boolean;
             /** Menu Choice */
             menu_choice?: string | null;
+            /** Main Guest Id */
+            main_guest_id?: number | null;
+            /**
+             * Attending
+             * @default false
+             */
+            attending: boolean;
+            /** Created At */
+            created_at?: string | null;
+            /** Sub Guests */
+            sub_guests?: components["schemas"]["GuestCreate"][] | null;
         };
         /** GuestRead */
         GuestRead: {
@@ -583,8 +594,22 @@ export interface components {
             is_main_guest: boolean;
             /** Menu Choice */
             menu_choice?: string | null;
+            /** Main Guest Id */
+            main_guest_id?: number | null;
+            /**
+             * Attending
+             * @default false
+             */
+            attending: boolean;
+            /** Created At */
+            created_at?: string | null;
             /** Id */
             id: number;
+            /**
+             * Sub Guests
+             * @default []
+             */
+            sub_guests: components["schemas"]["GuestRead"][] | null;
         };
         /** HTTPValidationError */
         HTTPValidationError: {

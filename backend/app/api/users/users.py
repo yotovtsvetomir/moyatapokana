@@ -19,6 +19,7 @@ from sqlalchemy import func
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 
 from app.core.permissions import require_role
+from app.core.settings import settings
 from app.db.session import get_read_session, get_write_session
 from app.db.models.invitation import Invitation
 from app.db.models.user import User, PasswordResetToken
@@ -45,15 +46,7 @@ from app.services.auth import (
 
 router = APIRouter()
 
-SESSION_EXPIRE_SECONDS = int(os.getenv("SESSION_EXPIRE_SECONDS", 604800))
-SECRET_KEY = os.getenv("SECRET_KEY", "default-secret-key")
-FRONTEND_BASE_URL = os.getenv("FRONTEND_BASE_URL", "http://localhost:3000")
-ANONYMOUS_SESSION_COOKIE_NAME = os.getenv(
-    "ANONYMOUS_SESSION_COOKIE_NAME", "anonymous_session_id"
-)
-
-RESET_TOKEN_EXPIRE_SECONDS = 900
-serializer = URLSafeTimedSerializer(SECRET_KEY)
+serializer = URLSafeTimedSerializer(settings.SECRET_KEY)
 
 
 async def check_email_mx(email: str) -> bool:
@@ -92,7 +85,7 @@ async def register(
 
     user = await create_user(user_create, db_write)
     session_id = await create_session(user)
-    expires_at = datetime.utcnow() + timedelta(seconds=SESSION_EXPIRE_SECONDS)
+    expires_at = datetime.utcnow() + timedelta(seconds=settings.SESSION_EXPIRE_SECONDS)
 
     # -------------------- Claim drafts before deleting anon session --------------------
     if anonymous_session_id:
@@ -126,7 +119,7 @@ async def register(
             "first_name": user.first_name or user.email,
             "email": user.email,
             "provider": getattr(user_create, "provider", None),
-            "logo_url": f"{FRONTEND_BASE_URL}/logo.png",
+            "logo_url": f"{settings.FRONTEND_BASE_URL}/logo.png",
         },
     )
 
@@ -172,7 +165,7 @@ async def login(
         await delete_session(anonymous_session_id, anonymous=True)
 
     session_id = await create_session(user)
-    expires_at = datetime.utcnow() + timedelta(seconds=SESSION_EXPIRE_SECONDS)
+    expires_at = datetime.utcnow() + timedelta(seconds=settings.SESSION_EXPIRE_SECONDS)
 
     return {
         "session_id": session_id,
@@ -313,14 +306,14 @@ async def password_reset_request(
     db_write.add(reset_token)
     await db_write.commit()
 
-    reset_link = f"{FRONTEND_BASE_URL}/password-reset/{token}/"
+    reset_link = f"{settings.FRONTEND_BASE_URL}/password-reset/{token}/"
 
     html_content = render_email(
         "password_reset.html",
         {
             "first_name": user.first_name,
             "reset_url": reset_link,
-            "logo_url": f"{FRONTEND_BASE_URL}/logo.png",
+            "logo_url": f"{settings.FRONTEND_BASE_URL}/logo.png",
         },
     )
 
@@ -341,7 +334,9 @@ async def password_reset_confirm(
 ):
     try:
         email = serializer.loads(
-            data.token, salt="password-reset-salt", max_age=RESET_TOKEN_EXPIRE_SECONDS
+            data.token,
+            salt="password-reset-salt",
+            max_age=settings.RESET_TOKEN_EXPIRE_SECONDS,
         )
     except (SignatureExpired, BadSignature):
         raise HTTPException(status_code=400, detail="Невалиден токен")
@@ -381,7 +376,7 @@ async def password_reset_confirm(
 @router.post("/anonymous-session")
 async def create_anon_session():
     session_id = await create_anonymous_session()
-    expires_at = datetime.utcnow() + timedelta(seconds=SESSION_EXPIRE_SECONDS)
+    expires_at = datetime.utcnow() + timedelta(seconds=settings.SESSION_EXPIRE_SECONDS)
     return {
         "anonymous_session_id": session_id,
         "message": "Anonymous session created",

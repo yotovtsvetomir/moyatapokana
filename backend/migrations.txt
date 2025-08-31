@@ -1,4 +1,4 @@
 !!!! If models are a new file make sure to include them in alembic/env.py before running migrations !!!!
 
-docker exec -it moyatapokana-backend-1 alembic revision --autogenerate -m "init schema"
+docker exec -it moyatapokana-backend-1 alembic revision --autogenerate -m "latest migration"
 docker exec -it moyatapokana-backend-1 alembic upgrade head

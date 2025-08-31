@@ -11,6 +11,7 @@ from app.api.admin.admin import router as admin_router
 from app.api.admin.analytics import router as analytics_router
 from app.api.users.social_auth import router as social_router
 from app.api.invitations.invitations import router as invitations_router
+from app.api.orders.orders import router as orders_router
 
 from app.admin import setup_admin
 
@@ -51,6 +52,9 @@ app.include_router(analytics_router, prefix="/admin", tags=["admin"])
 
 # Invitations Routers
 app.include_router(invitations_router, prefix="/invitations", tags=["invitations"])
+
+# Orders Routers
+app.include_router(orders_router, prefix="/orders", tags=["Orders"])
 
 # Add middleware after routers
 app.add_middleware(AdminAuthMiddleware)

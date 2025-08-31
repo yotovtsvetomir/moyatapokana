@@ -2,17 +2,12 @@ from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
-import os
+from app.core.settings import settings
 
 from app.services.auth import authenticate_user, create_session
 from app.db.session import get_read_session
 
 router = APIRouter()
-
-SESSION_EXPIRE_SECONDS = int(os.getenv("SESSION_EXPIRE_SECONDS", 604800))
-ADMIN_SESSION_COOKIE_NAME = os.getenv("ADMIN_SESSION_COOKIE_NAME", "admin_session_id")
-ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
-SESSION_COOKIE_SECURE = ENVIRONMENT == "production"
 
 templates = Jinja2Templates(directory="app/templates")
 
@@ -45,12 +40,12 @@ async def admin_login(
 
     response = RedirectResponse(url="/admin/dashboard", status_code=302)
     response.set_cookie(
-        key=ADMIN_SESSION_COOKIE_NAME,
+        key=settings.ADMIN_SESSION_COOKIE_NAME,
         value=session_id,
         httponly=True,
-        max_age=SESSION_EXPIRE_SECONDS,
+        max_age=settings.SESSION_EXPIRE_SECONDS,
         path="/",
-        secure=SESSION_COOKIE_SECURE,
+        secure=settings.SESSION_COOKIE_SECURE,
         samesite="lax",
     )
     return response
@@ -60,7 +55,7 @@ async def admin_login(
 async def admin_logout():
     response = RedirectResponse(url="/admin/login", status_code=302)
     response.delete_cookie(
-        key=ADMIN_SESSION_COOKIE_NAME,
+        key=settings.ADMIN_SESSION_COOKIE_NAME,
         path="/",
     )
     return response

@@ -15,35 +15,42 @@ async def paginate(
     anon_session_id: str | None = None,
     options: list = None,
     schema: Type[BaseModel] | None = None,
+    extra_filters: list = None,  # optional
+    ordering: list = None,  # optional
 ):
     offset = (page - 1) * page_size
     query = select(model)
 
+    # Eager loading
     if options:
         for option in options:
             query = query.options(option)
 
-    # Apply filters
+    # Filters
+    filters = []
     if owner_field and owner_id:
-        query = query.where(getattr(model, owner_field) == owner_id)
-        total_query = (
-            select(func.count())
-            .select_from(model)
-            .where(getattr(model, owner_field) == owner_id)
-        )
-    elif anon_field and anon_session_id:
-        query = query.where(getattr(model, anon_field) == anon_session_id)
-        total_query = (
-            select(func.count())
-            .select_from(model)
-            .where(getattr(model, anon_field) == anon_session_id)
-        )
-    else:
-        total_query = select(func.count()).select_from(model)
+        filters.append(getattr(model, owner_field) == owner_id)
+    if anon_field and anon_session_id:
+        filters.append(getattr(model, anon_field) == anon_session_id)
+    if extra_filters:
+        filters.extend(extra_filters)
+
+    if filters:
+        query = query.where(*filters)
+
+    # Count total
+    total_query = select(func.count()).select_from(model)
+    if filters:
+        total_query = total_query.where(*filters)
 
     total_result = await db.execute(total_query)
     total_count = total_result.scalar_one()
 
+    # Apply ordering
+    if ordering:
+        query = query.order_by(*ordering)
+
+    # Pagination
     query = query.offset(offset).limit(page_size)
     result = await db.execute(query)
     items = result.scalars().all()

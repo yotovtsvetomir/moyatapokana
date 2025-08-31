@@ -3,13 +3,17 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Spinner } from '@/ui-components/Spinner/Spinner';
 import { Button } from '@/ui-components/Button/Button';
-import Pagination from '@/ui-components/Pagination/Pagination';
 import styles from './guests.module.css';
 import type { components } from '@/shared/types';
 
-type Guest = components['schemas']['GuestRead'];
-type PaginatedGuests = components['schemas']['PaginatedResponse<GuestRead>'];
 type RSVPWithStats = components['schemas']['RSVPWithStats'];
+
+const menuMap: Record<string, { bgName: string; icon: string }> = {
+  meat: { bgName: 'Месо', icon: 'outdoor_grill' },
+  fish: { bgName: 'Риба', icon: 'phishing' },
+  vegetarian: { bgName: 'Вегетарианско', icon: 'nutrition' },
+  kid: { bgName: 'Детско меню', icon: 'child_care' },
+};
 
 export default function GuestsPage() {
   const { id } = useParams();
@@ -17,22 +21,19 @@ export default function GuestsPage() {
 
   const [data, setData] = useState<RSVPWithStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
 
   useEffect(() => {
     if (!id) return;
 
     setLoading(true);
-    fetch(`/api/invitations/${id}/rsvp?page=${page}`)
+    fetch(`/api/invitations/${id}/rsvp`)
       .then((res) => res.json())
       .then((d) => setData(d))
       .finally(() => setLoading(false));
-  }, [id, page]);
+  }, [id]);
 
   if (loading) return <Spinner />;
   if (!data) return <p>Няма отговорили гости.</p>;
-
-  const guests: PaginatedGuests = data.guests;
 
   return (
     <div className="container fullHeight centerWrapper">
@@ -52,6 +53,7 @@ export default function GuestsPage() {
 
         <h1>Гости</h1>
 
+        {/* Stats */}
         <div className={styles.stats}>
           <ul>
             <li>
@@ -77,40 +79,38 @@ export default function GuestsPage() {
             </li>
           </ul>
 
-          {data.stats.menu_counts && (
+          {data.ask_menu && (
             <>
               <h5>Менюта</h5>
               <ul>
-                {Object.entries(data.stats.menu_counts).map(([menu, count]) => (
-                  <li key={menu}>
-                    <div>
-                      <span className="material-symbols-outlined">nutrition</span>
-                      <span>{menu}</span>
-                    </div>
-                    <b>{count}</b>
-                  </li>
-                ))}
+                {Object.entries(data.stats.menu_counts).map(([menu, count]) => {
+                  const menuInfo = menuMap[menu] || { bgName: menu, icon: 'nutrition' };
+                  return (
+                    <li key={menu}>
+                      <div>
+                        <span className="material-symbols-outlined">{menuInfo.icon}</span>
+                        <span>{menuInfo.bgName}</span>
+                      </div>
+                      <b>{count}</b>
+                    </li>
+                  );
+                })}
               </ul>
             </>
           )}
         </div>
 
         <div className={styles.replies}>
-          <h3>Отговорили на поканата</h3>
-          <ul>
-            {guests.items.map((guest: Guest) => (
-              <li key={guest.id}>
-                {guest.first_name} {guest.last_name} — {guest.guest_type}{' '}
-                {guest.menu_choice ? `(Меню: ${guest.menu_choice})` : ''}
-              </li>
-            ))}
-          </ul>
+          <h5>Отговорили на поканата: {data.stats.total_attending}</h5>
 
-          <Pagination
-            currentPage={guests.current_page}
-            totalPages={guests.total_pages}
-            onPageChange={(newPage) => setPage(newPage)}
-          />
+          <Button
+            variant="secondary"
+            size="middle"
+            width="100%"
+            onClick={() => router.push(`/profile/invitations/${id}/guests/replies`)}
+          >
+            Подробен списък с гости
+          </Button>
         </div>
       </div>
     </div>

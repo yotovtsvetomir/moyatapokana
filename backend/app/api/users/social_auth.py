@@ -7,14 +7,11 @@ from app.db.models.invitation import Invitation
 from app.db.session import get_write_session, get_read_session
 from app.services.auth import create_session, hash_password, delete_session
 import httpx
-import os
+from app.core.settings import settings
 from pydantic import BaseModel
 import secrets
 
 router = APIRouter()
-
-GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
-REDIRECT_URI = os.getenv("FRONTEND_BASE_URL") + "/social-redirect"
 
 
 class GoogleLoginPayload(BaseModel):
@@ -56,7 +53,7 @@ async def google_login(
             )
         data = resp.json()
 
-    if data.get("aud") != GOOGLE_CLIENT_ID:
+    if data.get("aud") != settings.GOOGLE_CLIENT_ID:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid audience in token"
         )

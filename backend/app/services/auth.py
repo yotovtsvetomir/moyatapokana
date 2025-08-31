@@ -1,4 +1,4 @@
-import os
+from app.core.settings import settings
 import secrets
 import json
 from datetime import datetime, timezone
@@ -10,9 +10,7 @@ from app.schemas.user import UserCreate
 from app.db.models.user import User
 from app.core.redis_client import get_redis_client
 
-SESSION_EXPIRE_SECONDS = 60 * 60 * 24 * 7  # 7 days
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-PEPPER = os.getenv("PEPPER")
 
 
 def isoformat_z(dt: datetime) -> str:
@@ -20,11 +18,11 @@ def isoformat_z(dt: datetime) -> str:
 
 
 def hash_password(password: str) -> str:
-    return pwd_context.hash(password + PEPPER)
+    return pwd_context.hash(password + settings.PEPPER)
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password + PEPPER, hashed_password)
+    return pwd_context.verify(plain_password + settings.PEPPER, hashed_password)
 
 
 # ------------------------------
@@ -66,7 +64,7 @@ async def authenticate_user(email: str, password: str, db: AsyncSession) -> User
 async def _set_session(key: str, data: dict):
     redis = await get_redis_client()
     await redis.set(key, json.dumps(data))
-    await redis.expire(key, SESSION_EXPIRE_SECONDS)
+    await redis.expire(key, settings.SESSION_EXPIRE_SECONDS)
 
 
 async def create_session(user: User) -> str:
@@ -142,5 +140,5 @@ async def extend_session_expiry(session_id: str, anonymous: bool = False) -> boo
     key = f"{'anonymous_' if anonymous else 'user_'}session:{session_id}"
     if not await redis.exists(key):
         return False
-    await redis.expire(key, SESSION_EXPIRE_SECONDS)
+    await redis.expire(key, settings.SESSION_EXPIRE_SECONDS)
     return True
