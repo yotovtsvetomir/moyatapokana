@@ -4,36 +4,55 @@ from datetime import datetime
 from enum import Enum
 
 
+# -------------------- Enums --------------------
 class OrderStatus(str, Enum):
     STARTED = "started"
     PAID = "paid"
     CANCELLED = "cancelled"
 
 
+# -------------------- Price Tier Schemas --------------------
+class PriceTierRead(BaseModel):
+    id: int
+    price: float
+    duration_days: int
+    currency: str
+    active: bool
+
+    model_config = {"from_attributes": True}
+
+
+class PriceTierReadWithChoices(BaseModel):
+    tiers: list[PriceTierRead]
+    currencies: list[str]
+
+    model_config = {"from_attributes": True}
+
+
 # -------------------- Base --------------------
 class OrderBase(BaseModel):
-    customer_name: Optional[str]
-    customer_email: Optional[EmailStr]
-    billing_name: Optional[str]
-    billing_address: Optional[str]
-    billing_city: Optional[str]
-    billing_zip: Optional[str]
-    billing_country: Optional[str]
+    customer_name: Optional[str] = ""
+    customer_email: Optional[EmailStr] = ""
+    billing_name: Optional[str] = ""
+    billing_address: Optional[str] = ""
+    billing_city: Optional[str] = ""
+    billing_zip: Optional[str] = ""
+    billing_country: Optional[str] = ""
     is_company: Optional[bool] = False
-    company_name: Optional[str]
-    vat_number: Optional[str]
-    voucher_id: Optional[int]
+    company_name: Optional[str] = ""
+    vat_number: Optional[str] = ""
+    voucher_id: Optional[int] = ""
 
 
 # -------------------- Create --------------------
 class OrderCreate(OrderBase):
     invitation_id: int
-    total_price: Optional[float] = 0
 
 
 # -------------------- Update Price + Voucher --------------------
 class OrderUpdatePrice(BaseModel):
-    total_price: float
+    duration_days: int
+    currency: Optional[str] = "BGN"
     voucher_code: Optional[str]
 
 
@@ -44,6 +63,7 @@ class OrderUpdate(OrderBase):
     paid_price: Optional[float]
     paid_at: Optional[datetime]
     duration_days: Optional[int]
+    price_tier_id: Optional[int]
 
 
 # -------------------- Read / Response --------------------
@@ -62,5 +82,9 @@ class OrderRead(OrderBase):
     discount_amount: Optional[float]
     original_price: Optional[float]
     duration_days: Optional[int]
+    currency: str  # <--- new field
     created_at: datetime
     updated_at: datetime
+    price_tier: Optional[PriceTierRead]
+
+    model_config = {"from_attributes": True}

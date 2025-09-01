@@ -54,7 +54,12 @@ export default function InvitationSettingsPage() {
         href={`/invitations/edit/${id}/settings/style`}
         title="Стил"
         value={invitation.primary_color || invitation.secondary_color || "—"}
-        last
+      />
+
+      <OverviewSection
+        href={`/invitations/edit/${id}/settings/font`}
+        title="Шрифт"
+        value={invitation.font_obj?.label || "—"}
       />
 
       <OverviewSection

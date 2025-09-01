@@ -51,5 +51,14 @@ class Settings:
     # Google OAuth
     GOOGLE_CLIENT_ID: str | None = os.getenv("GOOGLE_CLIENT_ID")
 
+    # Stripe
+    STRIPE_PUBLISHABLE_KEY: str | None = os.getenv("STRIPE_PUBLISHABLE_KEY")
+    STRIPE_SECRET_KEY: str | None = os.getenv("STRIPE_SECRET_KEY")
+    STRIPE_WEBHOOK_SECRET: str | None = os.getenv("STRIPE_WEBHOOK_SECRET")
+
+    # Exchange rates
+    API_KEY: str | None = os.getenv("API_KEY")
+    BASE_CURRENCY: str | None = os.getenv("BASE_CURRENCY")
+
 
 settings = Settings()

@@ -33,19 +33,23 @@ from app.db.models.invitation import (
     Game,
     Slideshow,
     Guest,
+    Font,
 )
 from app.schemas.invitation import (
     InvitationUpdate,
     InvitationRead,
+    ReadyToPurchaseResponse,
     GameRead,
     SlideshowRead,
     GuestCreate,
     GuestRead,
     RSVPWithStats,
     Stats,
+    FontRead,
 )
 from app.services.auth import get_current_user
 from http.cookies import SimpleCookie
+from typing import List
 
 
 router = APIRouter()
@@ -82,6 +86,7 @@ async def fetch_invitation(
             selectinload(Invitation.selected_game_obj),
             selectinload(Invitation.selected_slideshow_obj),
             selectinload(Invitation.slideshow_images),
+            selectinload(Invitation.font_obj),
         )
         .where(Invitation.id == invitation_id)
     )
@@ -100,7 +105,7 @@ async def fetch_invitation(
     return invitation
 
 
-# -------------------- List all games --------------------
+# -------------------- List all games/slideshows/fonts --------------------
 @router.get("/games", response_model=list[GameRead])
 async def list_games(db: AsyncSession = Depends(get_read_session)):
     result = await db.execute(select(Game))
@@ -113,6 +118,13 @@ async def list_slideshows(db: AsyncSession = Depends(get_read_session)):
     result = await db.execute(select(Slideshow))
     slideshows = result.scalars().all()
     return slideshows
+
+
+@router.get("/fonts", response_model=list[FontRead])
+async def list_fonts(db: AsyncSession = Depends(get_read_session)):
+    result = await db.execute(select(Font))
+    fonts = result.scalars().all()
+    return fonts
 
 
 # -------------------- Get Invitation --------------------
@@ -190,6 +202,7 @@ async def create_empty_invitation(
             selectinload(Invitation.selected_slideshow_obj),
             selectinload(Invitation.events),
             selectinload(Invitation.slideshow_images),
+            selectinload(Invitation.font_obj),
         )
         .where(Invitation.id == invitation_obj.id)
     )
@@ -290,6 +303,7 @@ async def update_invitation(
             selectinload(Invitation.selected_game_obj),
             selectinload(Invitation.selected_slideshow_obj),
             selectinload(Invitation.slideshow_images),
+            selectinload(Invitation.font_obj),
         )
         .where(Invitation.id == invitation_id)
     )
@@ -315,6 +329,7 @@ async def list_invitations(
         selectinload(Invitation.selected_game_obj),
         selectinload(Invitation.selected_slideshow_obj),
         selectinload(Invitation.slideshow_images),
+        selectinload(Invitation.font_obj),
     ]
 
     return await paginate(
@@ -390,6 +405,7 @@ async def upload_invitation_wallpaper(
             selectinload(Invitation.selected_game_obj),
             selectinload(Invitation.selected_slideshow_obj),
             selectinload(Invitation.slideshow_images),
+            selectinload(Invitation.font_obj),
         )
         .where(Invitation.id == invitation.id)
     )
@@ -481,6 +497,7 @@ async def upload_slides(
             selectinload(Invitation.selected_game_obj),
             selectinload(Invitation.selected_slideshow_obj),
             selectinload(Invitation.slideshow_images),
+            selectinload(Invitation.font_obj),
         )
         .where(Invitation.id == invitation.id)
     )
@@ -534,6 +551,7 @@ async def upload_invitation_audio(
             selectinload(Invitation.selected_game_obj),
             selectinload(Invitation.selected_slideshow_obj),
             selectinload(Invitation.slideshow_images),
+            selectinload(Invitation.font_obj),
         )
         .where(Invitation.id == invitation.id)
     )
@@ -682,4 +700,88 @@ async def get_rsvp_for_owner(
         ask_menu=rsvp.ask_menu,
         stats=rsvp_stats,
         guests=paginated_main_guests,
+    )
+
+
+MANDATORY_INVITATION_FIELDS = [
+    "title",
+    "description",
+    "primary_color",
+    "secondary_color",
+    "wallpaper",
+    "font_obj",
+]
+
+MANDATORY_EVENT_FIELDS = [
+    "title",
+    "start_datetime",
+    "location",
+    "description",
+]
+
+FIELD_LABELS_BG = {
+    # Invitation fields
+    "title": "Заглавие",
+    "description": "Описание",
+    "primary_color": "Основен цвят",
+    "secondary_color": "Вторичен цвят",
+    "wallpaper": "Фонова снимка",
+    "font_obj": "Шрифт",
+    # Event fields
+    "title_event": "Заглавие на събитието",
+    "start_datetime": "Начална дата/час",
+    "location": "Място",
+    "description_event": "Описание на събитието",
+}
+
+
+@router.get(
+    "/{invitation_id}/ready",
+    response_model=ReadyToPurchaseResponse,
+)
+async def check_ready_to_purchase(
+    invitation_id: int, db: AsyncSession = Depends(get_read_session)
+):
+    """Check if an invitation has all mandatory fields filled before purchase."""
+    result = await db.execute(
+        select(Invitation)
+        .options(
+            selectinload(Invitation.rsvp),
+            selectinload(Invitation.events),
+            selectinload(Invitation.selected_game_obj),
+            selectinload(Invitation.selected_slideshow_obj),
+            selectinload(Invitation.slideshow_images),
+            selectinload(Invitation.font_obj),
+        )
+        .where(Invitation.id == invitation_id)
+    )
+    invitation = result.scalar_one_or_none()
+
+    if not invitation:
+        raise HTTPException(status_code=404, detail="Invitation not found")
+
+    invitation_data = InvitationRead.model_validate(invitation)
+    missing: List[str] = []
+
+    # --- Invitation fields ---
+    for field in MANDATORY_INVITATION_FIELDS:
+        if not getattr(invitation_data, field, None):
+            missing.append(f"{FIELD_LABELS_BG.get(field, field)}")
+
+    # --- Events ---
+    if not invitation_data.events or len(invitation_data.events) == 0:
+        missing.append("events")
+    else:
+        for idx, event in enumerate(invitation_data.events):
+            for field in MANDATORY_EVENT_FIELDS:
+                # Use separate key for event description to avoid duplicates
+                field_key = f"{field}_event" if field == "description" else field
+                if not getattr(event, field, None):
+                    missing.append(
+                        f"Събитие[{idx}] - {FIELD_LABELS_BG.get(field_key, field)}"
+                    )
+
+    return ReadyToPurchaseResponse(
+        ready=len(missing) == 0,
+        missing=missing or None,
     )

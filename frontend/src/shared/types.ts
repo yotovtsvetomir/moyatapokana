@@ -278,6 +278,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/invitations/fonts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Fonts */
+        get: operations["list_fonts_invitations_fonts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/invitations/{invitation_id}": {
         parameters: {
             query?: never;
@@ -448,6 +465,115 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/invitations/{invitation_id}/ready": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Check Ready To Purchase
+         * @description Check if an invitation has all mandatory fields filled before purchase.
+         */
+        get: operations["check_ready_to_purchase_invitations__invitation_id__ready_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/orders/create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Order Route */
+        post: operations["create_order_route_orders_create_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/orders/price-tiers/{currency}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Price Tiers
+         * @description Fetch all active price tiers filtered by the currency in the URL,
+         *     and all available currencies.
+         */
+        get: operations["get_price_tiers_orders_price_tiers__currency__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/orders/update/{order_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Order Price */
+        patch: operations["update_order_price_orders_update__order_id__patch"];
+        trace?: never;
+    };
+    "/orders/initiate-payment/{order_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Initiate Payment */
+        post: operations["initiate_payment_orders_initiate_payment__order_id__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/orders/{order_id}/invoice": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Generate Invoice */
+        get: operations["generate_invoice_orders__order_id__invoice_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -538,6 +664,19 @@ export interface components {
                 [key: string]: unknown;
             };
         };
+        /** FontRead */
+        FontRead: {
+            /** Label */
+            label: string;
+            /** Value */
+            value: string;
+            /** Font Family */
+            font_family: string;
+            /** Font Url */
+            font_url: string;
+            /** Id */
+            id: number;
+        };
         /** GameRead */
         GameRead: {
             /** Id */
@@ -605,6 +744,8 @@ export interface components {
             created_at?: string | null;
             /** Id */
             id: number;
+            /** Full Name */
+            full_name?: string | null;
             /**
              * Sub Guests
              * @default []
@@ -632,6 +773,9 @@ export interface components {
             /** Selected Slideshow */
             selected_slideshow?: string | null;
             selected_slideshow_obj?: components["schemas"]["SlideshowRead"] | null;
+            /** Selected Font */
+            selected_font?: string | null;
+            font_obj?: components["schemas"]["FontRead"] | null;
             /** Primary Color */
             primary_color?: string | null;
             /** Secondary Color */
@@ -640,8 +784,6 @@ export interface components {
             wallpaper?: string | null;
             /** Background Audio */
             background_audio?: string | null;
-            /** Font */
-            font?: string | null;
             /** Owner Id */
             owner_id?: number | null;
             /** Anon Session Id */
@@ -705,6 +847,9 @@ export interface components {
             /** Selected Slideshow */
             selected_slideshow?: string | null;
             selected_slideshow_obj?: components["schemas"]["SlideshowRead"] | null;
+            /** Selected Font */
+            selected_font?: string | null;
+            font_obj?: components["schemas"]["FontRead"] | null;
             /** Primary Color */
             primary_color?: string | null;
             /** Secondary Color */
@@ -713,8 +858,6 @@ export interface components {
             wallpaper?: string | null;
             /** Background Audio */
             background_audio?: string | null;
-            /** Font */
-            font?: string | null;
             /** Owner Id */
             owner_id?: number | null;
             /** Anon Session Id */
@@ -741,6 +884,181 @@ export interface components {
             events?: components["schemas"]["EventUpdate"][] | null;
             /** Slideshow Images */
             slideshow_images?: components["schemas"]["SlideshowImageCreate"][] | null;
+        };
+        /** OrderCreate */
+        OrderCreate: {
+            /**
+             * Customer Name
+             * @default
+             */
+            customer_name: string | null;
+            /**
+             * Customer Email
+             * @default
+             */
+            customer_email: string | null;
+            /**
+             * Billing Name
+             * @default
+             */
+            billing_name: string | null;
+            /**
+             * Billing Address
+             * @default
+             */
+            billing_address: string | null;
+            /**
+             * Billing City
+             * @default
+             */
+            billing_city: string | null;
+            /**
+             * Billing Zip
+             * @default
+             */
+            billing_zip: string | null;
+            /**
+             * Billing Country
+             * @default
+             */
+            billing_country: string | null;
+            /**
+             * Is Company
+             * @default false
+             */
+            is_company: boolean | null;
+            /**
+             * Company Name
+             * @default
+             */
+            company_name: string | null;
+            /**
+             * Vat Number
+             * @default
+             */
+            vat_number: string | null;
+            /**
+             * Voucher Id
+             * @default
+             */
+            voucher_id: number | null;
+            /** Invitation Id */
+            invitation_id: number;
+        };
+        /** OrderRead */
+        OrderRead: {
+            /**
+             * Customer Name
+             * @default
+             */
+            customer_name: string | null;
+            /**
+             * Customer Email
+             * @default
+             */
+            customer_email: string | null;
+            /**
+             * Billing Name
+             * @default
+             */
+            billing_name: string | null;
+            /**
+             * Billing Address
+             * @default
+             */
+            billing_address: string | null;
+            /**
+             * Billing City
+             * @default
+             */
+            billing_city: string | null;
+            /**
+             * Billing Zip
+             * @default
+             */
+            billing_zip: string | null;
+            /**
+             * Billing Country
+             * @default
+             */
+            billing_country: string | null;
+            /**
+             * Is Company
+             * @default false
+             */
+            is_company: boolean | null;
+            /**
+             * Company Name
+             * @default
+             */
+            company_name: string | null;
+            /**
+             * Vat Number
+             * @default
+             */
+            vat_number: string | null;
+            /**
+             * Voucher Id
+             * @default
+             */
+            voucher_id: number | null;
+            /** Id */
+            id: number;
+            /** Order Number */
+            order_number: string;
+            /** Invitation Id */
+            invitation_id: number;
+            /** Invitation Title */
+            invitation_title: string | null;
+            /** Total Price */
+            total_price: number;
+            /** Currency */
+            currency: string;
+            /** Paid */
+            paid: boolean;
+            /** Paid Price */
+            paid_price: number | null;
+            /** Paid At */
+            paid_at: string | null;
+            status: components["schemas"]["OrderStatus"];
+            /** Stripe Payment Intent */
+            stripe_payment_intent: string | null;
+            /** Stripe Session Id */
+            stripe_session_id: string | null;
+            /** Discount Amount */
+            discount_amount: number | null;
+            /** Original Price */
+            original_price: number | null;
+            /** Duration Days */
+            duration_days: number | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            price_tier: components["schemas"]["PriceTierRead"] | null;
+        };
+        /**
+         * OrderStatus
+         * @enum {string}
+         */
+        OrderStatus: "started" | "paid" | "cancelled";
+        /** OrderUpdatePrice */
+        OrderUpdatePrice: {
+            /** Duration Days */
+            duration_days: number;
+            /**
+             * Currency
+             * @default BGN
+             */
+            currency: string | null;
+            /** Voucher Code */
+            voucher_code: string | null;
         };
         /** PaginatedResponse[GuestRead] */
         PaginatedResponse_GuestRead_: {
@@ -770,6 +1088,26 @@ export interface components {
              */
             email: string;
         };
+        /** PriceTierRead */
+        PriceTierRead: {
+            /** Id */
+            id: number;
+            /** Price */
+            price: number;
+            /** Duration Days */
+            duration_days: number;
+            /** Currency */
+            currency: string;
+            /** Active */
+            active: boolean;
+        };
+        /** PriceTierReadWithChoices */
+        PriceTierReadWithChoices: {
+            /** Tiers */
+            tiers: components["schemas"]["PriceTierRead"][];
+            /** Currencies */
+            currencies: string[];
+        };
         /** RSVPInvitationRead */
         RSVPInvitationRead: {
             /** Id */
@@ -790,6 +1128,13 @@ export interface components {
             /** Ask Menu */
             ask_menu: boolean;
             stats: components["schemas"]["Stats"];
+        };
+        /** ReadyToPurchaseResponse */
+        ReadyToPurchaseResponse: {
+            /** Ready */
+            ready: boolean;
+            /** Missing */
+            missing?: string[] | null;
         };
         /** SlideshowImageCreate */
         SlideshowImageCreate: {
@@ -1424,6 +1769,26 @@ export interface operations {
             };
         };
     };
+    list_fonts_invitations_fonts_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FontRead"][];
+                };
+            };
+        };
+    };
     get_invitation_invitations__invitation_id__get: {
         parameters: {
             query?: never;
@@ -1734,6 +2099,9 @@ export interface operations {
             query?: {
                 page?: number;
                 page_size?: number;
+                attending?: string | null;
+                search?: string | null;
+                ordering?: string;
             };
             header?: never;
             path: {
@@ -1752,6 +2120,206 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RSVPWithStats"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    check_ready_to_purchase_invitations__invitation_id__ready_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invitation_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReadyToPurchaseResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_order_route_orders_create_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                session_id?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OrderCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_price_tiers_orders_price_tiers__currency__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                currency: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PriceTierReadWithChoices"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_order_price_orders_update__order_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order_id: number;
+            };
+            cookie?: {
+                session_id?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OrderUpdatePrice"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    initiate_payment_orders_initiate_payment__order_id__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order_id: number;
+            };
+            cookie?: {
+                session_id?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    generate_invoice_orders__order_id__invoice_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order_id: number;
+            };
+            cookie?: {
+                session_id?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */

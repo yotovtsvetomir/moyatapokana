@@ -81,7 +81,18 @@
   color: #b71c1c;
 }
 
-.invitationInfo {
+.purchaseErrors {
+  margin-top: 1rem;
+  background-color: #ffe0e0;
+  border: 1px solid #ff8080;
+  padding: 12px;
+  margin-bottom: 16px;
+  border-radius: 6px;
+  color: #800000;
+}
+.purchaseErrors ul {
+  margin: 4px 0 0 20px;
+  padding: 0;
 }
 
 .infoPair {

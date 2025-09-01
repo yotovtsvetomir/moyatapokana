@@ -25,6 +25,7 @@ export default function InvitationDetail() {
   const [loading, setLoading] = useState(true);
   const [showConfirm, setShowConfirm] = useState(false);
   const [showPurchaseConfirm, setShowPurchaseConfirm] = useState(false);
+  const [purchaseErrors, setPurchaseErrors] = useState<string[] | null>(null);
 
   useEffect(() => {
     const fetchInvitation = async () => {
@@ -44,6 +45,25 @@ export default function InvitationDetail() {
 
     if (id) fetchInvitation();
   }, [id]);
+  
+  const handleBuyClick = async () => {
+    try {
+      const res = await fetch(`/api/invitations/${invitation.id}/ready`);
+      if (!res.ok) throw new Error("Failed to check readiness");
+
+      const data = await res.json();
+
+      if (data.ready) {
+        setPurchaseErrors(null);
+        setShowPurchaseConfirm(true);
+      } else {
+        setPurchaseErrors(data.missing);
+      }
+    } catch (err) {
+      console.error(err);
+      setPurchaseErrors(["Възникна грешка при проверката за покупка."]);
+    }
+  };
 
   const handleDelete = async () => {
     if (!invitation) return;
@@ -122,25 +142,37 @@ export default function InvitationDetail() {
 
         <div className={styles.invitationInfo}>
           {[
-            {
-              label: 'Създадена на',
-              value: invitation.created_at
-                ? new Date(invitation.created_at).toLocaleDateString('bg-BG')
-                : '—',
-            },
+            { label: 'Създадена на', value: invitation.created_at ? new Date(invitation.created_at).toLocaleDateString('bg-BG') : '—' },
             { label: 'Игра', value: invitation.selected_game_obj?.name ?? 'Без' },
             { label: 'Слайдшоу', value: invitation.selected_slideshow_obj?.name ?? 'Без' },
-            { label: 'Шрифт', value: invitation.font ?? 'Без' },
-            { label: 'Тема', value: invitation.theme ?? 'Без' },
+            { label: 'Шрифт', value: invitation.font_obj?.label ?? 'Без' },
             {
-              label: 'Статус',
-              value: statusLabels[invitation.status] ?? invitation.status,
+              label: 'Тема',
+              value: `${invitation.primary_color ?? '#ccc'} ${invitation.secondary_color ?? '#ccc'}`, // string for detection
+              isColor: true, // flag to indicate it's a color
             },
+            { label: 'Статус', value: statusLabels[invitation.status] ?? invitation.status },
             { label: 'Онлайн', value: invitation.is_active ? 'Да' : 'Не' },
           ].map((item) => (
             <div key={item.label} className={styles.infoPair}>
               <h5>{item.label}</h5>
-              <p>{item.value}</p>
+              {item.isColor ? (
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  {item.value.split(' ').map((color, idx) => (
+                    <span
+                      key={idx}
+                      style={{
+                        width: 20,
+                        height: 20,
+                        borderRadius: '50%',
+                        backgroundColor: color,
+                      }}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <p>{item.value}</p>
+              )}
             </div>
           ))}
         </div>
@@ -177,12 +209,23 @@ export default function InvitationDetail() {
               width="100%"
               icon="shopping_cart"
               iconPosition="right"
-              onClick={() => setShowPurchaseConfirm(true)}
+              onClick={handleBuyClick}
             >
               Купи
             </Button>
           )}
         </div>
+
+        {purchaseErrors && (
+          <div className={styles.purchaseErrors}>
+            <strong>Не може да закупите поканата. Липсват задължителни полета:</strong>
+            <ul>
+              {purchaseErrors.map((field) => (
+                <li key={field}>{field}</li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         {!invitation.is_active && (
           <div className={styles.deleteActions}>

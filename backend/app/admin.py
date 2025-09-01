@@ -1,7 +1,8 @@
 from sqladmin import Admin, ModelView
 from app.db.session import engine_writer, get_read_session, get_write_session
 from app.db.models.user import User
-from app.db.models.invitation import Game, Slideshow, Invitation, RSVP, Guest
+from app.db.models.invitation import Game, Slideshow, Invitation, RSVP, Guest, Font
+from app.db.models.order import PriceTier, Order, Voucher, CurrencyRate
 
 
 # -------------------- User Admin --------------------
@@ -65,6 +66,7 @@ class SlideshowAdmin(ModelView, model=Slideshow):
     column_searchable_list = [Slideshow.name, Slideshow.key]
     column_sortable_list = [Slideshow.id, Slideshow.name]
     column_editable_list = [Slideshow.name, Slideshow.key]
+    form_excluded_columns = ["images"]
 
     async def get_session(self):
         async for session in get_read_session():
@@ -81,17 +83,15 @@ class InvitationAdmin(ModelView, model=Invitation):
         Invitation.is_active,
         Invitation.active_from,
         Invitation.active_until,
+        Invitation.rsvp_id,
     ]
-    column_searchable_list = [
-        Invitation.title,
-        Invitation.slug,
-        Invitation.owner_id,
-    ]
+    column_searchable_list = [Invitation.title, Invitation.slug, Invitation.owner_id]
     column_sortable_list = [
         Invitation.id,
         Invitation.title,
         Invitation.active_from,
         Invitation.active_until,
+        Invitation.rsvp_id,
     ]
     column_editable_list = [
         Invitation.title,
@@ -99,15 +99,33 @@ class InvitationAdmin(ModelView, model=Invitation):
         Invitation.is_active,
         Invitation.active_from,
         Invitation.active_until,
+        Invitation.rsvp_id,
     ]
+
+    # -------------------- AJAX selection --------------------
+    form_ajax_refs = {
+        "rsvp": {
+            "fields": (RSVP.id, RSVP.ask_menu),
+        },
+        "slideshow_images": {
+            "fields": ("file_url",),
+        },
+        "events": {
+            "fields": ("title",),
+        },
+    }
 
     async def get_session(self):
         async for session in get_read_session():
             return session
 
+    # -------------------- Create / Update --------------------
     async def create_model(self, session, data):
         async for s in get_write_session():
-            obj = Invitation(**data)
+            obj = Invitation()
+            for key, value in data.items():
+                if hasattr(obj, key):
+                    setattr(obj, key, value)
             s.add(obj)
             await s.commit()
             await s.refresh(obj)
@@ -118,10 +136,9 @@ class InvitationAdmin(ModelView, model=Invitation):
             db_obj = await s.get(Invitation, int(pk))
             if not db_obj:
                 return None
-            allowed_fields = ["status", "is_active", "active_from", "active_until"]
-            for key in allowed_fields:
-                if key in data:
-                    setattr(db_obj, key, data[key])
+            for key, value in data.items():
+                if hasattr(db_obj, key):
+                    setattr(db_obj, key, value)
             s.add(db_obj)
             await s.commit()
             await s.refresh(db_obj)
@@ -140,15 +157,29 @@ class InvitationAdmin(ModelView, model=Invitation):
 # -------------------- RSVP Admin --------------------
 class RSVPAdmin(ModelView, model=RSVP):
     column_list = [RSVP.id, RSVP.ask_menu]
-    column_searchable_list = [RSVP.id]  # Customize if needed
+    column_searchable_list = [RSVP.id]
     column_sortable_list = [RSVP.id]
     column_editable_list = [RSVP.ask_menu]
 
-    # Optional: if you want to show guests as a relation
+    # Show guests for this RSVP only
     column_formatters = {
-        "guests": lambda rsvp: ", ".join(
-            [guest.name for guest in getattr(rsvp, "guests", [])]
+        "guests": lambda v, c, m, n: ", ".join(
+            [
+                guest.first_name + " " + guest.last_name
+                for guest in getattr(m, "guests", [])
+            ]
         )
+    }
+
+    # -------------------- AJAX multiple selection for guests --------------------
+    form_ajax_refs = {
+        "guests": {
+            "fields": (Guest.first_name, Guest.last_name),
+            # Filter guests by RSVP ID dynamically
+            "filters": lambda query: query.filter(
+                Guest.rsvp_id == getattr(query._model, "id", None)
+            ),
+        }
     }
 
     async def get_session(self):
@@ -158,6 +189,13 @@ class RSVPAdmin(ModelView, model=RSVP):
     async def create_model(self, session, data):
         async for s in get_write_session():
             obj = RSVP(**data)
+            # Optionally assign guests
+            guest_ids = data.get("guests", [])
+            for guest_id in guest_ids:
+                guest = await s.get(Guest, int(guest_id))
+                if guest:
+                    guest.rsvp_id = obj.id
+                    s.add(guest)
             s.add(obj)
             await s.commit()
             await s.refresh(obj)
@@ -168,10 +206,24 @@ class RSVPAdmin(ModelView, model=RSVP):
             db_obj = await s.get(RSVP, int(pk))
             if not db_obj:
                 return None
-            allowed_fields = ["ask_menu"]
-            for key in allowed_fields:
-                if key in data:
-                    setattr(db_obj, key, data[key])
+            if "ask_menu" in data:
+                db_obj.ask_menu = data["ask_menu"]
+
+            # Update guests
+            if "guests" in data:
+                guest_ids = data["guests"]
+                # Remove old guests not in new selection
+                for g in db_obj.guests:
+                    if g.id not in guest_ids:
+                        g.rsvp_id = None
+                        s.add(g)
+                # Assign new guests
+                for guest_id in guest_ids:
+                    guest = await s.get(Guest, int(guest_id))
+                    if guest:
+                        guest.rsvp_id = db_obj.id
+                        s.add(guest)
+
             s.add(db_obj)
             await s.commit()
             await s.refresh(db_obj)
@@ -182,6 +234,10 @@ class RSVPAdmin(ModelView, model=RSVP):
             db_obj = await s.get(RSVP, int(pk))
             if not db_obj:
                 return None
+            # Reset guests
+            for guest in db_obj.guests:
+                guest.rsvp_id = None
+                s.add(guest)
             await s.delete(db_obj)
             await s.commit()
             return db_obj
@@ -363,6 +419,198 @@ class GuestAdmin(ModelView, model=Guest):
             return db_obj
 
 
+# -------------------- Font Admin --------------------
+class FontAdmin(ModelView, model=Font):
+    column_list = [Font.id, Font.label, Font.value, Font.font_family, Font.font_url]
+    column_searchable_list = [Font.label, Font.value, Font.font_family]
+    column_sortable_list = [Font.id, Font.label, Font.value]
+    column_editable_list = [Font.label, Font.value, Font.font_family, Font.font_url]
+    form_excluded_columns = ["invitations", "templates"]
+
+    async def get_session(self):
+        async for session in get_read_session():
+            return session
+
+    async def create_model(self, session, data):
+        async for s in get_write_session():
+            # Exclude relationships
+            allowed_keys = set(Font.__table__.columns.keys())
+            filtered_data = {k: v for k, v in data.items() if k in allowed_keys}
+
+            obj = Font(**filtered_data)
+            s.add(obj)
+            await s.commit()
+            await s.refresh(obj)
+            return obj
+
+    async def update_model(self, session, pk, data):
+        async for s in get_write_session():
+            db_obj = await s.get(Font, int(pk))
+            if not db_obj:
+                return None
+
+            allowed_keys = set(Font.__table__.columns.keys())
+            for key, value in data.items():
+                if key in allowed_keys:
+                    setattr(db_obj, key, value)
+
+            s.add(db_obj)
+            await s.commit()
+            await s.refresh(db_obj)
+            return db_obj
+
+    async def delete_model(self, session, pk):
+        async for s in get_write_session():
+            db_obj = await s.get(Font, int(pk))
+            if not db_obj:
+                return None
+            await s.delete(db_obj)
+            await s.commit()
+            return db_obj
+
+
+# -------------------- PriceTier Admin --------------------
+class PriceTierAdmin(ModelView, model=PriceTier):
+    column_list = [
+        PriceTier.id,
+        PriceTier.price,
+        PriceTier.duration_days,
+        PriceTier.currency,
+        PriceTier.active,
+    ]
+
+    column_searchable_list = [PriceTier.currency]
+    column_sortable_list = [PriceTier.id, PriceTier.price, PriceTier.duration_days]
+    column_editable_list = [PriceTier.price, PriceTier.active]
+    form_excluded_columns = ["orders"]
+
+
+# -------------------- Voucher Admin --------------------
+class VoucherAdmin(ModelView, model=Voucher):
+    column_list = [
+        Voucher.id,
+        Voucher.code,
+        Voucher.discount_type,
+        Voucher.amount,
+        Voucher.active,
+        Voucher.usage_limit,
+        Voucher.used_count,
+    ]
+
+    column_searchable_list = [Voucher.code]
+    column_sortable_list = [Voucher.id, Voucher.code, Voucher.amount, Voucher.active]
+    column_editable_list = [Voucher.amount, Voucher.active, Voucher.usage_limit]
+    form_excluded_columns = ["orders"]
+
+
+# -------------------- Order Admin --------------------
+class OrderAdmin(ModelView, model=Order):
+    column_list = [
+        Order.id,
+        Order.order_number,
+        Order.customer_name,
+        Order.customer_email,
+        Order.total_price,
+        Order.paid,
+        Order.status,
+        Order.invitation_id,
+        Order.voucher_id,
+        Order.price_tier_id,
+        Order.created_at,
+        Order.updated_at,
+    ]
+
+    column_searchable_list = [
+        Order.order_number,
+        Order.customer_name,
+        Order.customer_email,
+    ]
+    column_sortable_list = [
+        Order.id,
+        Order.order_number,
+        Order.total_price,
+        Order.paid,
+        Order.status,
+    ]
+    column_editable_list = [
+        Order.customer_name,
+        Order.customer_email,
+        Order.paid,
+        Order.status,
+    ]
+
+    # -------------------- AJAX references --------------------
+    form_ajax_refs = {
+        "invitation": {
+            "fields": (Invitation.title,),
+        },
+        "voucher": {
+            "fields": (Voucher.code,),
+        },
+        "price_tier": {
+            "fields": (PriceTier.price,),
+        },
+    }
+
+    async def get_session(self):
+        async for session in get_read_session():
+            return session
+
+
+class CurrencyRateAdmin(ModelView, model=CurrencyRate):
+    column_list = [
+        CurrencyRate.id,
+        CurrencyRate.currency,
+        CurrencyRate.rate_to_bgn,
+        CurrencyRate.updated_at,
+    ]
+
+    column_searchable_list = [CurrencyRate.currency]
+    column_sortable_list = [
+        CurrencyRate.id,
+        CurrencyRate.currency,
+        CurrencyRate.updated_at,
+    ]
+    column_editable_list = [CurrencyRate.rate_to_bgn]
+
+    async def get_session(self):
+        async for session in get_read_session():
+            return session
+
+    async def create_model(self, session, data):
+        async for s in get_write_session():
+            allowed_keys = set(CurrencyRate.__table__.columns.keys())
+            filtered_data = {k: v for k, v in data.items() if k in allowed_keys}
+            obj = CurrencyRate(**filtered_data)
+            s.add(obj)
+            await s.commit()
+            await s.refresh(obj)
+            return obj
+
+    async def update_model(self, session, pk, data):
+        async for s in get_write_session():
+            db_obj = await s.get(CurrencyRate, int(pk))
+            if not db_obj:
+                return None
+            allowed_keys = set(CurrencyRate.__table__.columns.keys())
+            for key, value in data.items():
+                if key in allowed_keys:
+                    setattr(db_obj, key, value)
+            s.add(db_obj)
+            await s.commit()
+            await s.refresh(db_obj)
+            return db_obj
+
+    async def delete_model(self, session, pk):
+        async for s in get_write_session():
+            db_obj = await s.get(CurrencyRate, int(pk))
+            if not db_obj:
+                return None
+            await s.delete(db_obj)
+            await s.commit()
+            return db_obj
+
+
 # -------------------- Setup Admin --------------------
 def setup_admin(app):
     admin = Admin(
@@ -376,3 +624,8 @@ def setup_admin(app):
     admin.add_view(SlideshowAdmin)
     admin.add_view(RSVPAdmin)
     admin.add_view(GuestAdmin)
+    admin.add_view(FontAdmin)
+    admin.add_view(PriceTierAdmin)
+    admin.add_view(VoucherAdmin)
+    admin.add_view(OrderAdmin)
+    admin.add_view(CurrencyRateAdmin)

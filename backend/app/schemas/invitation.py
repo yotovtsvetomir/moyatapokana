@@ -3,6 +3,34 @@ from typing import List, Dict, Optional, Annotated, TypeVar, Generic
 from pydantic import BaseModel, Field
 
 
+# -------------------- Font --------------------
+class FontBase(BaseModel):
+    label: str
+    value: str
+    font_family: str
+    font_url: str
+
+
+class FontCreate(FontBase):
+    pass
+
+
+class FontUpdate(BaseModel):
+    label: Optional[str] = None
+    value: Optional[str] = None
+    font_family: Optional[str] = None
+    font_url: Optional[str] = None
+
+    class Config:
+        extra = "forbid"
+
+
+class FontRead(FontBase):
+    id: int
+
+    model_config = {"from_attributes": True}
+
+
 # -------------------- Guest --------------------
 class GuestBase(BaseModel):
     first_name: str
@@ -163,21 +191,32 @@ class InvitationBase(BaseModel):
     slug: Optional[str] = None
     description: Optional[str] = None
     extra_info: Optional[str] = None
+
+    # Optional features (keys)
     selected_game: Optional[str] = None
     selected_game_obj: Optional[GameRead] = None
     selected_slideshow: Optional[str] = None
     selected_slideshow_obj: Optional[SlideshowRead] = None
+    selected_font: Optional[str] = None
+    font_obj: Optional[FontRead] = None
+
+    # Styling / Media
     primary_color: Optional[str] = None
     secondary_color: Optional[str] = None
     wallpaper: Optional[str] = None
     background_audio: Optional[str] = None
-    font: Optional[str] = None
+
+    # Ownership / session
     owner_id: Optional[int] = None
     anon_session_id: Optional[str] = None
     preview_token: Optional[str] = None
+
+    # Activation
     active_from: Optional[datetime] = None
     active_until: Optional[datetime] = None
     is_active: Optional[bool] = False
+
+    # Category / template
     category_id: Optional[int] = None
     subcategory_id: Optional[int] = None
     template_id: Optional[int] = None
@@ -193,6 +232,7 @@ class InvitationUpdate(InvitationBase):
     rsvp: Optional[RSVPInvitationUpdate] = None
     events: Optional[List[EventUpdate]] = None
     slideshow_images: Optional[List[SlideshowImageCreate]] = None
+    selected_font: Optional[str] = None
 
     class Config:
         extra = "forbid"
@@ -210,19 +250,33 @@ class InvitationRead(InvitationBase):
     model_config = {"from_attributes": True}
 
 
+class ReadyToPurchaseResponse(BaseModel):
+    ready: bool
+    missing: List[str] | None = None
+
+
 # -------------------- Template --------------------
 class TemplateBase(BaseModel):
     title: str
     slug: Optional[str] = None
     description: Optional[str] = None
     extra_info: Optional[str] = None
+
+    # Optional features (keys)
     selected_game: Optional[str] = None
+    selected_game_obj: Optional[GameRead] = None
     selected_slideshow: Optional[str] = None
+    selected_slideshow_obj: Optional[SlideshowRead] = None
+    selected_font: Optional[str] = None
+    font_obj: Optional[FontRead] = None
+
+    # Styling / Media
     primary_color: Optional[str] = None
     secondary_color: Optional[str] = None
     wallpaper: Optional[str] = None
     background_audio: Optional[str] = None
-    font: Optional[str] = None
+
+    # Categories
     category_id: Optional[int] = None
     subcategory_id: Optional[int] = None
 
@@ -241,4 +295,5 @@ class TemplateRead(TemplateBase):
     subcategory: Optional[SubCategoryRead] = None
     created_at: datetime
     updated_at: datetime
+
     model_config = {"from_attributes": True}
