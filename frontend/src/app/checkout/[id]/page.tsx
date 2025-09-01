@@ -13,16 +13,18 @@ import { components } from '@/shared/types';
 type Order = components['schemas']['OrderRead'];
 type PriceTier = components['schemas']['PriceTierRead'];
 
-// --- Static Header ---
 const CheckoutHeader = ({ order }: { order: Order }) => (
   <>
     {order.invitation_wallpaper && (
       <div className={styles.inviteWrapper}>
         <div className={styles.imageWrapper}>
-          <Image src={order.invitation_wallpaper} alt="Invitation" fill className={styles.inviteImage} />
-          <div className={styles.imageOverlay}>
-            <h1 className={styles.title}>{order.invitation_title}</h1>
-          </div>
+          <Image
+            src={order.invitation_wallpaper}
+            alt="Invitation"
+            fill
+            unoptimized
+            className={styles.inviteImage}
+          />
         </div>
       </div>
     )}
@@ -45,23 +47,25 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(true);
   const [order, setOrder] = useState<Order | null>(null);
 
-  const [currency, setCurrency] = useState<string>('BGN');
+  const [currency, setCurrency] = useState('BGN');
   const [currencyOptions, setCurrencyOptions] = useState<Option[]>([]);
   const [priceTiers, setPriceTiers] = useState<PriceTier[]>([]);
-
   const [selectedTierId, setSelectedTierId] = useState<number | null>(null);
+
   const [validFromInput, setValidFromInput] = useState('');
   const [validUntilInput, setValidUntilInput] = useState('');
   const [voucherCode, setVoucherCode] = useState('');
-  const [updateError, setUpdateError] = useState<string | null>(null);
+  const [appliedVoucher, setAppliedVoucher] = useState<string | null>(null);
 
-  const [calculatedTotal, setCalculatedTotal] = useState<number>(0);
-  const [discountAmount, setDiscountAmount] = useState<number>(0);
+  const [calculatedTotal, setCalculatedTotal] = useState(0);
+  const [discountAmount, setDiscountAmount] = useState(0);
+  const [updateError, setUpdateError] = useState<string | null>(null);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
 
-  const formatDateTime = (date: Date) => date.toISOString().slice(0, 16).replace('T', ' ');
+  const formatDateTime = (date: Date) =>
+    date.toISOString().slice(0, 16).replace('T', ' ');
 
-  // --- Fetch Order ---
+  // --- Fetch order ---
   useEffect(() => {
     if (!id) return;
     const fetchOrder = async () => {
@@ -85,7 +89,7 @@ export default function CheckoutPage() {
     fetchOrder();
   }, [id]);
 
-  // --- Fetch Price Tiers ---
+  // --- Fetch price tiers ---
   useEffect(() => {
     if (!currency) return;
     const fetchTiers = async () => {
@@ -95,12 +99,12 @@ export default function CheckoutPage() {
         const data = await res.json();
         setPriceTiers(data.tiers);
         setCurrencyOptions(data.currencies.map((c: string) => ({ value: c, label: c })));
-        // reset tier-dependent states
         setSelectedTierId(null);
         setCalculatedTotal(0);
         setDiscountAmount(0);
-        setVoucherCode('');
         setValidUntilInput('');
+        setVoucherCode('');
+        setAppliedVoucher(null);
         setUpdateError(null);
       } catch (err) {
         console.error(err);
@@ -109,45 +113,51 @@ export default function CheckoutPage() {
     fetchTiers();
   }, [currency]);
 
-  // --- Get currently selected tier object ---
-  const selectedTier = priceTiers.find(t => t.id === selectedTierId) ?? null;
+  const selectedTier = priceTiers.find((t) => t.id === selectedTierId) ?? null;
 
-  // --- Update Valid Until whenever tier changes ---
+  // --- Update valid until, total, reset voucher on tier/currency change ---
   useEffect(() => {
-    if (selectedTier) {
-      const now = new Date();
-      const until = new Date(now.getTime() + selectedTier.duration_days * 24 * 60 * 60 * 1000);
-      setValidUntilInput(formatDateTime(until));
-      setCalculatedTotal(selectedTier.price);
-      setDiscountAmount(0);
-      setVoucherCode('');
-      setUpdateError(null);
-    } else {
+    if (!selectedTier) {
       setValidUntilInput('');
       setCalculatedTotal(0);
       setDiscountAmount(0);
+      setVoucherCode('');
+      setAppliedVoucher(null);
+      return;
     }
-  }, [selectedTier]);
 
-  // --- Apply Voucher ---
-  const handleApplyVoucher = async () => {
-    if (!order || !selectedTier || !voucherCode) return;
+    const now = new Date();
+    const until = new Date(now.getTime() + selectedTier.duration_days * 24 * 60 * 60 * 1000);
+    setValidUntilInput(formatDateTime(until));
+    setCalculatedTotal(selectedTier.price);
+    setDiscountAmount(0);
+
+    setVoucherCode('');
+    setAppliedVoucher(null);
+
+    updateOrderBackend({ currency, duration_days: selectedTier.duration_days, voucher_code: null });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedTier, currency]);
+
+  const updateOrderBackend = async (updates: Partial<{ currency: string; duration_days: number; voucher_code: string | null }>) => {
+    if (!order || !selectedTier) return null;
+
+    const payload = {
+      currency: (updates.currency ?? currency).toUpperCase(),
+      duration_days: updates.duration_days ?? selectedTier.duration_days,
+      voucher_code: updates.voucher_code ?? null,
+    };
+
     try {
       const res = await fetch(`/api/orders/update/${order.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          currency,
-          voucher_code: voucherCode,
-          duration_days: selectedTier.duration_days,
-        }),
+        body: JSON.stringify(payload),
       });
       if (!res.ok) {
         const errData = await res.json();
         setUpdateError(errData.detail || 'Неуспешно обновяване на поръчката');
-        setDiscountAmount(0);
-        setCalculatedTotal(selectedTier.price);
-        return;
+        return null;
       }
 
       const updatedOrder: Order = await res.json();
@@ -155,9 +165,35 @@ export default function CheckoutPage() {
       setCalculatedTotal(updatedOrder.total_price);
       setDiscountAmount(updatedOrder.discount_amount);
       setUpdateError(null);
+      return updatedOrder;
     } catch (err) {
       console.error(err);
-      setUpdateError('Грешка при прилагане на промо код');
+      setUpdateError('Грешка при актуализация на поръчката');
+      return null;
+    }
+  };
+
+  // --- Apply / Remove voucher ---
+  const handleApplyVoucher = async () => {
+    if (!order || !selectedTier || !voucherCode) return;
+    const updated = await updateOrderBackend({
+      currency,
+      duration_days: selectedTier.duration_days,
+      voucher_code: voucherCode,
+    });
+    if (updated) setAppliedVoucher(voucherCode);
+  };
+
+  const handleRemoveVoucher = async () => {
+    if (!order || !selectedTier) return;
+    const updated = await updateOrderBackend({
+      currency,
+      duration_days: selectedTier.duration_days,
+      voucher_code: null,
+    });
+    if (updated) {
+      setAppliedVoucher(null);
+      setVoucherCode('');
     }
   };
 
@@ -184,7 +220,7 @@ export default function CheckoutPage() {
   if (loading || !order) return <Spinner />;
 
   return (
-    <div className="container fullHeight centerWrapper steps">
+    <div className="container fullHeight steps">
       <div className={styles.checkout}>
         <h1>Поръчка - {order.order_number}</h1>
         <CheckoutHeader order={order} />
@@ -214,7 +250,6 @@ export default function CheckoutPage() {
             onChange={(opt) => setSelectedTierId(opt?.value ?? null)}
             placeholder="Моля, изберете план"
           />
-
           {selectedTier && (
             <div className={styles.validityBox}>
               <h5>Поканата ще бъде активна</h5>
@@ -228,16 +263,33 @@ export default function CheckoutPage() {
         <div className={styles.voucherWrapper}>
           <h2>Промо код</h2>
           <div>
-            <Input id="voucher" name="voucher" value={voucherCode} onChange={(e) => setVoucherCode(e.target.value)} />
-            <Button
-              size="large"
-              width="100%"
-              variant="primary"
-              onClick={handleApplyVoucher}
-              disabled={!voucherCode || !selectedTier}
-            >
-              Приложи
-            </Button>
+            <Input
+              id="voucher"
+              name="voucher"
+              value={voucherCode}
+              onChange={(e) => setVoucherCode(e.target.value)}
+              disabled={!!appliedVoucher}
+            />
+            {!appliedVoucher ? (
+              <Button
+                size="large"
+                width="100%"
+                variant="primary"
+                onClick={handleApplyVoucher}
+                disabled={!voucherCode || !selectedTier}
+              >
+                Приложи
+              </Button>
+            ) : (
+              <Button
+                size="large"
+                width="100%"
+                variant="secondary"
+                onClick={handleRemoveVoucher}
+              >
+                Премахни
+              </Button>
+            )}
           </div>
           {updateError && <p className={styles.error}>{updateError}</p>}
         </div>
@@ -245,17 +297,20 @@ export default function CheckoutPage() {
         {/* Summary */}
         <div className={styles.summary}>
           <h2>Общо</h2>
-
           <div className={styles.summaryRow}>
-            <p>Оригинална цена:</p>
+            <p>Цена:</p>
             <p>{selectedTier ? selectedTier.price.toFixed(2) : '0.00'} {selectedTier?.currency}</p>
           </div>
-
-          <div className={styles.summaryRow}>
-            <p>Отстъпка:</p>
-            <p>{discountAmount.toFixed(2)} {selectedTier?.currency}</p>
-          </div>
-
+          {appliedVoucher && (
+            <div className={styles.summaryRow} style={{ color: '#298267' }}>
+              <p>Отстъпка:</p>
+              <p>
+                {appliedVoucher.length > 4
+                  ? `${appliedVoucher.slice(0, 4)}…`
+                  : appliedVoucher} - {discountAmount.toFixed(2)} {selectedTier?.currency}
+              </p>
+            </div>
+          )}
           <div className={styles.summaryRow}>
             <p><strong>Крайна цена:</strong></p>
             <p><strong>{calculatedTotal.toFixed(2)} {selectedTier?.currency}</strong></p>
@@ -264,7 +319,14 @@ export default function CheckoutPage() {
 
         {/* Checkout */}
         <div className={styles.actions}>
-          <Button onClick={handleCheckout} disabled={!selectedTier || checkoutLoading} width="100%" icon="payments" iconPosition="right" size="large">
+          <Button
+            onClick={handleCheckout}
+            disabled={!selectedTier || checkoutLoading}
+            width="100%"
+            icon="payments"
+            iconPosition="right"
+            size="large"
+          >
             {checkoutLoading ? 'Обработване...' : 'Плати'}
           </Button>
         </div>

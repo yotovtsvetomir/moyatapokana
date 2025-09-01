@@ -512,7 +512,7 @@ export interface paths {
         /**
          * Get Price Tiers
          * @description Fetch all active price tiers filtered by the currency in the URL,
-         *     and all available currencies.
+         *     and all available currencies. Sorted by price per duration day.
          */
         get: operations["get_price_tiers_orders_price_tiers__currency__get"];
         put?: never;
@@ -1010,10 +1010,10 @@ export interface components {
             invitation_id: number;
             /** Invitation Title */
             invitation_title: string | null;
+            /** Invitation Wallpaper */
+            invitation_wallpaper: string | null;
             /** Total Price */
             total_price: number;
-            /** Currency */
-            currency: string;
             /** Paid */
             paid: boolean;
             /** Paid Price */
@@ -1031,6 +1031,8 @@ export interface components {
             original_price: number | null;
             /** Duration Days */
             duration_days: number | null;
+            /** Currency */
+            currency: string;
             /**
              * Created At
              * Format: date-time

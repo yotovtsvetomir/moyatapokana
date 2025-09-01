@@ -104,6 +104,7 @@ async def create_order_route(
         order_number=order_number,
         invitation_id=invitation.id,
         invitation_title=invitation.title,
+        invitation_wallpaper=invitation.wallpaper,
         total_price=0,
         status=OrderStatus.STARTED,
         customer_name=customer_name,
@@ -126,11 +127,13 @@ async def get_price_tiers(
 ):
     """
     Fetch all active price tiers filtered by the currency in the URL,
-    and all available currencies.
+    and all available currencies. Sorted by price per duration day.
     """
-    # Fetch tiers
-    query = select(PriceTier).where(
-        PriceTier.active, PriceTier.currency == currency.upper()
+    # Fetch tiers sorted by price per duration day
+    query = (
+        select(PriceTier)
+        .where(PriceTier.active, PriceTier.currency == currency.upper())
+        .order_by(PriceTier.price)
     )
     result = await read_db.execute(query)
     tiers = result.scalars().all()
@@ -155,6 +158,11 @@ async def update_order_price(
     write_db: AsyncSession = Depends(get_write_session),
     read_db: AsyncSession = Depends(get_read_session),
 ):
+    """
+    Update order's price tier, currency, and voucher.
+    Handles applying and removing vouchers explicitly.
+    """
+
     # Fetch order from read_db
     result = await read_db.execute(
         select(Order)
@@ -183,10 +191,12 @@ async def update_order_price(
 
     total_price = Decimal(price_tier.price)
 
-    # Apply voucher
+    # --- Handle voucher ---
     discount_amount = Decimal(0)
     voucher_obj = None
+
     if payload.voucher_code:
+        # Apply voucher
         result = await read_db.execute(
             select(Voucher).where(
                 Voucher.code == payload.voucher_code,
@@ -223,7 +233,7 @@ async def update_order_price(
                     rate_from = Decimal(rates[voucher_currency])
                     rate_to = Decimal(rates[price_tier.currency])
                     discount_amount = (
-                        Decimal(voucher_obj.amount) * rate_from / rate_to
+                        Decimal(voucher_obj.amount) * rate_to / rate_from
                     ).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
                 except KeyError:
                     raise HTTPException(
@@ -233,7 +243,12 @@ async def update_order_price(
                 discount_amount = Decimal(voucher_obj.amount).quantize(
                     Decimal("0.01"), rounding=ROUND_HALF_UP
                 )
+    else:
+        # Explicitly handle removal of voucher
+        voucher_obj = None
+        discount_amount = Decimal(0)
 
+    # Calculate final price
     final_price = max(total_price - discount_amount, Decimal(0))
 
     # Merge order into write_db session
@@ -280,7 +295,7 @@ async def initiate_payment(
                         "currency": "bgn",
                         "product_data": {
                             "name": f"Покана: {order.invitation.title}",
-                            "images": [order.invitation.wallpaper],
+                            "images": [order.invitation_wallpaper],
                         },
                         "unit_amount": int(order.total_price * 100),
                     },

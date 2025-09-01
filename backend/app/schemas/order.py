@@ -72,6 +72,7 @@ class OrderRead(OrderBase):
     order_number: str
     invitation_id: int
     invitation_title: Optional[str]
+    invitation_wallpaper: Optional[str]
     total_price: float
     paid: bool
     paid_price: Optional[float]

@@ -61,6 +61,7 @@ class Order(Base):
     # Invitation info
     invitation_id = Column(Integer, ForeignKey("invitations.id"), nullable=False)
     invitation_title = Column(String, nullable=True)
+    invitation_wallpaper = Column(String, nullable=True)
     invitation = relationship("Invitation")
 
     # Payment info
