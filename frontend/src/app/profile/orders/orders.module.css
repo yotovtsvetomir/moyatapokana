@@ -1,0 +1,117 @@
+.orders {
+	padding-bottom: 2rem;
+}
+
+.heading {
+	margin-bottom: 1rem;
+}
+
+.grid {
+	margin-top: 1rem;
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+	list-style: none;
+	padding: 1rem 0;
+}
+
+.orderItem {
+  	position: relative;
+  	border-radius: 6px;
+  	padding: 1.5rem 1rem;
+  	box-shadow:
+	    0px 1px 3px rgba(0, 0, 0, 0.2),
+	    0px 1px 2px rgba(0, 0, 0, 0.14),
+	    0px 2px 1px -1px rgba(0, 0, 0, 0.12);
+}
+
+.head {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+
+	margin-bottom: 2rem;
+}
+
+.head h3 {
+	font-size: var(--font-2xl);
+}
+
+.status {
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  color: var(--color-dark-300);
+  font-size: var(--font-sm);
+}
+
+/* Status color classes */
+.status-started {
+  background-color: var(--color-warning-3);
+  color: var(--color-dark-100);
+}
+
+.status-payment_pending {
+  background-color: var(--color-warning-3);
+  color: var(--color-warning-1);
+}
+
+.status-paid {
+  background-color: var(--color-success-3);
+  color: var(--color-success-1);
+}
+
+.status-failed {
+  background-color: var(--color-error-3);
+  color: var(--color-error-1);
+}
+
+.status-cancelled {
+  background-color: var(--color-neutral-300);
+  color: var(--color-dark-400);
+}
+
+.status-refunded {
+  background-color: var(--color-highlight-5);
+  color: var(--color-highlight-1);
+}
+
+.pair {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 0.5rem 0;
+	border-bottom: 1px solid var(--color-highlight-7);
+}
+
+.last {
+	border-bottom: 0;
+}
+
+.pair p {
+	font-size: var(--font-lgl);
+}
+
+.order_actions {
+	display: flex;
+	justify-content: flex-end;
+	margin-top: 2rem;
+}
+
+@media (min-width: 1024px) {
+	.orderItem {
+  	padding: 1.5rem;
+  }
+
+  .head {
+  	margin-bottom: 1rem;
+  }
+
+	.order_actions {
+		margin-top: 1rem;
+	}
+}
+
+.message {
+	margin-top: 0.5rem;
+	margin-left: 0.25rem;
+}

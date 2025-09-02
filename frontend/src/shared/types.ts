@@ -494,29 +494,8 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Create Order Route */
-        post: operations["create_order_route_orders_create_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/orders/price-tiers/{currency}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Price Tiers
-         * @description Fetch all active price tiers filtered by the currency in the URL,
-         *     and all available currencies. Sorted by price per duration day.
-         */
-        get: operations["get_price_tiers_orders_price_tiers__currency__get"];
-        put?: never;
-        post?: never;
+        /** Create Order With Tiers Route */
+        post: operations["create_order_with_tiers_route_orders_create_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -536,8 +515,12 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** Update Order Price */
-        patch: operations["update_order_price_orders_update__order_id__patch"];
+        /**
+         * Update Order With Tiers
+         * @description Update order's price tier, currency, and voucher.
+         *     If no tier selected, reset order price info and return immediately.
+         */
+        patch: operations["update_order_with_tiers_orders_update__order_id__patch"];
         trace?: never;
     };
     "/orders/initiate-payment/{order_id}": {
@@ -557,6 +540,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/orders/payments/webhook/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Stripe Webhook */
+        post: operations["stripe_webhook_orders_payments_webhook__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/orders/{order_id}/invoice": {
         parameters: {
             query?: never;
@@ -566,6 +566,47 @@ export interface paths {
         };
         /** Generate Invoice */
         get: operations["generate_invoice_orders__order_id__invoice_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/orders/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List User Orders
+         * @description Paginated list of orders for the current user.
+         *     Optionally filter by status.
+         */
+        get: operations["list_user_orders_orders__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/orders/{order_number}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get User Order
+         * @description Return a single order for the current user.
+         */
+        get: operations["get_user_order_orders__order_number__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -807,8 +848,7 @@ export interface components {
             template_id?: number | null;
             /** Id */
             id: number;
-            /** Status */
-            status: string;
+            status: components["schemas"]["InvitationStatus"] | null;
             rsvp: components["schemas"]["RSVPInvitationRead"];
             /**
              * Events
@@ -831,6 +871,11 @@ export interface components {
              */
             updated_at: string;
         };
+        /**
+         * InvitationStatus
+         * @enum {string}
+         */
+        InvitationStatus: "draft" | "active" | "expired";
         /** InvitationUpdate */
         InvitationUpdate: {
             /** Title */
@@ -1012,6 +1057,11 @@ export interface components {
             invitation_title: string | null;
             /** Invitation Wallpaper */
             invitation_wallpaper: string | null;
+            invitation_status?: components["schemas"]["InvitationStatus"] | null;
+            /** Invitation Active From */
+            invitation_active_from?: string | null;
+            /** Invitation Active Until */
+            invitation_active_until?: string | null;
             /** Total Price */
             total_price: number;
             /** Paid */
@@ -1044,6 +1094,8 @@ export interface components {
              */
             updated_at: string;
             price_tier: components["schemas"]["PriceTierRead"] | null;
+            /** Voucher Code */
+            voucher_code?: string | null;
         };
         /**
          * OrderStatus
@@ -1053,14 +1105,22 @@ export interface components {
         /** OrderUpdatePrice */
         OrderUpdatePrice: {
             /** Duration Days */
-            duration_days: number;
+            duration_days?: number | null;
             /**
              * Currency
              * @default BGN
              */
             currency: string | null;
             /** Voucher Code */
-            voucher_code: string | null;
+            voucher_code?: string | null;
+        };
+        /** OrderWithTiersResponse */
+        OrderWithTiersResponse: {
+            order: components["schemas"]["OrderRead"];
+            /** Tiers */
+            tiers: components["schemas"]["PriceTierRead"][];
+            /** Currencies */
+            currencies: string[];
         };
         /** PaginatedResponse[GuestRead] */
         PaginatedResponse_GuestRead_: {
@@ -1102,13 +1162,6 @@ export interface components {
             currency: string;
             /** Active */
             active: boolean;
-        };
-        /** PriceTierReadWithChoices */
-        PriceTierReadWithChoices: {
-            /** Tiers */
-            tiers: components["schemas"]["PriceTierRead"][];
-            /** Currencies */
-            currencies: string[];
         };
         /** RSVPInvitationRead */
         RSVPInvitationRead: {
@@ -2166,7 +2219,7 @@ export interface operations {
             };
         };
     };
-    create_order_route_orders_create_post: {
+    create_order_with_tiers_route_orders_create_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -2187,7 +2240,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["OrderRead"];
+                    "application/json": components["schemas"]["OrderWithTiersResponse"];
                 };
             };
             /** @description Validation Error */
@@ -2201,38 +2254,7 @@ export interface operations {
             };
         };
     };
-    get_price_tiers_orders_price_tiers__currency__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                currency: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PriceTierReadWithChoices"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_order_price_orders_update__order_id__patch: {
+    update_order_with_tiers_orders_update__order_id__patch: {
         parameters: {
             query?: never;
             header?: never;
@@ -2255,7 +2277,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["OrderRead"];
+                    "application/json": components["schemas"]["OrderWithTiersResponse"];
                 };
             };
             /** @description Validation Error */
@@ -2302,6 +2324,26 @@ export interface operations {
             };
         };
     };
+    stripe_webhook_orders_payments_webhook__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
     generate_invoice_orders__order_id__invoice_get: {
         parameters: {
             query?: never;
@@ -2322,6 +2364,76 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_user_orders_orders__get: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+                status?: components["schemas"]["OrderStatus"] | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: {
+                session_id?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_user_order_orders__order_number__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order_number: string;
+            };
+            cookie?: {
+                session_id?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderRead"];
                 };
             };
             /** @description Validation Error */

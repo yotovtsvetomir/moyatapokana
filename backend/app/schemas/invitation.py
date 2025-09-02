@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import List, Dict, Optional, Annotated, TypeVar, Generic
 from pydantic import BaseModel, Field
+from enum import Enum
 
 
 # -------------------- Font --------------------
@@ -186,6 +187,12 @@ class EventRead(EventBase):
 
 
 # -------------------- Invitation --------------------
+class InvitationStatus(str, Enum):
+    DRAFT = "draft"
+    ACTIVE = "active"
+    EXPIRED = "expired"
+
+
 class InvitationBase(BaseModel):
     title: Optional[str] = None
     slug: Optional[str] = None
@@ -240,7 +247,7 @@ class InvitationUpdate(InvitationBase):
 
 class InvitationRead(InvitationBase):
     id: int
-    status: str
+    status: Optional[InvitationStatus]
     rsvp: RSVPInvitationRead
     events: List[EventRead] = []
     slideshow_images: List[SlideshowImageRead] = []

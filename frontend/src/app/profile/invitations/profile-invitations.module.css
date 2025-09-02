@@ -1,14 +1,5 @@
 .invitations {
-  padding-top: calc(var(--mobile-header-height) + 1rem);
-  max-width: 590px;
-  margin: 0 auto;
   padding-bottom: 4rem;
-}
-
-@media (min-width: 1024px) {
-  .invitations {
-    padding-top: calc(var(--desktop-header-height) + 1rem);
-  }
 }
 
 .filterControls {

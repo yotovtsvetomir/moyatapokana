@@ -1,7 +1,8 @@
 from pydantic import BaseModel, EmailStr
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 from enum import Enum
+from .invitation import InvitationStatus
 
 
 # -------------------- Enums --------------------
@@ -51,9 +52,9 @@ class OrderCreate(OrderBase):
 
 # -------------------- Update Price + Voucher --------------------
 class OrderUpdatePrice(BaseModel):
-    duration_days: int
+    duration_days: Optional[int] = None
     currency: Optional[str] = "BGN"
-    voucher_code: Optional[str]
+    voucher_code: Optional[str] = None
 
 
 # -------------------- Update --------------------
@@ -73,6 +74,10 @@ class OrderRead(OrderBase):
     invitation_id: int
     invitation_title: Optional[str]
     invitation_wallpaper: Optional[str]
+    invitation_status: Optional[InvitationStatus] = None
+    invitation_is_active: Optional[bool] = False
+    invitation_active_from: Optional[datetime] = None
+    invitation_active_until: Optional[datetime] = None
     total_price: float
     paid: bool
     paid_price: Optional[float]
@@ -83,9 +88,32 @@ class OrderRead(OrderBase):
     discount_amount: Optional[float]
     original_price: Optional[float]
     duration_days: Optional[int]
-    currency: str  # <--- new field
+    currency: str
     created_at: datetime
     updated_at: datetime
     price_tier: Optional[PriceTierRead]
+    voucher_code: Optional[str] = None
+
+    model_config = {"from_attributes": True}
+
+    @classmethod
+    def from_orm(cls, obj):
+        data = super().from_orm(obj)
+
+        if getattr(obj, "voucher", None):
+            data.voucher_code = obj.voucher.code
+        if getattr(obj, "invitation", None):
+            print(obj.invitation.active_from)
+            data.invitation_status = obj.invitation.status
+            data.invitation_is_active = obj.invitation.is_active
+            data.invitation_active_from = obj.invitation.active_from
+            data.invitation_active_until = obj.invitation.active_until
+        return data
+
+
+class OrderWithTiersResponse(BaseModel):
+    order: OrderRead
+    tiers: List[PriceTierRead]
+    currencies: List[str]
 
     model_config = {"from_attributes": True}

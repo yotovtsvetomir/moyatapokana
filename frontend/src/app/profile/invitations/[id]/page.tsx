@@ -94,7 +94,7 @@ export default function InvitationDetail() {
   const shareUrl = `${process.env.NEXT_PUBLIC_CLIENT_URL}/invitations/preview/${invitation.slug}/`;
 
   return (
-    <div className="container fullHeight steps">
+    <div className="container fullHeight centerWrapper">
       <div className={styles.invitation}>
         <div className={styles.actions}>
           <Button

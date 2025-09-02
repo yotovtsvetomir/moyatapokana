@@ -67,7 +67,7 @@ export default function ProfileInvitationsList() {
   const handlePageChange = (newPage: number) => setPage(newPage);
 
   return (
-    <div className="container fullHeight steps">
+    <div className="container fullHeight centerWrapper">
       <div className={styles.invitations}>
         <h1 className={styles.heading}>Вашите покани</h1>
 

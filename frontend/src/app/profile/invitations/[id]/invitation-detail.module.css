@@ -1,7 +1,5 @@
 .invitation {
-  padding: calc(var(--mobile-header-height) + 1rem) 0;
-  max-width: 590px;
-  margin: 0 auto;
+  padding-bottom: 3rem;
 }
 
 .heading {
@@ -144,12 +142,6 @@
 
 .delete_actions {
   margin-top: 4rem;
-}
-
-@media (min-width: 1024px) {
-  .invitation {
-    padding: calc(var(--desktop-header-height) + 1rem) 0;
-  }
 }
 
 .deleteActions {

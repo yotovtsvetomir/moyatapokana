@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-export async function PATCH(
+export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -12,8 +12,8 @@ export async function PATCH(
 
     const body = await req.text();
 
-    const res = await fetch(`${process.env.API_URL_SERVER}/orders/update/${id}`, {
-      method: "PATCH",
+    const res = await fetch(`${process.env.API_URL_SERVER}/orders/initiate-payment/${id}`, {
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
         cookie: req.headers.get("cookie") || "",

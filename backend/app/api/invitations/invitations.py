@@ -342,7 +342,7 @@ async def list_invitations(
         anon_field="anon_session_id",
         anon_session_id=anon_session_id,
         options=options,
-        schema=InvitationRead,  # <-- Pydantic schema here
+        schema=InvitationRead,
     )
 
 

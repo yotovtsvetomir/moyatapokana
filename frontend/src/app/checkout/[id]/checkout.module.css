@@ -1,15 +1,5 @@
 .checkout {
-	padding-top: calc(var(--mobile-header-height) + 1rem);
-	max-width: 590px;
-	margin: 0 auto;
-
 	padding-bottom: 2rem;
-}
-
-@media (min-width: 1024px) {
-	.checkout {
-		padding-top: calc(var(--desktop-header-height) + 1rem);
-	}
 }
 
 .checkout h1 {
@@ -21,6 +11,8 @@
   width: 100%;
   height: 300px;
   margin-bottom: 20px;
+  border: 1px solid #eee;
+  border-radius: 8px;
 }
 
 .imageWrapper {
@@ -112,6 +104,11 @@
 .currencySelector h2, .voucherWrapper h2, .selectWrapper h2, .selectWrapper h2, .summary h2 {
   font-size: var(--font-2xl);
   margin-bottom: 0.25rem;
+}
+
+.voucherInfo {
+  margin-top: 1rem;
+  font-size: var(--font-xl);
 }
 
 .summary {
