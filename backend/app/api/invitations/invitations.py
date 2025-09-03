@@ -15,6 +15,7 @@ from fastapi import (
     File,
     Form,
 )
+from sqlalchemy import desc
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
@@ -336,6 +337,8 @@ async def list_invitations(
         selectinload(Invitation.font_obj),
     ]
 
+    ordering = [desc(Invitation.created_at)]
+
     return await paginate(
         model=Invitation,
         db=db,
@@ -347,16 +350,28 @@ async def list_invitations(
         anon_session_id=anon_session_id,
         options=options,
         schema=InvitationRead,
+        ordering=ordering,
     )
 
 
-# -------------------- Delete Invitation --------------------
+# -------------------- Delete Invitation with full cleanup --------------------
 @router.delete("/delete/{invitation_id}", status_code=204)
 async def delete_invitation(
     invitation_id: int,
     db: AsyncSession = Depends(get_write_session),
 ):
-    result = await db.execute(select(Invitation).where(Invitation.id == invitation_id))
+    # Fetch invitation with all relationships
+    result = await db.execute(
+        select(Invitation)
+        .options(
+            selectinload(Invitation.rsvp)
+            .selectinload(RSVP.guests)
+            .selectinload(Guest.sub_guests),
+            selectinload(Invitation.events),
+            selectinload(Invitation.slideshow_images),
+        )
+        .where(Invitation.id == invitation_id)
+    )
     invitation = result.scalars().first()
     if not invitation:
         raise HTTPException(status_code=404, detail="Invitation not found")
@@ -366,6 +381,48 @@ async def delete_invitation(
             status_code=403, detail="Cannot delete an active invitation"
         )
 
+    # Services for S3 cleanup
+    wallpaper_service = WallpaperService()
+    slide_service = SlideService()
+    music_service = MusicService()
+
+    # -------------------- Delete wallpaper --------------------
+    if invitation.wallpaper:
+        try:
+            await wallpaper_service._delete(invitation.wallpaper)
+        except Exception as e:
+            print(f"Failed to delete wallpaper: {e}")
+
+    # -------------------- Delete background audio --------------------
+    if invitation.background_audio:
+        try:
+            await music_service.delete_music(invitation.background_audio)
+        except Exception as e:
+            print(f"Failed to delete audio: {e}")
+
+    # -------------------- Delete slideshow images --------------------
+    for slide in invitation.slideshow_images:
+        try:
+            await slide_service._delete(slide.file_url)
+        except Exception as e:
+            print(f"Failed to delete slide {slide.id}: {e}")
+        await db.delete(slide)
+
+    # -------------------- Delete events --------------------
+    for event in invitation.events:
+        await db.delete(event)
+
+    # -------------------- Delete RSVP & Guests --------------------
+    if invitation.rsvp:
+        for guest in invitation.rsvp.guests:
+            # Reset sub-guests' main_guest_id if any
+            for sub in guest.sub_guests:
+                sub.main_guest_id = None
+                db.add(sub)
+            await db.delete(guest)
+        await db.delete(invitation.rsvp)
+
+    # -------------------- Finally, delete the invitation itself --------------------
     await db.delete(invitation)
     await db.commit()
     return

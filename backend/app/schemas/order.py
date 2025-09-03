@@ -74,7 +74,7 @@ class OrderUpdate(OrderBase):
 class OrderRead(OrderBase):
     id: int
     order_number: str
-    invitation_id: int
+    invitation_id: Optional[int] = None
     invitation_title: Optional[str]
     invitation_wallpaper: Optional[str]
     invitation_status: Optional[InvitationStatus] = None

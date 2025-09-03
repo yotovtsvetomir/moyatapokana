@@ -59,10 +59,14 @@ class Order(Base):
     customer_email = Column(String, nullable=True)
 
     # Invitation info
-    invitation_id = Column(Integer, ForeignKey("invitations.id"), nullable=False)
+    invitation_id = Column(
+        Integer,
+        ForeignKey("invitations.id", ondelete="SET NULL"),
+        nullable=True,
+    )
     invitation_title = Column(String, nullable=True)
     invitation_wallpaper = Column(String, nullable=True)
-    invitation = relationship("Invitation")
+    invitation = relationship("Invitation", passive_deletes=True)
 
     # Payment info
     total_price = Column(Numeric(10, 2), nullable=False)

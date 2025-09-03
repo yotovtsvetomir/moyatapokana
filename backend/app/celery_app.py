@@ -23,9 +23,9 @@ celery_app.conf.beat_schedule = {
         "task": "app.tasks.update_currency_rates",
         "schedule": crontab(hour=0, minute=0),
     },
-    "deactivate-expired-invitations-every-day": {
-        "task": "invitations.tasks.deactivate_expired_invitations",
-        "schedule": crontab(hour=1, minute=0),
+    "delete_expired_invitations_async": {
+        "task": "invitations.tasks.delete_expired_invitations",
+        "schedule": crontab(minute="*"),
     },
 }
 

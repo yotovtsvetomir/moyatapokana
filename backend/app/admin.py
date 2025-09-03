@@ -1,7 +1,15 @@
 from sqladmin import Admin, ModelView
 from app.db.session import engine_writer, get_read_session, get_write_session
 from app.db.models.user import User
-from app.db.models.invitation import Game, Slideshow, Invitation, RSVP, Guest, Font
+from app.db.models.invitation import (
+    Game,
+    Slideshow,
+    Invitation,
+    RSVP,
+    Guest,
+    Font,
+    Event,
+)
 from app.db.models.order import PriceTier, Order, Voucher, CurrencyRate
 
 
@@ -102,33 +110,41 @@ class InvitationAdmin(ModelView, model=Invitation):
         Invitation.rsvp_id,
     ]
 
-    # -------------------- AJAX selection --------------------
     form_ajax_refs = {
-        "rsvp": {
-            "fields": (RSVP.id, RSVP.ask_menu),
-        },
-        "slideshow_images": {
-            "fields": ("file_url",),
-        },
-        "events": {
-            "fields": ("title",),
-        },
+        "rsvp": {"fields": (RSVP.id, RSVP.ask_menu)},
+        "slideshow_images": {"fields": ("file_url",)},
+        "events": {"fields": ("title",)},
     }
 
     async def get_session(self):
         async for session in get_read_session():
             return session
 
-    # -------------------- Create / Update --------------------
     async def create_model(self, session, data):
         async for s in get_write_session():
-            obj = Invitation()
-            for key, value in data.items():
-                if hasattr(obj, key):
-                    setattr(obj, key, value)
+            obj = Invitation(
+                **{
+                    k: v
+                    for k, v in data.items()
+                    if k in Invitation.__table__.columns.keys()
+                }
+            )
             s.add(obj)
             await s.commit()
-            await s.refresh(obj)
+            # Refresh only scalar fields, not relationships
+            await s.refresh(
+                obj,
+                attribute_names=[
+                    "id",
+                    "title",
+                    "slug",
+                    "owner_id",
+                    "is_active",
+                    "active_from",
+                    "active_until",
+                    "rsvp_id",
+                ],
+            )
             return obj
 
     async def update_model(self, session, pk, data):
@@ -136,12 +152,25 @@ class InvitationAdmin(ModelView, model=Invitation):
             db_obj = await s.get(Invitation, int(pk))
             if not db_obj:
                 return None
+            allowed_keys = Invitation.__table__.columns.keys()
             for key, value in data.items():
-                if hasattr(db_obj, key):
+                if key in allowed_keys:
                     setattr(db_obj, key, value)
             s.add(db_obj)
             await s.commit()
-            await s.refresh(db_obj)
+            await s.refresh(
+                db_obj,
+                attribute_names=[
+                    "id",
+                    "title",
+                    "slug",
+                    "owner_id",
+                    "is_active",
+                    "active_from",
+                    "active_until",
+                    "rsvp_id",
+                ],
+            )
             return db_obj
 
     async def delete_model(self, session, pk):
@@ -611,6 +640,60 @@ class CurrencyRateAdmin(ModelView, model=CurrencyRate):
             return db_obj
 
 
+class EventAdmin(ModelView, model=Event):
+    column_list = [
+        Event.id,
+        Event.title,
+        Event.invitation_id,
+        Event.start_datetime,
+        Event.finish_datetime,
+        Event.location,
+    ]
+    column_searchable_list = [Event.title, Event.location]
+    column_sortable_list = [Event.id, Event.start_datetime, Event.finish_datetime]
+    column_editable_list = [
+        Event.title,
+        Event.start_datetime,
+        Event.finish_datetime,
+        Event.location,
+        Event.description,
+    ]
+
+    async def get_session(self):
+        async for session in get_read_session():
+            return session
+
+    async def create_model(self, session, data):
+        async for s in get_write_session():
+            obj = Event(**data)
+            s.add(obj)
+            await s.commit()
+            await s.refresh(obj)
+            return obj
+
+    async def update_model(self, session, pk, data):
+        async for s in get_write_session():
+            db_obj = await s.get(Event, int(pk))
+            if not db_obj:
+                return None
+            for key, value in data.items():
+                if hasattr(db_obj, key):
+                    setattr(db_obj, key, value)
+            s.add(db_obj)
+            await s.commit()
+            await s.refresh(db_obj)
+            return db_obj
+
+    async def delete_model(self, session, pk):
+        async for s in get_write_session():
+            db_obj = await s.get(Event, int(pk))
+            if not db_obj:
+                return None
+            await s.delete(db_obj)
+            await s.commit()
+            return db_obj
+
+
 # -------------------- Setup Admin --------------------
 def setup_admin(app):
     admin = Admin(
@@ -629,3 +712,4 @@ def setup_admin(app):
     admin.add_view(VoucherAdmin)
     admin.add_view(OrderAdmin)
     admin.add_view(CurrencyRateAdmin)
+    admin.add_view(EventAdmin)

@@ -152,7 +152,7 @@ export default function OrderDetailPage() {
 
           <div className={styles.pair}>
             <p><strong>Номер на поканата</strong></p>
-            <p>{order.invitation_id}</p>
+            <p>{order.invitation_id ? order.invitation_id : "—"}</p>
           </div>
 
           <div className={styles.pair}>
@@ -166,7 +166,7 @@ export default function OrderDetailPage() {
               {order.invitation_status &&
               INVITATION_STATUS_LABELS_BG[order.invitation_status]
                 ? INVITATION_STATUS_LABELS_BG[order.invitation_status]
-                : order.invitation_status || "—"}
+                : order.invitation_status || "Изтекла"}
             </p>
           </div>
 

@@ -78,7 +78,7 @@ export default function EditEventPage() {
   };
 
   return (
-    <div className="container fullHeight centerWrapper">
+    <div className="container fullHeight centerWrapper steps">
       <DetailSection onSave={handleSave} backHref={backHref}>
         <h1>Редактиране на събитие #{eventId}</h1>
 

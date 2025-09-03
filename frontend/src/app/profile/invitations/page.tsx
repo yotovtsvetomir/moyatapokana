@@ -16,14 +16,12 @@ type Invitation = components['schemas']['InvitationRead'];
 const statusLabels: Record<string, string> = {
   draft: 'Чернова',
   active: 'Активна',
-  expired: 'Изтекла',
 };
 
 const filterOptions = [
   { value: 'all', label: 'Всички' },
   { value: 'draft', label: 'Чернови' },
   { value: 'active', label: 'Активни' },
-  { value: 'expired', label: 'Изтекли' },
 ];
 
 export default function ProfileInvitationsList() {

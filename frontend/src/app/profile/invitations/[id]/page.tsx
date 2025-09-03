@@ -178,16 +178,18 @@ export default function InvitationDetail() {
         </div>
 
         <div className={styles.secondary_actions}>
-          <Button
-            variant="secondary"
-            size="large"
-            width="100%"
-            href={`/invitations/edit/${invitation.id}/settings/step1`}
-            icon="visibility"
-            iconPosition="right"
-          >
-            Визуализирация
-          </Button>
+          {invitation.status !== 'expired' && (
+            <Button
+              variant="secondary"
+              size="large"
+              width="100%"
+              href={`/invitations/edit/${invitation.id}/settings/step1`}
+              icon="visibility"
+              iconPosition="right"
+            >
+              Визуализирация
+            </Button>
+          )}
 
           {invitation.status === 'active' && (
             <Button
