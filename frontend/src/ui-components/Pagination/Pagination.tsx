@@ -14,6 +14,9 @@ export default function Pagination({ currentPage, totalPages, onPageChange }: Pa
   const handlePageClick = (page: number) => {
     if (page >= 1 && page <= totalPages) {
       onPageChange(page);
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }, 0);
     }
   };
 

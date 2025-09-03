@@ -14,7 +14,7 @@ function InvitationsLoader({ children }: { children: ReactNode }) {
     const fetchInvitations = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`/api/invitations?page=1&page_size=10`);
+        const res = await fetch(`/api/invitations?page=1&page_size=7`);
         const data = await res.json();
         setInvitations(data.items || []);
       } catch (err) {

@@ -12,13 +12,14 @@ import styles from './profile-invitations.module.css';
 import type { components } from '@/shared/types';
 
 type Invitation = components['schemas']['InvitationRead'];
+type InvitationStatus = components['schemas']['InvitationStatus'];
 
-const statusLabels: Record<string, string> = {
+const statusLabels: Record<InvitationStatus, string> = {
   draft: 'Чернова',
   active: 'Активна',
 };
 
-const filterOptions = [
+const filterOptions: { value: InvitationStatus | 'all'; label: string }[] = [
   { value: 'all', label: 'Всички' },
   { value: 'draft', label: 'Чернови' },
   { value: 'active', label: 'Активни' },
@@ -36,15 +37,12 @@ export default function ProfileInvitationsList() {
     const fetchInvitations = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`/api/invitations?page=${page}&page_size=10`);
+        const statusParam =
+          selectedStatus.value === 'all' ? '' : `&status=${selectedStatus.value}`;
+        const res = await fetch(`/api/invitations?page=${page}&page_size=7${statusParam}`);
         const data: { items: Invitation[]; total_pages: number } = await res.json();
 
-        let filteredItems = data.items;
-        if (selectedStatus.value !== 'all') {
-          filteredItems = filteredItems.filter(inv => inv.status === selectedStatus.value);
-        }
-
-        setInvitations(filteredItems);
+        setInvitations(data.items);
         setTotalPages(data.total_pages);
       } catch (err) {
         console.error('Failed to fetch invitations:', err);
@@ -57,7 +55,7 @@ export default function ProfileInvitationsList() {
     fetchInvitations();
   }, [page, selectedStatus, setInvitations, setLoading]);
 
-  const handleFilterChange = (option: { value: string; label: string } | null) => {
+  const handleFilterChange = (option: { value: InvitationStatus | 'all'; label: string } | null) => {
     setSelectedStatus(option || filterOptions[0]);
     setPage(1);
   };

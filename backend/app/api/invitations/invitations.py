@@ -317,7 +317,6 @@ async def update_invitation(
     return invitation_with_rel
 
 
-# -------------------- List Invitations with Pagination --------------------
 @router.get("/", response_model=dict)
 async def list_invitations(
     db: AsyncSession = Depends(get_read_session),
@@ -325,6 +324,7 @@ async def list_invitations(
     anon_session_id: str | None = Cookie(None),
     page: int = Query(1, ge=1),
     page_size: int = Query(10, ge=1, le=100),
+    status: InvitationStatus | None = None,
 ):
     owner_id = int(current_user.get("user_id")) if current_user else None
 
@@ -339,6 +339,10 @@ async def list_invitations(
 
     ordering = [desc(Invitation.created_at)]
 
+    extra_filters = []
+    if status:
+        extra_filters.append(Invitation.status == status)
+
     return await paginate(
         model=Invitation,
         db=db,
@@ -351,6 +355,7 @@ async def list_invitations(
         options=options,
         schema=InvitationRead,
         ordering=ordering,
+        extra_filters=extra_filters,
     )
 
 
@@ -679,7 +684,7 @@ async def get_rsvp_for_owner(
     current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_read_session),
     page: int = Query(1, ge=1),
-    page_size: int = Query(10, ge=1, le=100),
+    page_size: int = Query(7, ge=1, le=100),
     attending: str | None = Query(None),
     search: str | None = Query(None),
     ordering: str = Query("-created_at"),

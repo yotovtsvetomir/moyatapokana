@@ -39,19 +39,13 @@ export default function OrdersPage() {
     const fetchOrders = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`/api/orders?page=${page}&page_size=10`, {
+        const statusParam = selectedStatus.value === "all" ? "" : `&status=${selectedStatus.value}`;
+        const res = await fetch(`/api/orders?page=${page}&page_size=7${statusParam}`, {
           credentials: "include",
         });
         const data: { items: Order[]; total_pages: number } = await res.json();
 
-        let filteredItems = data.items;
-        if (selectedStatus.value !== "all") {
-          filteredItems = filteredItems.filter(
-            (order) => order.status === selectedStatus.value
-          );
-        }
-
-        setOrders(filteredItems);
+        setOrders(data.items);
         setTotalPages(data.total_pages);
       } catch (err) {
         console.error("Failed to fetch orders:", err);
@@ -63,6 +57,7 @@ export default function OrdersPage() {
 
     fetchOrders();
   }, [page, selectedStatus]);
+
 
   const handleFilterChange = (option: { value: string; label: string } | null) => {
     setSelectedStatus(option || filterOptions[0]);
