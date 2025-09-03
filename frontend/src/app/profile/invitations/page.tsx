@@ -14,9 +14,11 @@ import type { components } from '@/shared/types';
 type Invitation = components['schemas']['InvitationRead'];
 type InvitationStatus = components['schemas']['InvitationStatus'];
 
-const statusLabels: Record<InvitationStatus, string> = {
+const statusLabels: Record<InvitationStatus | 'default', string> = {
   draft: 'Чернова',
   active: 'Активна',
+  expired: 'Изтекла',
+  default: '—',
 };
 
 const filterOptions: { value: InvitationStatus | 'all'; label: string }[] = [
@@ -88,8 +90,8 @@ export default function ProfileInvitationsList() {
                 <li key={invitation.id}>
                   <div className={styles.card}>
                     <div className={styles.cardInner}>
-                      <div className={`${styles.statusBadge} ${styles[invitation.status]}`}>
-                        <span>{statusLabels[invitation.status] || invitation.status}</span>
+                      <div className={`${styles.statusBadge} ${styles[invitation.status ?? 'default']}`}>
+                        <span>{statusLabels[invitation.status ?? 'default'] || invitation.status || '—'}</span>
                       </div>
 
                       <div className={styles.thumbnailWrapper}>

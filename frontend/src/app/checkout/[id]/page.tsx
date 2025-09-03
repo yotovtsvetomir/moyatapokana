@@ -82,9 +82,11 @@ export default function CheckoutPage() {
         setCompanyName(data.order.company_name ?? '');
         setVatNumber(data.order.vat_number ?? '');
 
-        setCurrencyOptions(data.currencies.map(c => ({ value: c, label: c })));
+        setCurrencyOptions(
+          data.currencies.map((c: string) => ({ value: c, label: c }))
+        );
         setTierOptions(
-          data.tiers.map(t => {
+          data.tiers.map((t: PriceTier) => {
             const duration = formatDuration(t.duration_days);
 
             let durationLabel: string;
@@ -150,9 +152,11 @@ export default function CheckoutPage() {
       const data = await res.json();
       setOrder(data.order);
 
-      setCurrencyOptions(data.currencies.map(c => ({ value: c, label: c })));
+      setCurrencyOptions(
+        data.currencies.map((c: string) => ({ value: c, label: c }))
+      );
       setTierOptions(
-        data.tiers.map(t => {
+        data.tiers.map((t: PriceTier) => {
           const duration = formatDuration(t.duration_days);
           const durationLabel =
             duration.type === 'days'
@@ -248,7 +252,9 @@ export default function CheckoutPage() {
           <h2>Валута за плащане</h2>
           <ReactSelect
             options={currencyOptions}
-            value={currencyOptions.find(c => c.value === order.currency) || null}
+            value={
+              currencyOptions.find((c: CurrencyOption) => c.value === order.currency) ?? null
+            }
             onChange={handleCurrencyChange}
             placeholder="Избери валута"
             isClearable={false}
@@ -258,9 +264,9 @@ export default function CheckoutPage() {
 
         <div className={styles.selectWrapper}>
           <h2>План</h2>
-          <ReactSelect
+          <ReactSelect<TierOption>
             options={tierOptions}
-            value={order.price_tier ? tierOptions.find(o => o.value === order.price_tier.id.toString()) : null}
+            value={tierOptions.find(o => o.value === order.price_tier?.id.toString()) ?? null}
             onChange={handleTierChange}
             placeholder="Моля, изберете план"
           />
@@ -273,6 +279,7 @@ export default function CheckoutPage() {
                 label="От"
                 value={formatDateTime(now)}
                 disabled
+                onChange={() => {}}
               />
               <Input
                 id="valid-until"
@@ -280,6 +287,7 @@ export default function CheckoutPage() {
                 label="До"
                 value={until ? formatDateTime(until) : ''}
                 disabled
+                onChange={() => {}}
               />
             </div>
           )}

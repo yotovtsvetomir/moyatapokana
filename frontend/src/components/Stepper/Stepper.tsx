@@ -1,5 +1,4 @@
 "use client";
-import Link from "next/link";
 import { usePathname, useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import styles from "./Stepper.module.css";

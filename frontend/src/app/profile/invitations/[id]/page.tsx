@@ -48,7 +48,7 @@ export default function InvitationDetail() {
   
   const handleBuyClick = async () => {
     try {
-      const res = await fetch(`/api/invitations/${invitation.id}/ready`);
+      const res = await fetch(`/api/invitations/${id}/ready`);
       if (!res.ok) throw new Error("Failed to check readiness");
 
       const data = await res.json();
@@ -69,7 +69,7 @@ export default function InvitationDetail() {
     if (!invitation) return;
 
     try {
-      const res = await fetch(`/api/invitations/delete/${invitation.id}`, {
+      const res = await fetch(`/api/invitations/delete/${id}`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
       });
@@ -151,7 +151,10 @@ export default function InvitationDetail() {
               value: `${invitation.primary_color ?? '#ccc'} ${invitation.secondary_color ?? '#ccc'}`, // string for detection
               isColor: true, // flag to indicate it's a color
             },
-            { label: 'Статус', value: statusLabels[invitation.status] ?? invitation.status },
+            { 
+              label: 'Статус', 
+              value: invitation.status != null ? statusLabels[invitation.status] ?? invitation.status : '—' 
+            },
             { label: 'Онлайн', value: invitation.is_active ? 'Да' : 'Не' },
           ].map((item) => (
             <div key={item.label} className={styles.infoPair}>

@@ -6,7 +6,7 @@ interface InputProps {
   name: string;
   type?: React.HTMLInputTypeAttribute;
   value: string;
-  error?: string;
+  error?: string | null;
   placeholder?: string;
   label?: string;
   icon?: string;

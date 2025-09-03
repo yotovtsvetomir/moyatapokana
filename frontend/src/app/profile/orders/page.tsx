@@ -20,7 +20,7 @@ const statusLabels: Record<OrderStatus, string> = {
 
 const filterOptions = [
   { value: "all", label: "Всички" },
-  { value: "started", label: "Стартирана" },
+  { value: "started", label: "Стартирани" },
   { value: "paid", label: "Платени" },
   { value: "cancelled", label: "Отказани" },
 ];

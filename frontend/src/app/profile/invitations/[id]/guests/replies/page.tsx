@@ -11,7 +11,7 @@ import styles from '../guests.module.css';
 import type { components } from '@/shared/types';
 
 type Guest = components['schemas']['GuestRead'];
-type PaginatedGuests = components['schemas']['PaginatedResponse<GuestRead>'];
+type PaginatedGuests = components['schemas']['PaginatedResponse_GuestRead_'];
 type RSVPWithStats = components['schemas']['RSVPWithStats'];
 
 type Option = { value: string; label: string };
@@ -148,7 +148,7 @@ export default function GuestsPage() {
                         }`}
                         title={guest.attending ? 'Присъства' : 'Не присъства'}
                       >
-                        {guest.is_main_guest && guest.sub_guests?.length > 0 ? 'groups' : 'person'}
+                        {guest.is_main_guest && (guest.sub_guests?.length ?? 0) > 0 ? 'groups' : 'person'}
                       </span>
                     </div>
                   </div>
@@ -160,7 +160,7 @@ export default function GuestsPage() {
 
                   <div className={styles.mainGuestPair}>
                     <p><strong>Отговор</strong></p>
-                    <p>{new Date(guest.created_at).toLocaleDateString('bg-BG')}</p>
+                    <p>{guest.created_at ? new Date(guest.created_at).toLocaleDateString('bg-BG') : '—'}</p>
                   </div>
 
                   {guest.menu_choice && menuMap[guest.menu_choice] && (

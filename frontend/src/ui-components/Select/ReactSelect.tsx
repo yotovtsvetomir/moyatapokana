@@ -3,23 +3,23 @@
 import Select from 'react-select'
 
 export interface Option {
-  value: string;
-  label: string;
-  id?: string | number;
-  preview?: string;
+  value: string
+  label: string
+  id?: string | number
+  preview?: string
 }
 
-interface ReactSelectProps {
-  options: Option[]
-  value: Option | null
-  onChange: (option: Option | null) => void
+interface ReactSelectProps<T> {
+  options: T[]
+  value: T | null
+  onChange: (option: T | null) => void
   placeholder?: string
   isDisabled?: boolean
   isClearable?: boolean
   isSearchable?: boolean
 }
 
-export default function ReactSelect({
+export default function ReactSelect<T extends { value: string; label: string }>({
   options,
   value,
   onChange,
@@ -27,9 +27,9 @@ export default function ReactSelect({
   isDisabled = false,
   isClearable = false,
   isSearchable = false,
-}: ReactSelectProps) {
+}: ReactSelectProps<T>) {
   return (
-    <Select
+    <Select<T>
       options={options}
       value={value}
       onChange={onChange}
