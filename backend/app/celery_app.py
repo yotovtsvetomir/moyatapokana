@@ -12,15 +12,20 @@ celery_app.conf.broker_connection_retry_on_startup = True
 
 import app.api.users.tasks  # noqa
 import app.api.orders.tasks  # noqa
+import app.api.invitations.tasks  # noqa
 
 celery_app.conf.beat_schedule = {
-    "dummy-db-task-every-10-minutes": {
+    "dummy-db-task-every-day": {
         "task": "app.tasks.dummy_db_task",
-        "schedule": crontab(minute="*/10"),
+        "schedule": crontab(hour=3, minute=0),
     },
     "update-currency-rates-daily": {
         "task": "app.tasks.update_currency_rates",
         "schedule": crontab(hour=0, minute=0),
+    },
+    "deactivate-expired-invitations-every-day": {
+        "task": "invitations.tasks.deactivate_expired_invitations",
+        "schedule": crontab(hour=1, minute=0),
     },
 }
 

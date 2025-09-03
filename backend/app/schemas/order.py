@@ -55,6 +55,9 @@ class OrderUpdatePrice(BaseModel):
     duration_days: Optional[int] = None
     currency: Optional[str] = "BGN"
     voucher_code: Optional[str] = None
+    is_company: Optional[bool] = None
+    company_name: Optional[str] = None
+    vat_number: Optional[str] = None
 
 
 # -------------------- Update --------------------

@@ -64,37 +64,47 @@
 
     <div class="section">
       <div class="row"><span class="label">Номер на поръчка:</span> {{ order.order_number }}</div>
-      <div class="row"><span class="label">Дата:</span> {{ order.created_at|date:"d.m.Y" }}</div>
+      <div class="row"><span class="label">Дата:</span> {{ order.created_at }}</div>
     </div>
 
     <div class="section">
       {% if order.is_company %}
         <div class="row"><span class="label">Фирма:</span> {{ order.company_name }}</div>
-        {% if order.billing_name %}
-          <div class="row"><span class="label">Лице за контакт:</span> {{ order.billing_name }}</div>
+        {% if order.full_name %}
+          <div class="row"><span class="label">Лице за контакт:</span> {{ full_name }}</div>
         {% endif %}
         {% if order.vat_number %}
           <div class="row"><span class="label">ДДС №:</span> {{ order.vat_number }}</div>
         {% endif %}
       {% else %}
-        <div class="row"><span class="label">Име:</span> {{ order.billing_name }}</div>
+        <div class="row"><span class="label">Име:</span> {{ full_name }}</div>
       {% endif %}
     </div>
 
     <div class="section">
       <div class="row"><span class="label">Покана №</span> {{ order.invitation_id }}</div>
       <div class="row"><span class="label">Заглавие на поканата</span> {{ order.invitation_title }}</div>
-      <div class="row"><span class="label">Активна от:</span> {{ order.invitation.live_from|date:"d.m.Y H:i" }}</div>
-      <div class="row"><span class="label">Активна до:</span> {{ order.invitation.live_until|date:"d.m.Y H:i" }}</div>
+      <div class="row"><span class="label">Активна от:</span> {{ order.invitation.live_from }}</div>
+      <div class="row"><span class="label">Активна до:</span> {{ order.invitation.live_until }}</div>
     </div>
 
     <div class="section">
-      <div class="row"><span class="label">Сума:</span> {{ order.total_price }} лв</div>
-      <div class="row"><span class="label">Платена на:</span> {{ order.paid_at|date:"d.m.Y" }}</div>
+      <div class="row">
+        <span class="label">Сума:</span>
+        {{ order.total_price }}
+        {% if order.currency == "EUR" %}
+          евро
+        {% elif order.currency == "BGN" %}
+          лева
+        {% else %}
+          {{ order.currency }}
+        {% endif %}
+      </div>
+      <div class="row"><span class="label">Платена на:</span> {{ order.paid_at }}</div>
     </div>
 
     <div style="margin-top: 40px;">
-      <h4>Издадено от:</h4>
+      <h4>Издадена от:</h4>
       <p><strong>ТиймЙотов ЕООД</strong></p>
       <p>ЕИК: 206115093</p>
       <p>Адрес: гр. Варна, ул. Уста Колю Фичето №25 А</p>

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+  <meta charset="UTF-8">
+  <title>Вашата поръчка е потвърдена</title>
+</head>
+<body style="font-family: Arial, sans-serif; color: #222; background: #f6f6f6; margin:0; padding:0;">
+  <div style="max-width:480px;margin:40px auto;background:#fff;border-radius:8px;padding:32px;box-shadow:0 2px 8px #0001;">
+    {% if logo_url %}
+      <img src="{{ logo_url }}" alt="MoyataPokana Logo"
+           style="width:110px;display:block;margin:0 0 14px 0;border-radius:12px;" />
+    {% endif %}
+    <h2 style="margin-bottom:10px;">Благодарим Ви за поръчката!</h2>
+    <p>Здравейте, {{ name }}!</p>
+    <p>Плащането Ви беше успешно обработено. Ето данните за поръчката:</p>
+
+    <ul style="line-height:1.6;">
+      <li><strong>Покана:</strong> {{ invitation_title }}</li>
+      <li>
+        <strong>Сума:</strong> {{ total_price }}
+        {% if currency == "EUR" %}
+          евро
+        {% elif currency == "BGN" %}
+          лева
+        {% else %}
+          {{ currency }}
+        {% endif %}
+      </li>
+      <li><strong>Период на активация:</strong> {{ live_from }} → {{ live_until }}</li>
+      <li><strong>Метод:</strong> Stripe</li>
+      <li><strong>Номер на поръчка:</strong> {{ order_uuid }}</li>
+    </ul>
+
+    <p>Вашата покана вече е активна. Можете да я споделите с гостите си.</p>
+
+    <p style="margin-top:16px;">
+      Нуждаете се от фактура? <a href="https://moyatapokana.com/profile/orders/{{ order_uuid }}" target="_blank" style="color:#0070f3;text-decoration:underline;">
+        Изтеглете я тук
+      </a>.
+    </p>
+
+    <p style="margin-top:20px;">Ако имате въпроси, <a href="mailto:support@moyatapokana.com">свържете се с нас</a>.</p>
+
+    <p style="margin-top:28px;">Поздрави,<br>Екипът на МоятаПокана</p>
+    <div style="font-size:12px;color:#888;margin-top:32px;">
+      &copy; {{ year }} MoyataPokana. Всички права запазени.
+    </div>
+  </div>
+</body>
+</html>

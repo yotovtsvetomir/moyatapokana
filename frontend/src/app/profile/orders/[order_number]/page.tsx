@@ -67,7 +67,8 @@ export default function OrderDetailPage() {
 
   const handleDownloadInvoice = async () => {
     try {
-      const res = await fetch(`/api/orders/${params.order_number}/invoice`, {
+      const res = await fetch(`/api/orders/invoice/${params.order_number}`, {
+        method: "POST",
         credentials: "include",
       });
       if (!res.ok) throw new Error("Failed to download invoice");

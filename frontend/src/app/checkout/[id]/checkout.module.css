@@ -101,9 +101,21 @@
   margin-bottom: 1rem;
 }
 
-.currencySelector h2, .voucherWrapper h2, .selectWrapper h2, .selectWrapper h2, .summary h2 {
+.currencySelector h2, .voucherWrapper h2, .selectWrapper h2, .selectWrapper h2, .summary h2, .companySection h2 {
   font-size: var(--font-2xl);
   margin-bottom: 0.25rem;
+}
+
+.companySection {
+  margin-bottom: 1rem;
+}
+
+.radioGroup {
+  margin-bottom: 1rem;
+}
+
+.companySection h2 {
+  margin: 1rem 0;
 }
 
 .voucherInfo {
@@ -126,4 +138,10 @@
 
 .summaryRow:first-of-type {
   border-top: 0;
+}
+
+.error {
+  margin-top: 1rem;
+  font-size: var(--font-xl);
+  color: var(--color-error-1);
 }

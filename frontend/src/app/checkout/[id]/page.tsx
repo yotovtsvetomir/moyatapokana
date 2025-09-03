@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { Spinner } from '@/ui-components/Spinner/Spinner';
 import { Button } from '@/ui-components/Button/Button';
 import { Input } from '@/ui-components/Input/Input';
+import RadioButton from '@/ui-components/RadioButton/RadioButton';
 import ReactSelect from '@/ui-components/Select/ReactSelect';
 import { components } from '@/shared/types';
 import styles from './checkout.module.css';
@@ -47,6 +48,11 @@ export default function CheckoutPage() {
   const [tierOptions, setTierOptions] = useState<TierOption[]>([]);
   const [voucherCode, setVoucherCode] = useState('');
   const [updateError, setUpdateError] = useState<string | null>(null);
+  const [isCompany, setIsCompany] = useState(false);
+  const [companyName, setCompanyName] = useState('');
+  const [vatNumber, setVatNumber] = useState('');
+
+  const [vatError, setVatError] = useState<string | null>(null);
 
   const [ checkoutLoading, setCheckoutLoading ] = useState(false)
 
@@ -70,6 +76,11 @@ export default function CheckoutPage() {
         const data: { order: Order; tiers: PriceTier[]; currencies: string[] } = await res.json();
 
         setOrder(data.order);
+
+        // Set company info fields here
+        setIsCompany(data.order.is_company ?? false);
+        setCompanyName(data.order.company_name ?? '');
+        setVatNumber(data.order.vat_number ?? '');
 
         setCurrencyOptions(data.currencies.map(c => ({ value: c, label: c })));
         setTierOptions(
@@ -107,17 +118,23 @@ export default function CheckoutPage() {
     currency?: string;
     duration_days?: number | null;
     voucher_code?: string | null;
+    is_company?: boolean;
+    company_name?: string;
+    vat_number?: string;
   }) => {
     if (!order) return;
 
     const payload = {
       currency: updates.currency?.toUpperCase() ?? order.currency,
-      duration_days: updates.duration_days ?? order.duration_days ?? null,
+      duration_days: updates.duration_days ?? order.price_tier?.duration_days ?? null,
       voucher_code: 'voucher_code' in updates ? updates.voucher_code : order.voucher_code ?? null,
+      is_company: 'is_company' in updates ? updates.is_company : order.is_company ?? false,
+      company_name: 'company_name' in updates ? updates.company_name : order.company_name ?? '',
+      vat_number: 'vat_number' in updates ? updates.vat_number : order.vat_number ?? '',
     };
 
     try {
-      const res = await fetch(`/api/orders/update/${order.id}`, {
+      const res = await fetch(`/api/orders/update/${order.order_number}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -125,31 +142,26 @@ export default function CheckoutPage() {
 
       if (!res.ok) {
         const errData = await res.json();
-        setUpdateError(errData.detail || 'Update failed');
+        console.log(errData);
+        setUpdateError(errData.error || 'Update failed');
         return;
       }
 
       const data = await res.json();
       setOrder(data.order);
+
       setCurrencyOptions(data.currencies.map(c => ({ value: c, label: c })));
       setTierOptions(
         data.tiers.map(t => {
           const duration = formatDuration(t.duration_days);
-
-          let durationLabel: string;
-          if (duration.type === 'days') {
-            durationLabel = `${duration.value} дни`;
-          } else {
-            durationLabel = `${duration.value} месец${duration.value > 1 ? 'а' : ''}`;
-          }
-
-          return {
-            value: t.id.toString(),
-            label: `${durationLabel} — ${t.price} ${t.currency}`,
-            duration_days: t.duration_days,
-          };
+          const durationLabel =
+            duration.type === 'days'
+              ? `${duration.value} дни`
+              : `${duration.value} месец${duration.value > 1 ? 'а' : ''}`;
+          return { value: t.id.toString(), label: `${durationLabel} — ${t.price} ${t.currency}`, duration_days: t.duration_days };
         })
       );
+
       setVoucherCode(data.order.voucher_code ?? '');
       setUpdateError(null);
     } catch (err) {
@@ -182,7 +194,7 @@ export default function CheckoutPage() {
     if (!order) return;
     try {
       setCheckoutLoading(true);
-      const res = await fetch(`/api/orders/initiate-payment/${order.id}`, { method: 'POST' });
+      const res = await fetch(`/api/orders/initiate-payment/${order.order_number}`, { method: 'POST' });
       if (!res.ok) {
         const errData = await res.json();
         alert(errData.detail || 'Неуспешно иницииране на плащането');
@@ -201,7 +213,13 @@ export default function CheckoutPage() {
   if (loading || !order) return <Spinner />;
 
   const now = new Date();
-  const until = new Date(now.getTime() + order.price_tier.duration_days * 24 * 60 * 60 * 1000);
+  const durationDays = order.price_tier?.duration_days || 0;
+  const until = new Date(now.getTime() + durationDays * 24 * 60 * 60 * 1000);
+  const isCompanyInfoChanged =
+    order &&
+    (order.is_company !== isCompany ||
+      order.company_name !== companyName ||
+      order.vat_number !== vatNumber);
 
   return (
     <div className="container fullHeight centerWrapper">
@@ -246,7 +264,6 @@ export default function CheckoutPage() {
             onChange={handleTierChange}
             placeholder="Моля, изберете план"
           />
-          {console.log(order.price_tier)}
           {order.price_tier && (
             <div className={styles.validityBox}>
               <h5>Поканата ще бъде активна</h5>
@@ -265,6 +282,82 @@ export default function CheckoutPage() {
                 disabled
               />
             </div>
+          )}
+        </div>
+
+        <div className={styles.companySection}>
+          <h2>Фактуриране</h2>
+
+          <div className={styles.radioGroup}>
+            <RadioButton
+              label="Физическо лице"
+              name="company-status"
+              value="individual"
+              selected={!isCompany}
+              onSelect={() => {
+                setIsCompany(false);
+                setCompanyName('');
+                setVatNumber('');
+                setVatError(null);
+
+                updateOrderBackend({
+                  is_company: false,
+                  company_name: '',
+                  vat_number: '',
+                });
+              }}
+            />
+            <RadioButton
+              label="Фирма"
+              name="company-status"
+              value="company"
+              selected={isCompany}
+              onSelect={() => setIsCompany(true)}
+            />
+          </div>
+
+          {isCompany && (
+            <>
+              <Input
+                id="company-name"
+                name="company-name"
+                label="Фирма"
+                value={companyName}
+                onChange={e => setCompanyName(e.target.value)}
+              />
+              <Input
+                id="vat-number"
+                name="vat-number"
+                label="ЕИК/ПИК/БУЛСТАТ"
+                value={vatNumber}
+                error={vatError}
+                onChange={e => {
+                  const digitsOnly = e.target.value.replace(/\D/g, '');
+                  setVatNumber(digitsOnly);
+
+                  if (digitsOnly.length > 0 && digitsOnly.length !== 9) {
+                    setVatError('Моля, въведете точно 9 цифри');
+                  } else {
+                    setVatError(null);
+                  }
+                }}
+              />
+              <Button
+                size="large"
+                width="100%"
+                variant="primary"
+                disabled={!isCompanyInfoChanged || vatNumber.length !== 9} // disable if not changed or invalid VAT
+                onClick={() =>
+                  updateOrderBackend({
+                    is_company: isCompany,
+                    company_name: companyName,
+                    vat_number: vatNumber,
+                  })
+                }
+              >
+                Потвърди фирмена информация
+              </Button>
+            </>
           )}
         </div>
 
@@ -295,8 +388,9 @@ export default function CheckoutPage() {
               </Button>
             )}
           </div>
-          {updateError && <p className={styles.error}>{updateError}</p>}
         </div>
+
+        {updateError && <p className={styles.error}>{updateError}</p>}
 
         <div className={styles.summary}>
           <h2>Общо</h2>

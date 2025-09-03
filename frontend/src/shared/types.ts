@@ -502,7 +502,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/orders/update/{order_id}": {
+    "/orders/update/{order_number}": {
         parameters: {
             query?: never;
             header?: never;
@@ -520,10 +520,10 @@ export interface paths {
          * @description Update order's price tier, currency, and voucher.
          *     If no tier selected, reset order price info and return immediately.
          */
-        patch: operations["update_order_with_tiers_orders_update__order_id__patch"];
+        patch: operations["update_order_with_tiers_orders_update__order_number__patch"];
         trace?: never;
     };
-    "/orders/initiate-payment/{order_id}": {
+    "/orders/initiate-payment/{order_number}": {
         parameters: {
             query?: never;
             header?: never;
@@ -533,7 +533,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Initiate Payment */
-        post: operations["initiate_payment_orders_initiate_payment__order_id__post"];
+        post: operations["initiate_payment_orders_initiate_payment__order_number__post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -557,17 +557,17 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/orders/{order_id}/invoice": {
+    "/orders/invoice/{order_number}": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Generate Invoice */
-        get: operations["generate_invoice_orders__order_id__invoice_get"];
+        get?: never;
         put?: never;
-        post?: never;
+        /** Generate Invoice */
+        post: operations["generate_invoice_orders_invoice__order_number__post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1058,6 +1058,11 @@ export interface components {
             /** Invitation Wallpaper */
             invitation_wallpaper: string | null;
             invitation_status?: components["schemas"]["InvitationStatus"] | null;
+            /**
+             * Invitation Is Active
+             * @default false
+             */
+            invitation_is_active: boolean | null;
             /** Invitation Active From */
             invitation_active_from?: string | null;
             /** Invitation Active Until */
@@ -1113,6 +1118,12 @@ export interface components {
             currency: string | null;
             /** Voucher Code */
             voucher_code?: string | null;
+            /** Is Company */
+            is_company?: boolean | null;
+            /** Company Name */
+            company_name?: string | null;
+            /** Vat Number */
+            vat_number?: string | null;
         };
         /** OrderWithTiersResponse */
         OrderWithTiersResponse: {
@@ -2254,12 +2265,12 @@ export interface operations {
             };
         };
     };
-    update_order_with_tiers_orders_update__order_id__patch: {
+    update_order_with_tiers_orders_update__order_number__patch: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                order_id: number;
+                order_number: string;
             };
             cookie?: {
                 session_id?: string | null;
@@ -2291,12 +2302,12 @@ export interface operations {
             };
         };
     };
-    initiate_payment_orders_initiate_payment__order_id__post: {
+    initiate_payment_orders_initiate_payment__order_number__post: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                order_id: number;
+                order_number: string;
             };
             cookie?: {
                 session_id?: string | null;
@@ -2344,12 +2355,12 @@ export interface operations {
             };
         };
     };
-    generate_invoice_orders__order_id__invoice_get: {
+    generate_invoice_orders_invoice__order_number__post: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                order_id: number;
+                order_number: string;
             };
             cookie?: {
                 session_id?: string | null;

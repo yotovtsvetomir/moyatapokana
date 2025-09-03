@@ -1,4 +1,3 @@
-import os
 import aiodns
 from datetime import datetime, timedelta
 from fastapi import (
@@ -114,7 +113,7 @@ async def register(
 
     # -------------------- Send Welcome Email --------------------
     html_content = render_email(
-        "welcome.html",
+        "customers/welcome.html",
         {
             "first_name": user.first_name or user.email,
             "email": user.email,
@@ -309,7 +308,7 @@ async def password_reset_request(
     reset_link = f"{settings.FRONTEND_BASE_URL}/password-reset/{token}/"
 
     html_content = render_email(
-        "password_reset.html",
+        "customers/password_reset.html",
         {
             "first_name": user.first_name,
             "reset_url": reset_link,

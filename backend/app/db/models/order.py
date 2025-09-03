@@ -41,7 +41,7 @@ class PriceTier(Base):
 
 
 # -------------------- Order --------------------
-class OrderStatus(PyEnum):
+class OrderStatus(str, PyEnum):
     STARTED = "started"
     PAID = "paid"
     CANCELLED = "cancelled"

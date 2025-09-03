@@ -2,17 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ order_number: string }> }
 ) {
   try {
-    const { id } = await params;
-    if (!id) {
-      return NextResponse.json({ error: "Missing order ID" }, { status: 400 });
+    const { order_number } = await params;
+    if (!order_number) {
+      return NextResponse.json({ error: "Missing order order_number" }, { status: 400 });
     }
 
     const body = await req.text();
 
-    const res = await fetch(`${process.env.API_URL_SERVER}/orders/initiate-payment/${id}`, {
+    const res = await fetch(`${process.env.API_URL_SERVER}/orders/initiate-payment/${order_number}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

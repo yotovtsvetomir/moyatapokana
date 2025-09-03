@@ -5,7 +5,7 @@ from email.message import EmailMessage
 from datetime import datetime
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
-TEMPLATE_DIR = os.path.join("app", "templates", "customers", "emails")
+TEMPLATE_DIR = os.path.join("app", "templates")
 
 env = Environment(
     loader=FileSystemLoader(TEMPLATE_DIR),

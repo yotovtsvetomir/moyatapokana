@@ -27,6 +27,7 @@ from app.services.pagination import paginate
 from app.services.search import apply_filters_search_ordering
 from app.db.models.invitation import (
     Invitation,
+    InvitationStatus,
     RSVP,
     Event,
     SlideshowImage,
@@ -152,9 +153,12 @@ async def create_empty_invitation(
 
     # -------------------- Check Draft Limits --------------------
     query = select(Invitation).where(
-        (Invitation.owner_id == owner_id)
-        if owner_id
-        else (Invitation.anon_session_id == anononymous_session_id)
+        (
+            (Invitation.owner_id == owner_id)
+            if owner_id
+            else (Invitation.anon_session_id == anononymous_session_id)
+        )
+        & (Invitation.status == InvitationStatus.DRAFT)
     )
     result = await db.execute(query)
     existing_drafts = result.scalars().all()

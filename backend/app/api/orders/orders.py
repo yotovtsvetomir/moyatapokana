@@ -16,8 +16,9 @@ from weasyprint import HTML
 
 from app.db.session import get_write_session, get_read_session
 from app.db.models.order import Order, OrderStatus, Voucher, PriceTier, CurrencyRate
-from app.db.models.invitation import Invitation
+from app.db.models.invitation import Invitation, InvitationStatus
 from app.services.pagination import paginate
+from app.services.email import render_email, send_email
 from app.schemas.order import (
     OrderCreate,
     OrderRead,
@@ -47,11 +48,11 @@ def format_order_dates(order: Order) -> dict:
         "paid_at": order.paid_at.strftime("%d.%m.%Y") if order.paid_at else "",
         "invitation": {
             **order.invitation.__dict__,
-            "live_from": order.invitation.live_from.strftime("%d.%m.%Y %H:%M")
-            if order.invitation.live_from
+            "live_from": order.invitation.active_from.strftime("%d.%m.%Y %H:%M")
+            if order.invitation.active_from
             else "",
-            "live_until": order.invitation.live_until.strftime("%d.%m.%Y %H:%M")
-            if order.invitation.live_until
+            "live_until": order.invitation.active_until.strftime("%d.%m.%Y %H:%M")
+            if order.invitation.active_until
             else "",
         }
         if order.invitation
@@ -68,7 +69,7 @@ async def create_order_with_tiers_route(
     read_db: AsyncSession = Depends(get_read_session),
 ):
     customer_email = current_user["email"]
-    customer_name = current_user["first_name"] + " " + current_user["last_name"]
+    customer_name = f"{current_user['first_name']} {current_user['last_name']}"
 
     # Check for existing STARTED order
     result = await read_db.execute(
@@ -85,6 +86,7 @@ async def create_order_with_tiers_route(
         )
     )
     existing_order = result.scalars().first()
+
     if existing_order:
         order = existing_order
     else:
@@ -117,11 +119,26 @@ async def create_order_with_tiers_route(
             customer_email=customer_email,
             currency="BGN",
         )
+
+        # Merge invitation into write_db session
+        merged_invitation = await write_db.merge(invitation)
+        order.invitation = merged_invitation
+
         write_db.add(order)
         await write_db.commit()
-        await write_db.refresh(order)
 
-    # Fetch active tiers and available currencies (same as update-with-tiers)
+    # Ensure all relationships are fully loaded from write_db session
+    order = await write_db.get(
+        Order,
+        order.id,
+        options=[
+            selectinload(Order.invitation),
+            selectinload(Order.price_tier),
+            selectinload(Order.voucher),
+        ],
+    )
+
+    # Fetch active tiers and available currencies
     tier_result = await read_db.execute(
         select(PriceTier)
         .where(PriceTier.active, PriceTier.currency == order.currency)
@@ -134,6 +151,7 @@ async def create_order_with_tiers_route(
     )
     currencies = currency_result.scalars().all()
 
+    # Return fully loaded order
     return OrderWithTiersResponse(
         order=OrderRead.from_orm(order),
         tiers=[PriceTierRead.from_orm(t) for t in tiers],
@@ -142,9 +160,9 @@ async def create_order_with_tiers_route(
 
 
 # -------------------- UPDATE ORDER PRICE + FETCH TIERS --------------------
-@router.patch("/update/{order_id}", response_model=OrderWithTiersResponse)
+@router.patch("/update/{order_number}", response_model=OrderWithTiersResponse)
 async def update_order_with_tiers(
-    order_id: int,
+    order_number: str,
     payload: OrderUpdatePrice,
     current_user: dict = Depends(require_role("customer")),
     write_db: AsyncSession = Depends(get_write_session),
@@ -162,13 +180,23 @@ async def update_order_with_tiers(
             selectinload(Order.voucher),
             selectinload(Order.invitation),
         )
-        .where(Order.id == order_id, Order.customer_email == current_user["email"])
+        .where(
+            Order.order_number == order_number,
+            Order.customer_email == current_user["email"],
+        )
     )
     order = result.scalars().first()
     if not order:
         raise HTTPException(status_code=404, detail="Order not found or forbidden")
 
     order = await write_db.merge(order)
+
+    if payload.is_company is not None:
+        order.is_company = payload.is_company
+    if payload.company_name is not None:
+        order.company_name = payload.company_name
+    if payload.vat_number is not None:
+        order.vat_number = payload.vat_number
 
     # If no tier is selected, reset order and return
     if payload.duration_days is None:
@@ -237,7 +265,7 @@ async def update_order_with_tiers(
         )
         voucher_obj = result.scalars().first()
         if not voucher_obj:
-            raise HTTPException(status_code=400, detail="Invalid or expired voucher")
+            raise HTTPException(status_code=400, detail="Невалиден промо код")
 
         # Validate usage
         if (
@@ -304,9 +332,10 @@ async def update_order_with_tiers(
     )
 
 
-@router.post("/initiate-payment/{order_id}")
+# -------------------- Initiate Payment --------------------
+@router.post("/initiate-payment/{order_number}")
 async def initiate_payment(
-    order_id: int,
+    order_number: str,
     current_user: dict = Depends(require_role("customer")),
     read_db: AsyncSession = Depends(get_read_session),
     write_db: AsyncSession = Depends(get_write_session),
@@ -319,31 +348,84 @@ async def initiate_payment(
             selectinload(Order.voucher),
             selectinload(Order.invitation),
         )
-        .where(Order.id == order_id, Order.customer_email == current_user["email"])
+        .where(
+            Order.order_number == order_number,
+            Order.customer_email == current_user["email"],
+        )
     )
     order = result.scalars().first()
     if not order:
         raise HTTPException(status_code=404, detail="Order not found or forbidden")
 
     # Handle free orders with voucher
-    if order.total_price == 0 and order.voucher_code:
+    if order.total_price == 0 and order.voucher:
+        # Merge all related objects into the write session
+        order = await write_db.merge(order)
+        if order.voucher:
+            order.voucher = await write_db.merge(order.voucher)
+        if order.invitation:
+            order.invitation = await write_db.merge(order.invitation)
+
+        now = datetime.utcnow()
+
+        # Update order fields
         order.status = OrderStatus.PAID
         order.paid = True
         order.paid_price = 0
-        order.paid_at = datetime.utcnow()
+        order.paid_at = now
 
+        # Update invitation if exists
         if order.invitation:
             order.invitation.is_active = True
-            order.invitation.active_from = datetime.utcnow()
+            order.invitation.active_from = now
+            order.invitation.active_until = now + timedelta(
+                days=order.duration_days or 0
+            )
+            order.invitation.status = InvitationStatus.ACTIVE
 
-        write_db.add(order)
+        # Update voucher if exists
+        if order.voucher:
+            order.voucher.used_count += 1
+            if (
+                order.voucher.usage_limit
+                and order.voucher.used_count >= order.voucher.usage_limit
+            ):
+                order.voucher.active = False
+
+        # Commit changes — no need to call add()
         await write_db.commit()
+
+        html_body = render_email(
+            "orders/successful_order.html",
+            {
+                "name": order.customer_name,
+                "logo_url": f"{settings.FRONTEND_BASE_URL}/logo.png",
+                "invitation_title": order.invitation_title,
+                "total_price": order.total_price,
+                "currency": order.currency,
+                "live_from": order.invitation.active_from.strftime("%d.%m.%Y %H:%M")
+                if order.invitation and order.invitation.active_from
+                else "",
+                "live_until": order.invitation.active_until.strftime("%d.%m.%Y %H:%M")
+                if order.invitation and order.invitation.active_until
+                else "",
+                "order_uuid": order.order_number,
+            },
+        )
+        send_email(
+            to=order.customer_email,
+            subject="Вашата поръчка е потвърдена",
+            body=f"Здравейте, {order.customer_name}! Поръчката Ви е потвърдена.",
+            html=html_body,
+        )
+
         return {
             "stripe_session_id": None,
-            "payment_url": None,
+            "payment_url": f"{settings.FRONTEND_BASE_URL}/profile/orders/{order.order_number}?payment_status=success",
             "message": "Order fully paid. Invitation activated.",
         }
 
+    # Normal paid orders via Stripe
     try:
         session = stripe.checkout.Session.create(
             payment_method_types=["card"],
@@ -375,6 +457,7 @@ async def initiate_payment(
     return {"stripe_session_id": session.id, "payment_url": session.url}
 
 
+# -------------------- Stripe Webhook --------------------
 @router.post("/payments/webhook/")
 async def stripe_webhook(
     request: Request,
@@ -396,7 +479,13 @@ async def stripe_webhook(
         order_number = session["metadata"].get("order_number")
 
         result = await write_db.execute(
-            select(Order).where(Order.order_number == order_number)
+            select(Order)
+            .options(
+                selectinload(Order.price_tier),
+                selectinload(Order.voucher),
+                selectinload(Order.invitation),
+            )
+            .where(Order.order_number == order_number)
         )
         order = result.scalars().first()
         if not order or order.paid:
@@ -410,29 +499,61 @@ async def stripe_webhook(
         order.stripe_payment_intent = session.get("payment_intent")
         order.stripe_session_id = session.get("id")
 
-        # Fetch invitation separately and attach it to session
-        if order.invitation_id:
-            result = await write_db.execute(
-                select(Invitation).where(Invitation.id == order.invitation_id)
+        # Fetch invitation and activate
+        if order.invitation:
+            now = datetime.utcnow()
+            order.invitation.status = InvitationStatus.ACTIVE
+            order.invitation.is_active = True
+            order.invitation.active_from = now
+            order.invitation.active_until = now + timedelta(
+                days=order.duration_days or 0
             )
-            invitation = result.scalars().first()
-            if invitation:
-                now = datetime.utcnow()
-                invitation.is_active = True
-                invitation.active_from = now
-                invitation.active_until = now + timedelta(days=order.duration_days or 0)
-                write_db.add(invitation)  # Ensure it’s tracked
+            write_db.add(order.invitation)
+
+        if order.voucher:
+            order.voucher.used_count += 1
+            if (
+                order.voucher.usage_limit
+                and order.voucher.used_count >= order.voucher.usage_limit
+            ):
+                order.voucher.active = False
+            write_db.add(order.voucher)
 
         # Commit all changes
+        write_db.add(order)
         await write_db.commit()
+
+        html_body = render_email(
+            "orders/successful_order.html",
+            {
+                "name": order.customer_name,
+                "logo_url": f"{settings.FRONTEND_BASE_URL}/logo.png",
+                "invitation_title": order.invitation_title,
+                "total_price": order.total_price,
+                "currency": order.currency,
+                "live_from": order.invitation.active_from.strftime("%d.%m.%Y %H:%M")
+                if order.invitation.active_from
+                else "",
+                "live_until": order.invitation.active_until.strftime("%d.%m.%Y %H:%M")
+                if order.invitation.active_until
+                else "",
+                "order_uuid": order.order_number,
+            },
+        )
+        send_email(
+            to=order.customer_email,
+            subject="Вашата поръчка е потвърдена",
+            body=f"Здравейте, {order.customer_name}! Поръчката Ви е потвърдена.",
+            html=html_body,
+        )
 
     return {"status": "success"}
 
 
 # -------------------- INVOICE --------------------
-@router.get("/{order_id}/invoice")
+@router.post("/invoice/{order_number}")
 async def generate_invoice(
-    order_id: int,
+    order_number: str,
     current_user: dict = Depends(require_role("customer")),
     read_db: AsyncSession = Depends(get_read_session),
 ):
@@ -443,7 +564,10 @@ async def generate_invoice(
             selectinload(Order.voucher),
             selectinload(Order.invitation),
         )
-        .where(Order.id == order_id, Order.customer_email == current_user["email"])
+        .where(
+            Order.order_number == order_number,
+            Order.customer_email == current_user["email"],
+        )
     )
     order = result.scalars().first()
     if not order:
@@ -458,10 +582,13 @@ async def generate_invoice(
         )
 
     order_data = format_order_dates(order)
+    full_name = order.customer_name
 
     template = env.get_template("invoice.html")
     html_string = template.render(
-        order=order_data, logo_url=f"{settings.FRONTEND_BASE_URL}/logo.png"
+        order=order_data,
+        logo_url=f"{settings.FRONTEND_BASE_URL}/logo.png",
+        full_name=full_name,
     )
 
     pdf_file = BytesIO()
