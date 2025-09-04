@@ -85,7 +85,9 @@ class RSVPRead(RSVPBase):
 
 
 class Stats(BaseModel):
+    total_guests: int
     total_attending: int
+    total_not_attending: int
     total_adults: int
     total_kids: int
     menu_counts: Dict[str, int] = {}

@@ -25,7 +25,7 @@ export default function InvitationCustomizePage() {
 
         <div className={styles.buttons}>
           <Button
-            href={`/invitations/preview/${id}/game`}
+            href={`/invitations/preview/${id}`}
             variant="primary"
             size="large"
             width="100%"

@@ -8,7 +8,6 @@ import { TextLink } from "@/ui-components/TextLink/TextLink";
 import DateInput from "@/ui-components/DateInput/DateInput";
 import DetailSection from "@/ui-components/DetailSection/DetailSection";
 import styles from "../../Events.module.css";
-import type { components } from "@/shared/types";
 import { useInvitation } from "@/context/InvitationContext";
 
 export default function EditEventPage() {

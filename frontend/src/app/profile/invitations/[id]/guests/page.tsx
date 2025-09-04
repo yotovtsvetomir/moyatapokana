@@ -58,11 +58,28 @@ export default function GuestsPage() {
           <ul>
             <li>
               <div>
+                <span className="material-symbols-outlined">people</span>
+                <span>Общо</span>
+              </div>
+              <b>{data.stats.total_guests}</b>
+            </li>
+            <li>
+              <div>
                 <span className="material-symbols-outlined">done_all</span>
-                <span>Потвърдени</span>
+                <span>Присъстващи</span>
               </div>
               <b>{data.stats.total_attending}</b>
             </li>
+            <li>
+              <div>
+                <span className="material-symbols-outlined">close</span>
+                <span>Неприсъстващи</span>
+              </div>
+              <b>{data.stats.total_not_attending}</b>
+            </li>
+          </ul>
+
+          <ul>
             <li>
               <div>
                 <span className="material-symbols-outlined">groups</span>

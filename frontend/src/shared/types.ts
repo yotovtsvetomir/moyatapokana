@@ -1052,7 +1052,7 @@ export interface components {
             /** Order Number */
             order_number: string;
             /** Invitation Id */
-            invitation_id: number;
+            invitation_id?: number | null;
             /** Invitation Title */
             invitation_title: string | null;
             /** Invitation Wallpaper */
@@ -1253,8 +1253,12 @@ export interface components {
         };
         /** Stats */
         Stats: {
+            /** Total Guests */
+            total_guests: number;
             /** Total Attending */
             total_attending: number;
+            /** Total Not Attending */
+            total_not_attending: number;
             /** Total Adults */
             total_adults: number;
             /** Total Kids */
@@ -1959,6 +1963,7 @@ export interface operations {
             query?: {
                 page?: number;
                 page_size?: number;
+                status?: components["schemas"]["InvitationStatus"] | null;
             };
             header?: never;
             path?: never;

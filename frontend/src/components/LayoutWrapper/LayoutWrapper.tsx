@@ -17,7 +17,9 @@ export default function LayoutWrapper({
   const hideLayout =
     pathname === '/login' ||
     pathname === '/register' ||
-    pathname.startsWith('/invitations/preview');
+    pathname.startsWith('/invitations/preview/') ||
+    pathname.startsWith('/games/') ||
+    pathname.startsWith('/slideshows/');
 
   return (
     <>

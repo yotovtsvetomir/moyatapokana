@@ -1,0 +1,110 @@
+.slideshow {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  z-index: 1000;
+}
+
+.AniFooter {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 20px 0;
+  width: 100vw;
+  z-index: 1100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--invitation-bg-medium);
+  box-shadow: 
+    0 1px 16px color-mix(in srgb, var(--invitation-primary) 20%, transparent),
+    0 1.5px 8px color-mix(in srgb, var(--invitation-primary) 13%, transparent);
+  pointer-events: none;
+}
+
+.progressBar {
+  width: 100vw;
+  height: 8px;
+  margin: 0;
+  display: flex;
+  align-items: flex-start;
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: auto;
+  background: none;
+  z-index: 10;
+  border-radius: 0 0 2rem 2rem;
+  overflow: hidden;
+}
+
+.progress {
+  height: 100%;
+  border-radius: 0 0 2rem 2rem;
+  background: var(--invitation-primary);
+  box-shadow:
+    0 2px 8px 0 color-mix(in srgb, var(--invitation-primary) 18%, transparent),
+    0 0 0 1.5px color-mix(in srgb, var(--invitation-primary) 27%, transparent) inset;
+  transition: width 0.4s cubic-bezier(.42, 0, .58, 1);
+  margin: 0;
+  border: none;
+}
+
+.continueButton {
+  display: block;
+  background: linear-gradient(
+    90deg,
+    var(--invitation-primary) 15%,
+    var(--invitation-bg-medium) 100%
+  );
+  color: var(--invitation-text-main);
+  font-size: 1.13rem;
+  padding: 0.75rem 2.2rem;
+  border-radius: 10px;
+  border: none;
+  box-shadow: 0 2px 16px 0 color-mix(in srgb, var(--invitation-primary) 33%, transparent);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  z-index: 1102;
+  transition: background 0.18s, box-shadow 0.2s;
+  pointer-events: auto;
+}
+
+.continueButton:disabled {
+  background: #f6f6f6;
+  color: #bbbbbb;
+  box-shadow: none;
+  cursor: not-allowed;
+  opacity: 0;
+  border: 1px solid #eee;
+}
+
+.downwards {
+  position: absolute;
+  bottom: 20px;
+  right: 50%;
+  transform: translateX(50%);
+}
+
+@media (min-width: 768px) {
+  .downwards {
+    position: absolute;
+    right: 20px;
+    bottom: 20px;
+    transform: none;
+  }
+}
+
+.imageCircle {
+  position: absolute;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 4px solid var(--invitation-bg-medium);
+  box-shadow:
+    0 4px 32px color-mix(in srgb, var(--invitation-primary) 13%, transparent),
+    0 1.5px 14px color-mix(in srgb, var(--invitation-primary) 19%, transparent);
+  background: var(--invitation-bg-medium);
+  z-index: 1002;
+}

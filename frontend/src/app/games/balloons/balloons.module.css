@@ -1,0 +1,338 @@
+.headingBanner {
+  position: absolute;
+  top: 5%;
+  left: 5%;
+  width: 90%;
+  max-width: 100%;
+  padding: 0.85rem 0;
+  background: var(--invitation-bg-medium);
+  border: 2px solid color-mix(in srgb, var(--invitation-primary) 80%, transparent);
+  border-radius: 1.6rem;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 24px color-mix(in srgb, var(--invitation-primary) 33%, transparent);
+  pointer-events: none;
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.headingBanner::before,
+.headingBanner::after {
+  content: "";
+  position: absolute;
+  width: 46px;
+  height: 10px;
+  background: linear-gradient(90deg, var(--invitation-primary), var(--invitation-bg-light));
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.headingBanner::before {
+  left: -20px;
+  border-radius: 4px 0 0 4px;
+}
+
+.headingBanner::after {
+  right: -20px;
+  border-radius: 0 4px 4px 0;
+}
+
+.heading {
+  font-family: var(--font-dynamic), sans-serif;
+  text-align: center;
+  font-size: 1.7rem;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: 0.02em;
+  color: var(--invitation-text-main);
+  text-shadow:
+    0 1px 2px rgba(24, 24, 24, 0.06),
+    0 1px 6px color-mix(in srgb, var(--invitation-primary) 25%, transparent);
+  padding: 0 2vw;
+  pointer-events: none;
+  width: 100%;
+  box-sizing: border-box;
+  z-index: 2;
+}
+
+.footer {
+  width: 100%;
+  padding: 18px 0;
+  background-color: var(--invitation-bg-dark);
+  color: var(--invitation-primary);
+  letter-spacing: 0.03em;
+  font-weight: 500;
+  z-index: 2;
+  border-top: 1px solid color-mix(in srgb, var(--invitation-primary) 33%, transparent);
+  display: flex;
+  justify-content: center;
+}
+
+.footer p {
+  font-size: 1.5rem;
+  font-weight: bold;
+  font-family: var(--font-dynamic), sans-serif;
+}
+
+.balloon {
+  position: absolute;
+  bottom: -80px;
+  transition: transform 0.3s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+  animation: floatUp 8s linear forwards;
+  cursor: pointer;
+  user-select: none;
+  z-index: 1;
+  isolation: isolate;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  background: transparent !important;
+}
+
+.balloon:active,
+.balloon:focus {
+  outline: none;
+  background: none;
+  box-shadow: none;
+}
+
+@keyframes floatUp {
+  from { bottom: -200px; }
+  to   { bottom: 100vh; }
+}
+
+.popped {
+  animation: pop 0.35s cubic-bezier(0.68,-0.55,0.27,1.55) forwards !important;
+}
+
+@keyframes pop {
+  0% { transform: scale(1); opacity: 1; }
+  60% { transform: scale(1.3); opacity: 1; }
+  100% { transform: scale(0); opacity: 0; }
+}
+
+@keyframes boxPopIn {
+  0% { transform: scale(0.82); opacity: 0; }
+  70% { transform: scale(1.06); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+.successBox {
+  position: relative;
+  left: 5%;
+  bottom: 15%;
+  background: var(--invitation-bg-medium);
+  color: var(--invitation-text-main);
+  padding: 2.3rem 1.5rem 2rem 1.5rem;
+  border-radius: 1.6rem;
+  box-shadow:
+    0 4px 32px 0 color-mix(in srgb, var(--invitation-primary) 13%, transparent),
+    0 1.5px 14px 0 color-mix(in srgb, var(--invitation-primary) 18%, transparent);
+  text-align: center;
+  width: 90%;
+  border: 2px solid color-mix(in srgb, var(--invitation-primary) 73%, transparent);
+  backdrop-filter: blur(10px);
+  z-index: 21;
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  animation: boxPopIn 0.48s cubic-bezier(0.68,-0.4,0.25,1.15);
+}
+
+@media (min-width: 767px) {
+  .successBox {
+    left: 15%;
+    width: 70%;
+    bottom: 80%;
+  }
+}
+
+.successBox::before,
+.successBox::after {
+  content: "";
+  position: absolute;
+  width: 46px;
+  height: 10px;
+  background: linear-gradient(90deg, var(--invitation-primary), var(--invitation-bg-light));
+  top: 32px;
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.successBox::before {
+  left: -20px;
+  border-radius: 6px 0 0 6px;
+}
+
+.successBox::after {
+  right: -20px;
+  border-radius: 0 6px 6px 0;
+}
+
+.successBox h2,
+.successBox p {
+  color: var(--invitation-text-main);
+  text-shadow: 0 1px 2px rgba(24,24,24,0.06);
+}
+
+.successBox h2 {
+  font-size: 2.2rem;
+  margin-bottom: 0.65em;
+  font-weight: 900;
+  letter-spacing: 0.01em;
+}
+
+.successBox p {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 1.5em;
+  line-height: 1.45;
+}
+
+.successBox button {
+  margin-top: 1.5em;
+  padding: 0.78em 2.1em;
+  font-size: 1.18rem;
+  background: linear-gradient(90deg, var(--invitation-primary) 15%, var(--invitation-bg-light) 100%);
+  color: var(--invitation-text-main);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 700;
+  box-shadow: 0 2px 8px 0 color-mix(in srgb, var(--invitation-primary) 38%, transparent);
+  letter-spacing: 0.04em;
+  transition: background 0.22s;
+}
+
+.progressBarFooter {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 24px 0 22px 0;
+  background: var(--invitation-bg-medium);
+  z-index: 2;
+  position: relative;
+}
+
+.progressBarFooter button {
+  padding: 0.78em 2.1em;
+  font-size: 1.18rem;
+  background: linear-gradient(90deg, var(--invitation-primary) 15%, var(--invitation-bg-light) 100%);
+  color: var(--invitation-text-main);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 700;
+  box-shadow: 0 2px 8px 0 color-mix(in srgb, var(--invitation-primary) 38%, transparent);
+  letter-spacing: 0.04em;
+  transition: background 0.22s;
+  margin-top: 1.3rem;
+}
+
+@media (min-width: 767px) {
+  .progressBarFooter button {
+    position: absolute;
+    right: 2rem;
+    bottom: 1rem;
+  }
+}
+
+.progressBarWrapper {
+  width: 320px;
+  background: var(--invitation-bg-medium);
+  border-radius: 2rem;
+  box-shadow:
+    0 4px 24px 0 color-mix(in srgb, var(--invitation-primary) 20%, transparent),
+    0 1.5px 7px 0 color-mix(in srgb, var(--invitation-primary) 8%, transparent);
+  position: relative;
+  overflow: hidden;
+  height: 40px;
+}
+
+.progressBarBG {
+  width: 100%;
+  height: 100%;
+  border-radius: 2rem;
+  background: linear-gradient(90deg, var(--invitation-primary) 0%, var(--invitation-bg-light) 100%);
+  opacity: 0.17;
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 0;
+}
+
+.progressBarFill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 40px;
+  border-radius: 2rem;
+  background: linear-gradient(90deg, var(--invitation-primary) 0%, var(--invitation-bg-light) 100%);
+  box-shadow: 0 2px 8px 0 color-mix(in srgb, var(--invitation-primary) 18%, transparent);
+  transition: width 0.4s cubic-bezier(.42,0,.58,1);
+  z-index: 1;
+}
+
+.progressBarText {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--invitation-text-main);
+  font-family: var(--font-dynamic), sans-serif;
+  font-size: 1.28rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  text-shadow: 0 2px 12px #0008, 0 0 8px var(--invitation-bg-light);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+}
+
+.progressBarText span {
+  font-size: 1.3em;
+}
+
+.progressBarText .doneIcon {
+  margin-left: 0.5em;
+  font-size: 1.1em;
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--invitation-primary) 60%, transparent));
+}
+
+.currentNum {
+  font-size: 1.45em;
+  font-weight: 900;
+  color: var(--invitation-text-main);
+  text-shadow: 0 2px 12px color-mix(in srgb, var(--invitation-primary) 35%, transparent);
+  transition: color 0.3s;
+}
+
+.totalNum {
+  color: var(--invitation-text-main);
+  font-size: 1.15em;
+  opacity: 0.7;
+}
+
+.slash {
+  font-size: 1.1em;
+  color: var(--invitation-text-main);
+  margin: 0 0.15em;
+  opacity: 0.7;
+}
+
+@keyframes scorePop {
+  0%   { transform: scale(1); }
+  30%  { transform: scale(2); }
+  60%  { transform: scale(0.92); }
+  100% { transform: scale(1); }
+}
+
+.popAnim {
+  animation: scorePop 0.34s cubic-bezier(0.68,-0.55,0.27,1.55);
+}

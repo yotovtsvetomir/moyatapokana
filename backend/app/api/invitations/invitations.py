@@ -703,7 +703,7 @@ async def get_rsvp_for_owner(
 
     rsvp = invitation.rsvp
 
-    # --- Stats (all guests) ---
+    # --- Fetch all guests for this RSVP ---
     guests_all = (
         (
             await db.execute(
@@ -716,19 +716,32 @@ async def get_rsvp_for_owner(
         .all()
     )
 
-    total_attending = len([g for g in guests_all if g.attending])
-    total_adults = len([g for g in guests_all if g.guest_type != "kid"])
-    total_kids = len([g for g in guests_all if g.guest_type == "kid"])
+    # Separate attending and not attending guests
+    attending_guests = [g for g in guests_all if g.attending]
+    not_attending_guests = [g for g in guests_all if not g.attending]
+
+    # Totals for attending
+    total_attending = len(attending_guests)
+    total_adults = len([g for g in attending_guests if g.guest_type != "kid"])
+    total_kids = len([g for g in attending_guests if g.guest_type == "kid"])
 
     menu_counts: Dict[str, int] = {}
-    for g in guests_all:
+    for g in attending_guests:
         if g.menu_choice:
             menu_counts[g.menu_choice] = menu_counts.get(g.menu_choice, 0) + 1
+
+    # Totals for not attending
+    total_not_attending = len(not_attending_guests)
+
+    # Total guests (attending + not attending)
+    total_guests = total_attending + total_not_attending
 
     rsvp_stats = Stats(
         total_attending=total_attending,
         total_adults=total_adults,
         total_kids=total_kids,
+        total_not_attending=total_not_attending,
+        total_guests=total_guests,
         menu_counts=menu_counts,
     )
 

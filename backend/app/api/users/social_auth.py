@@ -88,15 +88,19 @@ async def google_login(
     # -------------------- Claim drafts before deleting anon session --------------------
     if anon_session_id:
         result_user_invites = await db_read.execute(
-            select(func.count(Invitation.id)).where(Invitation.owner_id == user.id)
+            select(func.count(Invitation.id)).where(
+                Invitation.owner_id == user.id,
+                Invitation.status == "draft"
+            )
         )
         user_invite_count = result_user_invites.scalar() or 0
+
 
         result_drafts = await db_read.execute(
             select(Invitation).where(Invitation.anon_session_id == anon_session_id)
         )
-        drafts = result_drafts.scalars().all()
 
+        drafts = result_drafts.scalars().all()
         max_allowed = 3 - user_invite_count
         drafts_to_transfer = drafts[:max_allowed] if max_allowed > 0 else []
 
@@ -179,15 +183,19 @@ async def facebook_login(
     # -------------------- Claim drafts before deleting anon session --------------------
     if anon_session_id:
         result_user_invites = await db_read.execute(
-            select(func.count(Invitation.id)).where(Invitation.owner_id == user.id)
+            select(func.count(Invitation.id)).where(
+                Invitation.owner_id == user.id,
+                Invitation.status == "draft"
+            )
         )
         user_invite_count = result_user_invites.scalar() or 0
+
 
         result_drafts = await db_read.execute(
             select(Invitation).where(Invitation.anon_session_id == anon_session_id)
         )
-        drafts = result_drafts.scalars().all()
 
+        drafts = result_drafts.scalars().all()
         max_allowed = 3 - user_invite_count
         drafts_to_transfer = drafts[:max_allowed] if max_allowed > 0 else []
 
@@ -200,6 +208,7 @@ async def facebook_login(
             await db_write.commit()
 
         await delete_session(anon_session_id, anonymous=True)
+
 
     # -------------------- Create new session --------------------
     session_id = await create_session(user)

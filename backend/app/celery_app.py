@@ -25,7 +25,7 @@ celery_app.conf.beat_schedule = {
     },
     "delete_expired_invitations_async": {
         "task": "invitations.tasks.delete_expired_invitations",
-        "schedule": crontab(minute="*"),
+        "schedule": crontab(hour=1, minute=0),
     },
 }
 
