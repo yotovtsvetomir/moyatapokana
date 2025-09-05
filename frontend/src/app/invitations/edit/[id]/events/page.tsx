@@ -160,7 +160,7 @@ export default function EventsPage() {
                             <div className={styles.eventInfoLabel}>
                               <span className="material-symbols-outlined">schedule</span>
                             </div>
-                            <p>{startTime}{endTime ? ` - ${endTime}` : ""}</p>
+                            <p>{startTime} ч. {endTime ? ` - ${endTime} ч.` : ""}</p>
                           </div>
 
                           <div className={styles.eventInfoGroup}>

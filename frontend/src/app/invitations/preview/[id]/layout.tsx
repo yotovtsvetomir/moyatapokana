@@ -42,5 +42,5 @@ export default function PreviewInvitationLayout({ children }: { children: ReactN
 
   if (loading) return <Spinner size={60} />;
 
-  return <div style={{ marginTop: "5rem" }}>{children}</div>;
+  return <div>{children}</div>;
 }

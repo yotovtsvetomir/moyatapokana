@@ -1,0 +1,329 @@
+.invitation {
+  position: relative;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.bgImage {
+  object-fit: cover;
+  object-position: center;
+  z-index: -1;
+}
+
+.content {
+  position: absolute;
+  width: 320px;
+  top: 15%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.title {
+  padding: 1rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  margin-bottom: 3rem;
+}
+
+.title h1 {
+  font-size: var(--font-3xl);
+  text-align: center;
+}
+
+.content p {
+  font-size: var(--font-xl);
+  font-style: italic;
+  line-height: 1.45;
+  margin-bottom: 1rem;
+  text-align: justify-all;
+}
+
+.pointer {
+  position: absolute;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.pointerCircle {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.arrowBounce {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  align-items: center;
+  animation: bounce 1.5s infinite;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(10px);
+  }
+}
+
+.extraInfo {
+}
+
+.extraInfo div {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background-color: #ffffff;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+}
+
+.extraInfo div:last-of-type {
+  margin-bottom: 0;
+}
+
+.extraInfo p {
+  font-size: var(--font-lg);
+  color: var(--color-dark-300);
+  text-align: justify-all;
+}
+
+.sectionTitle {
+  font-size: var(--font-2xl);
+  color: var(--color-dark-300);
+  margin-top: 3rem;
+  margin-bottom: 1rem;
+}
+
+/* EventsTimeline */
+.timeline {
+  position: relative;
+  padding-left: 2rem;
+  margin-left: 1rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.timelineTrack {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  background: var(--color-highlight-6);
+  z-index: 0;
+  border-radius: 2px;
+  height: 100%;
+  pointer-events: none;
+}
+
+.timelineFilled {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 0;
+  background: var(--color-highlight-1);
+  z-index: 1;
+  border-radius: 2px;
+  transition: height 0.3s ease-out;
+}
+
+.eventList {
+  position: relative;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+  margin: 0;
+  padding: 0;
+}
+
+.eventItem {
+  position: relative;
+}
+
+/* The timeline dot */
+.eventItem::before {
+  content: '';
+  position: absolute;
+  top: 1.6rem;
+  left: -1.85rem;
+  width: 1rem;
+  height: 1rem;
+  background: linear-gradient(
+    to bottom right, 
+    var(--primary-color, #ff7a18), 
+    var(--secondary-color, #af002d)
+  );
+  border: 3px solid white;
+  border-radius: 50%;
+  z-index: 2;
+  transform: translateX(-50%);
+  transition: transform 0.4s ease, box-shadow 0.4s ease, background 0.4s ease;
+}
+
+.eventItem.active::before {
+  box-shadow: 0 0 0 4px var(--color-highlight-1);
+  transform: scale(1.15) translateX(-0.6rem);
+}
+
+.eventItem {
+  padding: 1rem 0;
+  border-radius: 6px;
+  box-shadow:
+    0px 1px 3px rgba(0, 0, 0, 0.2),
+    0px 1px 2px rgba(0, 0, 0, 0.14),
+    0px 2px 1px -1px rgba(0, 0, 0, 0.12);
+}
+
+.eventCardWrapper .actions {
+  padding: 0 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.actions a:hover {
+  background: var(--primary-color) !important;
+  color: white !important;
+}
+
+.eventText {
+  padding-top: 1rem;
+  margin-top: 0.5rem;
+  padding-bottom: 1rem;
+  padding-left: 1.5rem;
+  margin-bottom: 1rem;
+  border-top: 1px solid;
+  border-bottom: 1px solid;
+}
+
+.eventText h4 {
+  font-size: var(--font-lxl);
+  color: var(--color-dark-300);
+  line-height: 1;
+}
+
+.eventText p {
+  margin-top: 0.25rem;
+  color: var(--color-dark-300);
+}
+
+.eventInfoGroup {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 1.3rem;
+}
+
+.eventInfoGroup p {
+  font-size: var(--font-lg);
+  color: var(--color-dark-200);
+}
+
+.eventInfoLabel {
+  display: flex;
+  align-items: center;
+  margin-right: 0.5rem;
+}
+
+.eventInfoLabel label {
+  font-size: var(--font-md);
+  color: var(--color-dark-300);
+}
+
+.eventInfoLabel span:first-of-type {
+  font-size: 1.5rem;
+  color: var(--color-dark-300);
+}
+
+.audioToggle {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+}
+
+.audioToggle button {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: 1px solid #eee;
+  cursor: pointer;
+  
+}
+
+.audioToggle button > span {
+  font-size: 1.7rem;
+}
+
+.rsvp {
+  margin-bottom: 3rem;
+}
+
+.rsvp button:hover {
+  background: var(--primary-color) !important;
+  color: white !important;
+}
+
+.footer {
+  padding: 1rem 0;
+}
+
+
+@media (min-width: 768px) {
+  .eventCardWrapper .actions {
+    flex-direction: row;
+  }
+}
+
+@media (min-width: 1024px) {
+  .wrapper {
+    width: 700px;
+    margin: 0 auto;
+  }
+
+  .eventInfoInner {
+    display: flex;
+  }
+
+  .events h1 {
+    font-size: var(--font-3xl);
+  }
+
+  .content {
+    top: 15%;
+    width: 450px;
+  }
+
+  .content h1 {
+    font-size: 40px;
+  }
+
+  .content p {
+    font-size: 23px;
+  }
+
+  .audioToggle button {
+    width: 60px;
+    height: 60px;
+    border: 1px solid #eee;
+  }
+
+  .audioToggle button > span {
+    font-size: 2rem;
+  }
+}

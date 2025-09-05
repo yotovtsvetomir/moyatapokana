@@ -186,3 +186,10 @@
 .ghost:hover {
   background-color: var(--color-neutral-300);
 }
+
+.basic {
+  background-color: transparent;
+  border: 2px solid var(--color-neutral-300);
+  color: var(--color-dark-300);
+  transition: background-color 0.2s ease;
+}
