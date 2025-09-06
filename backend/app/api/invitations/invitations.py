@@ -759,6 +759,7 @@ async def add_guest(
         last_name=payload.last_name,
         guest_type=payload.guest_type,
         is_main_guest=True,
+        attending=payload.attending,
         menu_choice=payload.menu_choice,
         rsvp_id=invitation.rsvp_id,
     )
@@ -772,6 +773,7 @@ async def add_guest(
                 last_name=sub.last_name,
                 guest_type=sub.guest_type,
                 is_main_guest=False,
+                attending=sub.attending,
                 menu_choice=sub.menu_choice,
                 main_guest_id=main_guest.id,
                 rsvp_id=invitation.rsvp_id,

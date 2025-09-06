@@ -63,7 +63,14 @@ export default function RSVPForm() {
   const addSubGuest = () => {
     setSubGuests((prev) => [
       ...prev,
-      { first_name: '', last_name: '', guest_type: 'adult', menu_choice: 'meat', is_main_guest: false },
+      { 
+        first_name: '', 
+        last_name: '', 
+        guest_type: 'adult', 
+        menu_choice: 'meat', 
+        is_main_guest: false, 
+        attending: false
+      },
     ]);
   };
 
@@ -81,6 +88,7 @@ export default function RSVPForm() {
     setLoading(true);
     try {
       const payload = { ...mainGuest, sub_guests: subGuests };
+      console.log(payload)
       const res = await fetch(`/api/invitations/${invitation.slug}/guest`, {
         method: 'POST',
         credentials: "include",
@@ -113,7 +121,7 @@ export default function RSVPForm() {
 
   const handleAttendingYes = () => {
     setMainGuest((prev) => ({ ...prev, attending: true }));
-    toast.success('Ако сте група от семейство или приятели, нека само 1 човек потвърди за всички.');
+    toast.success('Ако сте група от семейство или приятели, моля само 1 човек потвърди за всички.');
   };
 
   // -------------------- Confirmation View --------------------
