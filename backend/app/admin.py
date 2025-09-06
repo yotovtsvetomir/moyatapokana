@@ -1,4 +1,6 @@
 from sqladmin import Admin, ModelView
+from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 from app.db.session import engine_writer, get_read_session, get_write_session
 from app.db.models.user import User
 from app.db.models.invitation import (
@@ -434,11 +436,16 @@ class GuestAdmin(ModelView, model=Guest):
     # -------------------- Delete --------------------
     async def delete_model(self, session, pk):
         async for s in get_write_session():
-            db_obj = await s.get(Guest, int(pk))
+            result = await s.execute(
+                select(Guest)
+                .where(Guest.id == int(pk))
+                .options(selectinload(Guest.sub_guests))  # load sub_guests eagerly
+            )
+            db_obj = result.scalars().first()
             if not db_obj:
                 return None
 
-            # Reset sub-guests if deleting a main guest
+            # Reset sub-guests
             for sub in db_obj.sub_guests:
                 sub.main_guest_id = None
                 s.add(sub)

@@ -55,16 +55,16 @@ export default function TextSettingsPage() {
     }
   }
 
-  // Disable save if nothing changed
   const isUnchanged =
     title === (invitation?.title || '') &&
     description === (invitation?.description || '') &&
     extraInfo === (invitation?.extra_info || '')
 
   return (
-    <div className="container fullHeight centerWrapper steps">
+    <div className="container fullHeight centerWrapper steps" style={{ paddingBottom: "3rem"}}>
       <h1>Редакция на текста #{invitation.id}</h1>
 
+      {/* Title */}
       <Input
         id="title"
         name="title"
@@ -73,8 +73,10 @@ export default function TextSettingsPage() {
         onChange={(e) => setTitle(e.target.value)}
         size="large"
         required
+        hint={"Препоръчваме до 64 символа.\nПример:\n Заповядайте на първият рожден ден на Кати"}
       />
 
+      {/* Description */}
       <Textarea
         id="description"
         name="description"
@@ -82,8 +84,10 @@ export default function TextSettingsPage() {
         value={description}
         onChange={(e) => setDescription(e.target.value)}
         size="large"
+        hint={`Препоръчваме до 4 абзаца общо, до 7-8 изречения.\nПример:\nСкъпи приятели,\n\nС огромна радост ви каним да отпразнуваме заедно първия рожден ден на нашата малка принцеса Катерина!\n\nТова е един много специален момент за нас и ще бъде истинско щастие да го споделим с най-близките си хора.\n\nНадяваме се да бъдете част от този незабравим празник и да зарадвате Кати с вашето присъствие.`}
       />
 
+      {/* Extra Info */}
       <Textarea
         id="extraInfo"
         name="extraInfo"
@@ -91,6 +95,7 @@ export default function TextSettingsPage() {
         value={extraInfo}
         onChange={(e) => setExtraInfo(e.target.value)}
         size="large"
+        hint={"Препоръчваме да поставяте на нов ред отделните неща.\nПример:\nДрес код: официален\n\nМоля, потвърдете присъствието си до 1 юни.\n\nВместо цветя: ще има касичка за дарения, които ще бъдат предоставени за благотворителна кауза"}
       />
 
       <div className="editActions">
@@ -105,7 +110,7 @@ export default function TextSettingsPage() {
           variant="primary"
           width="47%"
           size="large"
-          disabled={saving || isUnchanged} // disabled if nothing changed
+          disabled={saving || isUnchanged}
         >
           {saving ? 'Запазване...' : 'Запази'}
         </Button>

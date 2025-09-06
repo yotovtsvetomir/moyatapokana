@@ -10,10 +10,12 @@ export async function POST(
   const fastApiUrl = `${process.env.API_URL_SERVER}/invitations/guest/${param}`;
 
   const res = await fetch(fastApiUrl, {
+    method: "POST",
     headers: {
       "Content-Type": "application/json",
       "Cookie": cookieHeader,
     },
+    body: JSON.stringify(await req.json()),
   });
 
   const data = await res.json();

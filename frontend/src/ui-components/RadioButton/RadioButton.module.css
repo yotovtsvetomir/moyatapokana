@@ -73,14 +73,14 @@
 }
 
 .selected .borderCircle {
-  border-color: var(--color-highlight-1);
+  border-color: var(--radio-highlight-color, var(--color-highlight-1));
 }
 
 /* Dot inside the radio circle */
 .dot {
   width: 13px;
   height: 13px;
-  background-color: var(--color-highlight-1);
+  background-color: var(--radio-highlight-color, var(--color-highlight-1));
   border-radius: 50%;
   opacity: 0;
   transform: scale(0.5);

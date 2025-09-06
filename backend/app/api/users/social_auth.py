@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import func
 from app.db.models.user import User
-from app.db.models.invitation import Invitation
+from app.db.models.invitation import Invitation, InvitationStatus
 from app.db.session import get_write_session, get_read_session
 from app.services.auth import create_session, hash_password, delete_session
 import httpx
@@ -90,7 +90,7 @@ async def google_login(
         result_user_invites = await db_read.execute(
             select(func.count(Invitation.id)).where(
                 Invitation.owner_id == user.id,
-                Invitation.status == "draft"
+                Invitation.status == InvitationStatus.DRAFT
             )
         )
         user_invite_count = result_user_invites.scalar() or 0
@@ -185,7 +185,7 @@ async def facebook_login(
         result_user_invites = await db_read.execute(
             select(func.count(Invitation.id)).where(
                 Invitation.owner_id == user.id,
-                Invitation.status == "draft"
+                Invitation.status == InvitationStatus.DRAFT
             )
         )
         user_invite_count = result_user_invites.scalar() or 0

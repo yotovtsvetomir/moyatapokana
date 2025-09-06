@@ -7,6 +7,7 @@ interface InputProps {
   type?: React.HTMLInputTypeAttribute;
   value: string;
   error?: string | null;
+  hint?: string; // new prop for helper text
   placeholder?: string;
   label?: string;
   icon?: string;
@@ -14,6 +15,7 @@ interface InputProps {
   onFocus?: (e: React.FocusEvent<HTMLInputElement>) => void;
   required?: boolean;
   disabled?: boolean;
+  color?: string;
   size?: 'default' | 'large';
 }
 
@@ -23,6 +25,7 @@ export const Input: React.FC<InputProps> = ({
   type = 'text',
   value,
   error,
+  hint, // destructure hint
   placeholder = ' ',
   label,
   icon,
@@ -30,10 +33,16 @@ export const Input: React.FC<InputProps> = ({
   onFocus,
   required = false,
   disabled = false,
+  color,
   size
 }) => {
   return (
-    <div
+    <div 
+      style={
+        color
+          ? { '--focus-border-color': color } as React.CSSProperties
+          : undefined
+      }
       className={`${styles.inputGroup} ${error ? styles.hasMessage : ''}`}
     >
       <input
@@ -62,9 +71,14 @@ export const Input: React.FC<InputProps> = ({
         )}
         {label}
       </label>
+
+      {/* Error message */}
       <p className={`${styles.errorMessage} ${error ? styles.show : ''}`}>
         {error}
       </p>
+
+      {/* Hint message */}
+      {hint && <p className={styles.hintMessage}>{hint}</p>}
     </div>
   );
 };

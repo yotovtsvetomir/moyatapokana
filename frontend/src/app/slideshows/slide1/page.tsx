@@ -61,7 +61,7 @@ function getRandomPositions(num, imageSize = 140, padding = 32, reservedFooterHe
 
 export default function SlideOne() {
   const router = useRouter()
-  const [invitationId, setInvitationId] = useState("");
+  const [slug, setSlug] = useState("");
   const [primaryColor, setPrimaryColor] = useState("");
   const [secondaryColor, setSecondaryColor] = useState("");
   const [images, setImages] = useState([])
@@ -70,6 +70,8 @@ export default function SlideOne() {
   const [imageSize, setImageSize] = useState(140);
   const [footerHeight, setFooterHeight] = useState(97);
   const [showLottie, setShowLottie] = useState(true);
+  const [showSkip, setShowSkip] = useState(false);
+
   const animationIsDone = step === steps.length - 1;
 
   const audioRef = useRef(null);
@@ -88,14 +90,14 @@ export default function SlideOne() {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
     }
-    router.push(`/invitations/preview/${invitationId}/schedule`)
+    router.push(`/invitations/preview/${slug}/schedule`)
   };
 
   useEffect(() => {
     const stored = localStorage.getItem("invitationData");
     if (stored) {
       const data = JSON.parse(stored);
-      setInvitationId(data.invitationId ?? "");
+      setSlug(data.slug ?? "");
       setImages(
         (data.slideshowImages ?? []).sort((a, b) => a.order - b.order)
       );
@@ -103,6 +105,12 @@ export default function SlideOne() {
       setSecondaryColor(data.secondaryColor ?? "");
     }
   }, []);
+
+  useEffect(() => {
+    if (!slug) return;
+    const seenIds = JSON.parse(localStorage.getItem("seen_invitation_slugs") || "[]");
+    setShowSkip(seenIds.includes(slug));
+  }, [slug]);
 
   useEffect(() => {
     document.documentElement.style.setProperty("--invitation-primary", primaryColor);
@@ -225,7 +233,7 @@ export default function SlideOne() {
         </button>
       </div>
 
-      {!animationIsDone && (
+      {!animationIsDone && showSkip && (
         <button
           className={`${styles.continueButton} ${styles.downwards}`}
           onClick={handleContinue}

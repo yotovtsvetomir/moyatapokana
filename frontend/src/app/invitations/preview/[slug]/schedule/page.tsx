@@ -9,6 +9,7 @@ import { useDynamicFont } from "@/hooks/useDynamicFont";
 import confetti from "canvas-confetti";
 import { motion } from "framer-motion";
 
+import ConfirmModal from '@/ui-components/ConfirmModal/ConfirmModal';
 import { Button } from "@/ui-components/Button/Button";
 import styles from "./schedule.module.css";
 import type { components } from "@/shared/types";
@@ -16,12 +17,32 @@ import type { components } from "@/shared/types";
 
 type Event = components["schemas"]["EventRead"];
 
+function hexToRgba(hex, alpha = 1) {
+  let r = 0, g = 0, b = 0;
+
+  if (hex.length === 4) {
+    r = parseInt(hex[1] + hex[1], 16);
+    g = parseInt(hex[2] + hex[2], 16);
+    b = parseInt(hex[3] + hex[3], 16);
+  } 
+
+  else if (hex.length === 7) {
+    r = parseInt(hex.slice(1, 3), 16);
+    g = parseInt(hex.slice(3, 5), 16);
+    b = parseInt(hex.slice(5, 7), 16);
+  }
+
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
 export default function Schedule() {
   const router = useRouter();
   const { invitation } = useInvitation();
-  const fontFamily = useDynamicFont(invitation.font_obj);
+  const fontFamily = useDynamicFont(invitation.font_obj)
   const [isPlaying, setIsPlaying] = useState(true);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [showPurchaseConfirm, setShowPurchaseConfirm] = useState(false);
+  const [purchaseErrors, setPurchaseErrors] = useState<string[] | null>(null);
 
   const toggleAudio = () => {
     if (!audioRef.current) return;
@@ -32,6 +53,41 @@ export default function Schedule() {
     }
     setIsPlaying(!isPlaying);
   };
+
+  const handleReplay = () => {
+    if (!invitation?.slug) return;
+    localStorage.setItem("replay", "true");
+    router.replace(`/invitations/preview/${invitation.slug}`);
+  };
+
+  const handleBuyClick = async () => {
+    try {
+      const res = await fetch(`/api/invitations/${invitation.id}/ready`);
+      if (!res.ok) throw new Error("Failed to check readiness");
+
+      const data = await res.json();
+
+      if (data.ready) {
+        setPurchaseErrors(null);
+        setShowPurchaseConfirm(true);
+      } else {
+        setPurchaseErrors(data.missing);
+      }
+    } catch (err) {
+      console.error(err);
+      setPurchaseErrors(["Възникна грешка при проверката за покупка."]);
+    }
+  };
+
+  useEffect(() => {
+    if (invitation?.slug) {
+      const seenSlugs = JSON.parse(localStorage.getItem("seen_invitation_slugs") || "[]");
+      if (!seenSlugs.includes(invitation.slug)) {
+        seenSlugs.push(invitation.slug);
+        localStorage.setItem("seen_invitation_slugs", JSON.stringify(seenSlugs));
+      }
+    }
+  }, [invitation?.slug]);
 
   useEffect(() => {
     const duration = 3 * 1000;
@@ -338,33 +394,41 @@ export default function Schedule() {
         {renderTimeline(invitation.events)}
 
         {/* Extra Info */}
-        <h2 className={styles.sectionTitle}>Инфо</h2>
         {invitation.extra_info && (
-          <div 
-            className={styles.extraInfo}
-            
-          >
-          
-          {invitation.extra_info
-            .split("\n")
-            .filter((p) => p.trim())
-            .map((p, i) => (
-              <div key={i} style={{
-              boxShadow: `0 4px 15px ${invitation.primary_color}33`
-            }}>
-                <span
-                  className="material-symbols-outlined"
-                  style={{
-                    color: `${invitation.primary_color}`,
-                    fontSize: "1.5rem"
-                  }}
-                >
-                  info
-                </span>
-                <p>{p}</p>
-              </div>
-          ))}
-          </div>
+          <>
+            <h2 className={styles.sectionTitle}>Инфо</h2>
+            <div 
+              className={styles.extraInfo}
+              style={{
+                boxShadow: `
+                  0px 1px 3px ${hexToRgba(invitation.primary_color, 0.2)},
+                  0px 1px 2px ${hexToRgba(invitation.primary_color, 0.14)},
+                  0px 2px 1px -1px ${hexToRgba(invitation.primary_color, 0.12)}
+                `,
+              }}
+            >
+              {invitation.extra_info
+                .split("\n")
+                .filter((p) => p.trim())
+                .map((p, i) => (
+                  <div
+                    key={i}
+                    style={{ borderColor: invitation.primary_color }}
+                  >
+                    <span
+                      className="material-symbols-outlined"
+                      style={{
+                        color: `${invitation.primary_color}`,
+                        fontSize: "1.5rem"
+                      }}
+                    >
+                      info
+                    </span>
+                    <p>{p}</p>
+                  </div>
+                ))}
+            </div>
+          </>
         )}
 
         {/* RSVP Section */}
@@ -377,7 +441,7 @@ export default function Schedule() {
             iconPosition="left"
             color={invitation.primary_color}
             width="100%"
-            onClick={() => router.push("#rsvp")}
+            href={`/invitations/preview/${invitation.slug}/rsvp`}
           >
             Потвърдете
           </Button>
@@ -402,21 +466,89 @@ export default function Schedule() {
 
         {/* Footer Controls */}
         <div className={styles.footer}>
-          <Button variant="secondary" size="middle" width="100%" href={`/invitations/edit/${invitation.id}/settings`}>
-            Редактиране
-          </Button>
-          <Button variant="secondary" size="middle" width="100%">
-            Използвай шаблон
-          </Button>
-          <Button variant="secondary" size="middle" width="100%" icon="replay" iconPosition="left">
+          {invitation.status === 'draft' && 
+            <Button 
+              variant="basic"
+              color={invitation.primary_color}
+              size="large"
+              width="100%"
+              icon="edit"
+              iconPosition="left"
+              href={`/invitations/edit/${invitation.id}/settings`}
+            >
+              Редактиране
+            </Button>
+          }
+
+          {invitation.is_template && 
+            <Button variant="secondary" size="middle" width="100%">
+              Използвай шаблон
+            </Button>
+          }
+
+          <Button
+            variant="basic"
+            color={invitation.primary_color}
+            size="large"
+            width="100%"
+            icon="replay"
+            iconPosition="left"
+            onClick={handleReplay}
+          >
             Повтори
           </Button>
 
-          <p className={styles.draftInfo}>
-            Ако не бъдат използвани черновите ще бъдат изтрити след 30 дни от създаването им.
-          </p>
+          {invitation.status === 'draft' && (
+            <Button
+              variant="primary"
+              size="middle"
+              width="100%"
+              icon="shopping_cart"
+              iconPosition="right"
+              onClick={handleBuyClick}
+            >
+              Купи
+            </Button>
+          )}
+
+          {purchaseErrors && (
+            <div className={styles.purchaseErrors}>
+              <strong>Не може да закупите поканата. Липсват задължителни полета:</strong>
+              <ul>
+                {purchaseErrors.map((field) => (
+                  <li key={field}>{field}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {invitation.status === 'draft' &&
+            <div className={styles.footerInfo}>
+              <span className="material-symbols-outlined">error</span>
+              <p className={styles.draftInfo}>
+                Ако не бъдат използвани черновите ще бъдат изтрити след 30 дни от създаването им.
+              </p>
+            </div>
+          }
         </div>
       </div>
+
+      {showPurchaseConfirm && (
+        <ConfirmModal
+          title="Сигурни ли сте?"
+          description={[
+            "След активиране, тази покана не може да бъде редактирана. Моля, прегледайте внимателно съдържанието, преди да продължите.",
+            "Ако все пак откриете грешка след активиране, пишете ни на support@moyatapokana.com.",
+          ]}
+          confirmText="Продължи"
+          cancelText="Назад"
+          onConfirm={() => {
+            setShowPurchaseConfirm(false);
+            router.push(`/checkout/${invitation.id}`);
+          }}
+          onCancel={() => setShowPurchaseConfirm(false)}
+        />
+      )}
     </div>
   );
 }

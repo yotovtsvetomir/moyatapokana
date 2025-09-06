@@ -27,10 +27,13 @@ celery_app.conf.beat_schedule = {
         "task": "invitations.tasks.delete_expired_invitations",
         "schedule": crontab(hour=1, minute=0),
     },
+    "delete_expired_and_old_drafts_daily": {
+        "task": "invitations.tasks.delete_expired_and_old_drafts",
+        "schedule": crontab(hour=2, minute=0),
+    },
 }
 
 celery_app.conf.timezone = "UTC"
-
 
 @worker_process_init.connect
 def init_asyncio_loop(**kwargs):

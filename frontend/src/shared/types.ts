@@ -312,6 +312,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/invitations/slug/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Invitation By Slug */
+        get: operations["get_invitation_by_slug_invitations_slug__slug__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/invitations/create": {
         parameters: {
             query?: never;
@@ -787,11 +804,8 @@ export interface components {
             id: number;
             /** Full Name */
             full_name?: string | null;
-            /**
-             * Sub Guests
-             * @default []
-             */
-            sub_guests: components["schemas"]["GuestRead"][] | null;
+            /** Sub Guests */
+            sub_guests?: components["schemas"]["SubGuestRead"][] | null;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -1270,6 +1284,35 @@ export interface components {
             menu_counts: {
                 [key: string]: number;
             };
+        };
+        /** SubGuestRead */
+        SubGuestRead: {
+            /** First Name */
+            first_name: string;
+            /** Last Name */
+            last_name: string;
+            /** Guest Type */
+            guest_type: string;
+            /**
+             * Is Main Guest
+             * @default false
+             */
+            is_main_guest: boolean;
+            /** Menu Choice */
+            menu_choice?: string | null;
+            /** Main Guest Id */
+            main_guest_id?: number | null;
+            /**
+             * Attending
+             * @default false
+             */
+            attending: boolean;
+            /** Created At */
+            created_at?: string | null;
+            /** Id */
+            id: number;
+            /** Full Name */
+            full_name?: string | null;
         };
         /** UserCreate */
         UserCreate: {
@@ -1892,6 +1935,39 @@ export interface operations {
             };
         };
     };
+    get_invitation_by_slug_invitations_slug__slug__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: {
+                session_id?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvitationRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     create_empty_invitation_invitations_create_post: {
         parameters: {
             query?: never;
@@ -2137,7 +2213,9 @@ export interface operations {
             path: {
                 slug: string;
             };
-            cookie?: never;
+            cookie?: {
+                session_id?: string | null;
+            };
         };
         requestBody: {
             content: {

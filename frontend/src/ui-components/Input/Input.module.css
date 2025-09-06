@@ -20,7 +20,7 @@
 }
 
 .input:focus {
-  border-color: var(--color-highlight-1);
+  border-color: var(--focus-border-color, var(--color-highlight-1));
   outline: none;
 }
 
@@ -116,7 +116,7 @@
 }
 
 .textarea:focus {
-  border-color: var(--color-highlight-1);
+  border-color: var(--focus-border-color, var(--color-highlight-1));
   outline: none;
 }
 
@@ -129,3 +129,10 @@
   min-height: 160px;
 }
 
+.hintMessage {
+  font-size: var(--font-lg);
+  color: #555;
+  margin-top: 4px;
+  line-height: 1.4;
+  white-space: pre-line;
+}

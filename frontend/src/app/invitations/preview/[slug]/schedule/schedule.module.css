@@ -13,7 +13,7 @@
 .content {
   position: absolute;
   width: 320px;
-  top: 15%;
+  top: 10%;
   left: 50%;
   transform: translateX(-50%);
 }
@@ -24,7 +24,7 @@
   background: rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  margin-bottom: 3rem;
+  margin-bottom: 2rem;
 }
 
 .title h1 {
@@ -33,7 +33,7 @@
 }
 
 .content p {
-  font-size: var(--font-xl);
+  font-size: var(--font-lxl);
   font-style: italic;
   line-height: 1.45;
   margin-bottom: 1rem;
@@ -80,26 +80,39 @@
 }
 
 .extraInfo {
-}
-
-.extraInfo div {
-  display: flex;
-  gap: 1rem;
   margin-bottom: 1rem;
-  padding: 1rem;
+  padding: 1.5rem 1rem;
   background-color: #ffffff;
   border-radius: 8px;
   margin-bottom: 2rem;
+  box-shadow:
+    0px 1px 3px rgba(0, 0, 0, 0.2),
+    0px 1px 2px rgba(0, 0, 0, 0.14),
+    0px 2px 1px -1px rgba(0, 0, 0, 0.12);
+}
+
+.extraInfo div {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px dashed;
 }
 
 .extraInfo div:last-of-type {
   margin-bottom: 0;
+  padding-bottom: 0;
+  border: 0;
 }
 
 .extraInfo p {
-  font-size: var(--font-lg);
+  font-size: var(--font-xl);
   color: var(--color-dark-300);
   text-align: justify-all;
+}
+
+.extraInfo p:last-of-type {
+  margin-bottom: 0;
 }
 
 .sectionTitle {
@@ -123,7 +136,7 @@
   top: 0;
   left: 0;
   width: 4px;
-  background: var(--color-highlight-6);
+  background: var(--secondary-color);
   z-index: 0;
   border-radius: 2px;
   height: 100%;
@@ -136,7 +149,7 @@
   left: 0;
   width: 4px;
   height: 0;
-  background: var(--color-highlight-1);
+  background: var(--primary-color);
   z-index: 1;
   border-radius: 2px;
   transition: height 0.3s ease-out;
@@ -177,7 +190,7 @@
 }
 
 .eventItem.active::before {
-  box-shadow: 0 0 0 4px var(--color-highlight-1);
+  box-shadow: 0 0 0 4px var(--primary-color);
   transform: scale(1.15) translateX(-0.6rem);
 }
 
@@ -198,7 +211,7 @@
   margin-top: 1rem;
 }
 
-.actions a:hover {
+.actions a:hover, .footer a:hover, .footer button:hover {
   background: var(--primary-color) !important;
   color: white !important;
 }
@@ -274,15 +287,74 @@
   margin-bottom: 3rem;
 }
 
-.rsvp button:hover {
+.rsvp a:hover {
   background: var(--primary-color) !important;
   color: white !important;
 }
 
-.footer {
-  padding: 1rem 0;
+.rsvp p {
+  font-size: var(--font-lg);
+  color: var(--color-error-1);
 }
 
+.rsvpMessage span {
+  color: var(--color-error-1);
+}
+
+.rsvpMessage {
+  position: relative;
+  transform: translateY(-30px);
+  opacity: 0;
+  pointer-events: none;
+  margin-top: 0.5rem;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.rsvpShow {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.footer {
+  padding: 1rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.footerInfo {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.footerInfo p {
+  font-size: var(--font-lg);
+  color: var(--color-error-1);
+}
+
+.footerInfo span {
+  font-size: 1.5rem;
+  color: var(--color-error-1);
+}
+
+.purchaseErrors {
+  margin-top: 1rem;
+  background-color: #ffe0e0;
+  border: 1px solid #ff8080;
+  padding: 12px;
+  margin-bottom: 16px;
+  border-radius: 6px;
+  color: #800000;
+}
+.purchaseErrors ul {
+  margin: 4px 0 0 20px;
+  padding: 0;
+}
 
 @media (min-width: 768px) {
   .eventCardWrapper .actions {
@@ -305,8 +377,12 @@
   }
 
   .content {
-    top: 15%;
-    width: 450px;
+    top: 13%;
+    width: 550px;
+  }
+
+  .title {
+    margin-bottom: 3rem;
   }
 
   .content h1 {
@@ -314,7 +390,7 @@
   }
 
   .content p {
-    font-size: 23px;
+    font-size: 25px;
   }
 
   .audioToggle button {

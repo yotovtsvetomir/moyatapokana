@@ -6,6 +6,7 @@ interface TextareaProps {
   name: string;
   value: string;
   error?: string;
+  hint?: string;
   placeholder?: string;
   label?: string;
   icon?: string;
@@ -21,6 +22,7 @@ export const Textarea: React.FC<TextareaProps> = ({
   name,
   value,
   error,
+  hint, // destructure hint
   placeholder = ' ',
   label,
   icon,
@@ -31,9 +33,7 @@ export const Textarea: React.FC<TextareaProps> = ({
   size,
 }) => {
   return (
-    <div
-      className={`${styles.inputGroup} ${error ? styles.hasMessage : ''}`}
-    >
+    <div className={`${styles.inputGroup} ${error ? styles.hasMessage : ''}`}>
       <textarea
         id={id}
         name={name}
@@ -59,9 +59,14 @@ export const Textarea: React.FC<TextareaProps> = ({
         )}
         {label}
       </label>
+
+      {/* Error message */}
       <p className={`${styles.errorMessage} ${error ? styles.show : ''}`}>
         {error}
       </p>
+
+      {/* Hint message */}
+      {hint && <p className={styles.hintMessage}>{hint}</p>}
     </div>
   );
 };

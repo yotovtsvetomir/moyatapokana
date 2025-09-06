@@ -186,7 +186,7 @@ export default function InvitationDetail() {
               variant="secondary"
               size="large"
               width="100%"
-              href={`/invitations/edit/${invitation.id}/settings/step1`}
+              href={`/invitations/preview/${invitation.slug}/`}
               icon="visibility"
               iconPosition="right"
             >

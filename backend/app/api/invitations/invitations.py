@@ -26,6 +26,7 @@ from app.services.s3.slide import SlideService
 from app.services.s3.music import MusicService
 from app.services.pagination import paginate
 from app.services.search import apply_filters_search_ordering
+from app.services.helpers import generate_google_calendar_link
 from app.db.models.invitation import (
     Invitation,
     InvitationStatus,
@@ -71,15 +72,16 @@ async def fetch_invitation(
     db: AsyncSession = Depends(get_read_session),
     current_user: dict | None = Depends(get_current_user),
 ) -> Invitation:
+    # Extract anon session ID from cookies
     anon_session_id = None
     cookie_header = request.headers.get("cookie")
     if cookie_header:
         from http.cookies import SimpleCookie
-
         cookies = SimpleCookie(cookie_header)
         if "anonymous_session_id" in cookies:
             anon_session_id = cookies["anonymous_session_id"].value
 
+    # Fetch the invitation
     result = await db.execute(
         select(Invitation)
         .options(
@@ -96,15 +98,76 @@ async def fetch_invitation(
     if not invitation:
         raise HTTPException(status_code=404, detail="Invitation not found")
 
-    # Ownership check
-    if invitation.owner_id:
-        if not current_user or invitation.owner_id != int(current_user.get("user_id")):
-            raise HTTPException(status_code=403, detail="Access denied")
-    else:
-        if not anon_session_id or invitation.anon_session_id != anon_session_id:
-            raise HTTPException(status_code=403, detail="Access denied")
+    # ---------------- Access control ----------------
 
-    return invitation
+    # 1. Registered owner
+    if current_user and invitation.owner_id == int(current_user.get("user_id")):
+        return invitation
+
+    # 2. Anonymous owner
+    if invitation.anon_session_id and anon_session_id == invitation.anon_session_id:
+        if invitation.is_active:
+            raise HTTPException(status_code=403, detail="Access denied")  # anon owner cannot access active
+        return invitation
+
+    # 3. Guest access (registered or anonymous, not owners)
+    if invitation.is_active:
+        return invitation
+
+    # 4. All other cases
+    raise HTTPException(status_code=403, detail="Access denied")
+
+
+async def fetch_invitation_by_slug(
+    slug: str,
+    request: Request,
+    db: AsyncSession = Depends(get_read_session),
+    current_user: dict | None = Depends(get_current_user),
+) -> Invitation:
+    # Extract anon session ID from cookies
+    anon_session_id = None
+    cookie_header = request.headers.get("cookie")
+    if cookie_header:
+        from http.cookies import SimpleCookie
+        cookies = SimpleCookie(cookie_header)
+        if "anonymous_session_id" in cookies:
+            anon_session_id = cookies["anonymous_session_id"].value
+
+    # Fetch the invitation
+    result = await db.execute(
+        select(Invitation)
+        .options(
+            selectinload(Invitation.rsvp),
+            selectinload(Invitation.events),
+            selectinload(Invitation.selected_game_obj),
+            selectinload(Invitation.selected_slideshow_obj),
+            selectinload(Invitation.slideshow_images),
+            selectinload(Invitation.font_obj),
+        )
+        .where(Invitation.slug == slug)
+    )
+    invitation = result.scalars().first()
+    if not invitation:
+        raise HTTPException(status_code=404, detail="Invitation not found")
+
+    # ---------------- Access control ----------------
+
+    # 1. Registered owner
+    if current_user and invitation.owner_id == int(current_user.get("user_id")):
+        return invitation
+
+    # 2. Anonymous owner
+    if invitation.anon_session_id and anon_session_id == invitation.anon_session_id:
+        if invitation.is_active:
+            raise HTTPException(status_code=403, detail="Access denied")  # anon owner cannot access active
+        return invitation
+
+    # 3. Guest access (registered or anonymous, not owners)
+    if invitation.is_active:
+        return invitation
+
+    # 4. All other cases
+    raise HTTPException(status_code=403, detail="Access denied")
 
 
 # -------------------- List all games/slideshows/fonts --------------------
@@ -132,6 +195,13 @@ async def list_fonts(db: AsyncSession = Depends(get_read_session)):
 # -------------------- Get Invitation --------------------
 @router.get("/{invitation_id}", response_model=InvitationRead)
 async def get_invitation(invitation: Invitation = Depends(fetch_invitation)):
+    return invitation
+
+# ----------------- Get Invitation By Slug --------------
+@router.get("/slug/{slug}", response_model=InvitationRead)
+async def get_invitation_by_slug(
+    invitation: Invitation = Depends(fetch_invitation_by_slug),
+):
     return invitation
 
 
@@ -277,14 +347,30 @@ async def update_invitation(
             setattr(rsvp_obj, key, value)
 
     if payload.events is not None:
+        # Delete existing events
         events_result = await write_db.execute(
             select(Event).where(Event.invitation_id == invitation.id)
         )
         for e in events_result.scalars().all():
             await write_db.delete(e)
 
-        for event in payload.events:
-            write_db.add(Event(**event.dict(), invitation_id=invitation.id))
+        for event_data in payload.events:
+            start_dt = event_data.start_datetime
+            end_dt = event_data.finish_datetime or start_dt
+
+            calendar_link = generate_google_calendar_link(
+                title=event_data.title,
+                start=start_dt,
+                end=end_dt,
+                description=event_data.description or "",
+                location=event_data.location or "",
+            )
+
+            # Create Event object and assign link
+            event_obj = Event(**event_data.dict(), invitation_id=invitation.id)
+            event_obj.calendar_link = calendar_link
+
+            write_db.add(event_obj)
 
     if hasattr(payload, "slideshow_images") and payload.slideshow_images is not None:
         images_result = await write_db.execute(
@@ -631,7 +717,9 @@ async def upload_invitation_audio(
 async def add_guest(
     slug: str,
     payload: GuestCreate,
+    request: Request,
     db: AsyncSession = Depends(get_write_session),
+    current_user: dict | None = Depends(get_current_user),
 ):
     # Fetch invitation
     result = await db.execute(select(Invitation).where(Invitation.slug == slug))
@@ -639,10 +727,33 @@ async def add_guest(
 
     if not invitation or not invitation.is_active:
         raise HTTPException(
-            status_code=404, detail="Поканата не може да бъде намерена или е неактивна."
+            status_code=404,
+            detail="Поканата не може да бъде намерена или е неактивна.",
         )
 
-    # Create main guest
+    # --- Block owner (registered or anonymous) from RSVPing ---
+    # 1. Registered owner
+    if current_user and invitation.owner_id == int(current_user.get("user_id")):
+        raise HTTPException(
+            status_code=400,
+            detail="Собственикът на поканата не може да бъде добавен като гост.",
+        )
+
+    # 2. Anonymous owner
+    anon_session_id = None
+    cookie_header = request.headers.get("cookie")
+    if cookie_header:
+        cookies = SimpleCookie(cookie_header)
+        if "anonymous_session_id" in cookies:
+            anon_session_id = cookies["anonymous_session_id"].value
+
+    if invitation.anon_session_id and anon_session_id == invitation.anon_session_id:
+        raise HTTPException(
+            status_code=400,
+            detail="Собственикът на поканата не може да бъде добавен като гост.",
+        )
+
+    # --- Proceed with guest creation ---
     main_guest = Guest(
         first_name=payload.first_name,
         last_name=payload.last_name,
@@ -654,7 +765,6 @@ async def add_guest(
     db.add(main_guest)
     await db.flush()
 
-    # Add sub-guests if provided
     if payload.sub_guests:
         for sub in payload.sub_guests:
             sub_guest = Guest(
@@ -675,7 +785,14 @@ async def add_guest(
         await db.rollback()
         raise HTTPException(status_code=400, detail="Failed to add guest(s)")
 
-    return main_guest
+    result = await db.execute(
+        select(Guest)
+        .where(Guest.id == main_guest.id)
+        .options(selectinload(Guest.sub_guests))
+    )
+    guest_with_subs = result.scalars().first()
+
+    return guest_with_subs
 
 
 @router.get("/rsvp/{invitation_id}", response_model=RSVPWithStats)
@@ -795,7 +912,6 @@ MANDATORY_EVENT_FIELDS = [
     "title",
     "start_datetime",
     "location",
-    "description",
 ]
 
 FIELD_LABELS_BG = {

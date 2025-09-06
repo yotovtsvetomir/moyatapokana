@@ -31,11 +31,13 @@ export default function BalloonGame() {
   const [animateScore, setAnimateScore] = useState(false);
   const [showButton, setShowButton] = useState(false);
 
+  const [showSkip, setShowSkip] = useState(false);
+
   const popSound = useRef<HTMLAudioElement>(null);
   const victorySound = useRef<HTMLAudioElement>(null);
   const progressSound = useRef<HTMLAudioElement>(null);
 
-  const [invitationId, setInvitationId] = useState("");
+  const [slug, setSlug] = useState("");
   const [slideshowKey, setSlideshowKey] = useState("");
   const [primaryColor, setPrimaryColor] = useState("");
   const [secondaryColor, setSecondaryColor] = useState("");
@@ -54,12 +56,18 @@ export default function BalloonGame() {
     const stored = localStorage.getItem("invitationData");
     if (stored) {
       const data = JSON.parse(stored);
-      setInvitationId(data.invitationId ?? "");
+      setSlug(data.slug ?? "");
       setSlideshowKey(data.slideshowKey ?? "");
       setPrimaryColor(data.primaryColor ?? "");
       setSecondaryColor(data.secondaryColor ?? "");
     }
   }, []);
+
+  useEffect(() => {
+    if (!slug) return;
+    const seenIds = JSON.parse(localStorage.getItem("seen_invitation_slugs") || "[]");
+    setShowSkip(seenIds.includes(slug));
+  }, [slug]);
 
   useEffect(() => {
     document.documentElement.style.setProperty("--invitation-primary", primaryColor);
@@ -168,7 +176,7 @@ export default function BalloonGame() {
           </div>
         </div>
 
-        {!false && <button type="button" onClick={handleSuccess}>Пропусни</button>}
+        {showSkip && <button type="button" onClick={handleSuccess}>Пропусни</button>}
       </div>
     </div>
   );

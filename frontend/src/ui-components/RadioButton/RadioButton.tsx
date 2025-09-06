@@ -7,6 +7,7 @@ type RadioButtonProps = {
   value: string;
   selected: boolean;
   onSelect: (value: string) => void;
+  color?: string; // <-- new optional color prop
   disabled?: boolean;
 };
 
@@ -16,6 +17,7 @@ const RadioButton: React.FC<RadioButtonProps> = ({
   value,
   selected,
   onSelect,
+  color = 'var(--color-highlight-1)',
   disabled = false,
 }) => {
   const circleWrapperRef = useRef<HTMLSpanElement>(null);
@@ -28,6 +30,7 @@ const RadioButton: React.FC<RadioButtonProps> = ({
 
     const ripple = document.createElement('span');
     ripple.className = styles.ripple;
+    ripple.style.backgroundColor = color;
 
     wrapper.appendChild(ripple);
     setTimeout(() => ripple.remove(), 600);
@@ -46,6 +49,7 @@ const RadioButton: React.FC<RadioButtonProps> = ({
       className={`${styles.radioButton} ${selected ? styles.selected : ''} ${
         disabled ? styles.disabled : ''
       }`}
+      style={{ '--radio-highlight-color': color } as React.CSSProperties}
     >
       <span className={styles.circleWrapper} ref={circleWrapperRef}>
         <span className={styles.circleClipper}>

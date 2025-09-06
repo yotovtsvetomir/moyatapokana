@@ -1,12 +1,27 @@
 'use client'
 
-import { useParams } from 'next/navigation'
+import { useState } from 'react'
+import { useParams, useRouter } from 'next/navigation'
 import { Button } from '@/ui-components/Button/Button'
-
+import { useInvitation } from "@/context/InvitationContext";
 import styles from './preview.module.css'
 
 export default function InvitationCustomizePage() {
   const { id } = useParams()
+  const router = useRouter()
+  const { invitation } = useInvitation();
+  const [error, setError] = useState<string | null>(null)
+
+  const handleVisualize = () => {
+    if (!invitation?.title || invitation.title.trim() === "") {
+      setError("Моля, въведете заглавие за поканата, за да продължите.");
+      return;
+    }
+
+    setError(null);
+    localStorage.setItem("replay", "true");
+    router.push(`/invitations/preview/${invitation.slug}`);
+  };
 
   return (
     <div className="container fullHeight centerWrapper steps">
@@ -23,9 +38,11 @@ export default function InvitationCustomizePage() {
           <p>Време е да видите как изглежда поканата ви!</p>
         </div>
 
+        {error && <p className={styles.error}>{error}</p>}
+
         <div className={styles.buttons}>
           <Button
-            href={`/invitations/preview/${id}`}
+            onClick={handleVisualize}
             variant="primary"
             size="large"
             width="100%"

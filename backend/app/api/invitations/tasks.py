@@ -1,11 +1,11 @@
 import redis
-from datetime import datetime
+from datetime import datetime, timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
 from contextlib import asynccontextmanager
 
 from app.celery_app import celery_app
 from app.db.celery_session import get_write_session
-from app.db.models.invitation import Invitation, RSVP, Guest
+from app.db.models.invitation import Invitation, InvitationStatus, RSVP, Guest
 from app.services.s3.wallpaper import WallpaperService
 from app.services.s3.slide import SlideService
 from app.services.s3.music import MusicService
@@ -109,5 +109,90 @@ def delete_expired_invitations():
     try:
         loop = celery_app.asyncio_loop
         loop.run_until_complete(delete_expired_invitations_async())
+    finally:
+        redis_client.delete(lock_key)
+
+async def delete_expired_and_old_drafts_async():
+    """Delete expired invitations and draft invitations older than 30 days."""
+    now = datetime.utcnow()
+    draft_cutoff = now - timedelta(days=30)
+
+    async with get_session() as session:
+        # Fetch invitations to delete: expired OR old drafts
+        result = await session.execute(
+            select(Invitation)
+            .options(
+                selectinload(Invitation.rsvp)
+                .selectinload(RSVP.guests)
+                .selectinload(Guest.sub_guests),
+                selectinload(Invitation.events),
+                selectinload(Invitation.slideshow_images),
+            )
+            .where(
+                (Invitation.active_until <= now) | 
+                ((Invitation.status == InvitationStatus.DRAFT) & (Invitation.created_at <= draft_cutoff))
+            )
+        )
+        invitations_to_delete = result.scalars().all()
+
+        wallpaper_service = WallpaperService()
+        slide_service = SlideService()
+        music_service = MusicService()
+
+        for invitation in invitations_to_delete:
+            # Delete wallpaper
+            if invitation.wallpaper:
+                try:
+                    await wallpaper_service._delete(invitation.wallpaper)
+                except Exception as e:
+                    print(f"Failed to delete wallpaper: {e}")
+
+            # Delete background audio
+            if invitation.background_audio:
+                try:
+                    await music_service.delete_music(invitation.background_audio)
+                except Exception as e:
+                    print(f"Failed to delete audio: {e}")
+
+            # Delete slideshow images
+            for slide in invitation.slideshow_images:
+                try:
+                    await slide_service._delete(slide.file_url)
+                except Exception as e:
+                    print(f"Failed to delete slide {slide.id}: {e}")
+                await session.delete(slide)
+
+            # Delete events
+            for event in invitation.events:
+                await session.delete(event)
+
+            # Delete RSVP & Guests
+            if invitation.rsvp:
+                for guest in invitation.rsvp.guests:
+                    for sub in guest.sub_guests:
+                        sub.main_guest_id = None
+                        session.add(sub)
+                    await session.delete(guest)
+                await session.delete(invitation.rsvp)
+
+            # Delete invitation itself
+            await session.delete(invitation)
+
+        await session.commit()
+        print(f"Deleted {len(invitations_to_delete)} invitations at {now.isoformat()}")
+
+
+@celery_app.task(name="invitations.tasks.delete_expired_and_old_drafts")
+def delete_expired_and_old_drafts():
+    """Celery task wrapper with Redis lock to prevent concurrent execution."""
+    lock_key = "lock:delete_expired_and_old_drafts"
+    have_lock = redis_client.set(lock_key, "locked", nx=True, ex=60 * 60)
+    if not have_lock:
+        print("Lock exists, skipping the task.")
+        return
+
+    try:
+        loop = celery_app.asyncio_loop
+        loop.run_until_complete(delete_expired_and_old_drafts_async())
     finally:
         redis_client.delete(lock_key)

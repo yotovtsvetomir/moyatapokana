@@ -17,6 +17,7 @@ interface ReactSelectProps<T> {
   isDisabled?: boolean
   isClearable?: boolean
   isSearchable?: boolean
+  color?: string // <-- new color prop
 }
 
 export default function ReactSelect<T extends { value: string; label: string }>({
@@ -27,6 +28,7 @@ export default function ReactSelect<T extends { value: string; label: string }>(
   isDisabled = false,
   isClearable = false,
   isSearchable = false,
+  color = 'var(--color-highlight-1)', // default highlight color
 }: ReactSelectProps<T>) {
   return (
     <Select<T>
@@ -44,9 +46,7 @@ export default function ReactSelect<T extends { value: string; label: string }>(
           outline: 'none',
           borderWidth: 1,
           borderStyle: 'solid',
-          borderColor: state.isFocused
-            ? 'var(--color-highlight-1)'
-            : 'var(--color-neutral-200)',
+          borderColor: state.isFocused ? color : 'var(--color-neutral-200)',
           backgroundColor: 'var(--color-neutral-500)',
           fontFamily: 'var(--font-sans)',
           fontSize: 'var(--font-lg)',
@@ -56,7 +56,7 @@ export default function ReactSelect<T extends { value: string; label: string }>(
           padding: '0 1rem',
           cursor: 'pointer',
           '&:hover': {
-            borderColor: 'var(--color-highlight-1)',
+            borderColor: color,
           },
         }),
         valueContainer: (base) => ({
@@ -82,7 +82,7 @@ export default function ReactSelect<T extends { value: string; label: string }>(
         option: (base, state) => ({
           ...base,
           backgroundColor: state.isSelected
-            ? 'var(--color-highlight-1)'
+            ? color
             : state.isFocused
             ? 'var(--color-highlight-6)'
             : 'transparent',
@@ -97,7 +97,6 @@ export default function ReactSelect<T extends { value: string; label: string }>(
           cursor: 'pointer',
           padding: '0.75rem 1rem',
         }),
-        // (unchanged below)
         menu: (base) => ({
           ...base,
           borderRadius: 9,

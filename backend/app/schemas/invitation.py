@@ -43,22 +43,26 @@ class GuestBase(BaseModel):
     attending: bool = False
     created_at: Optional[datetime] = None
 
-
 class GuestCreate(GuestBase):
     sub_guests: Optional[List["GuestCreate"]] = None
 
 
+class SubGuestRead(GuestBase):
+    id: int
+    full_name: Optional[str] = None
+
+    model_config = {"from_attributes": True}
+
 class GuestRead(GuestBase):
     id: int
     full_name: Optional[str] = None
-    sub_guests: Optional[List["GuestRead"]] = []
+    sub_guests: Optional[List[SubGuestRead]] = None 
 
     model_config = {"from_attributes": True}
 
 
 # -------------------- Pagination --------------------
 T = TypeVar("T")
-
 
 class PaginatedResponse(BaseModel, Generic[T]):
     total_count: int

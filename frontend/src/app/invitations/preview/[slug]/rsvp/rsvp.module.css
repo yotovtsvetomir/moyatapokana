@@ -1,0 +1,167 @@
+.rsvp {
+	margin-top: 1rem;
+	padding-bottom: 5rem;
+}
+
+.rsvp h1 {
+	color: var(--primary-color);
+	font-size: var(--font-3xl);
+	text-align: center;
+	margin-bottom: 2rem;
+}
+
+.rsvp h2 {
+	font-size: var(--font-2xl);
+	color: var(--color-dark-300);
+	margin-bottom: 1rem;
+}
+
+.fandf a:hover, .fandf button:hover {
+	background: var(--primary-color);
+	color: #fff !important;
+}
+
+.main_actions a:hover, .main_actions button:hover {
+	background: var(--primary-color);
+	color: #fff !important;
+}
+
+.subGuestActions button:first-of-type:hover {
+	background: var(--color-error-1);
+	color: white !important;
+}
+
+.selects {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+	margin-bottom: 1.5rem;
+}
+
+.fandf {
+  padding-left: 3rem;
+  margin-bottom: 3rem;
+}
+
+.subGuestBlock {
+  margin-bottom: 3rem;
+  padding-left: 1rem;
+  border-left: 2px solid var(--primary-color);
+  position: relative;
+}
+
+.subGuestHeader {
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+}
+
+.subGuestActions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.radioButtons{
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	margin-bottom: 1rem;
+}
+
+.confirmation {
+	position: absolute;
+	top: 20%;
+	left: 50%;
+	transform: translateX(-50%);
+}
+
+.confirmation h2 {
+	font-size: var(--font-2xl);
+	color: var(--primary-color);
+}
+
+.confirmation h3 {
+	text-align: center;
+	font-size: var(--font-3xl);
+	color: var(--primary-color);
+}
+
+.confirmationList {
+	list-style: none;
+	margin-top: 1rem;
+	margin-bottom: 2rem;
+}
+
+.confirmationList li {
+	font-size: var(--font-lg);
+	padding: 0.25rem 0;
+}
+
+.confirmation {
+  position: absolute;
+  top: 20%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #fff;
+  padding: 2rem;
+  border-radius: 1rem;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+  max-width: 500px;
+  width: 90%;
+}
+
+.confirmation h2 {
+  font-size: var(--font-2xl);
+  color: var(--primary-color);
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.confirmation h3 {
+  text-align: center;
+  font-size: var(--font-3xl);
+  color: var(--primary-color);
+  margin-top: 2rem;
+}
+
+.confirmationList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.confirmationGuest {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  justify-content: space-between;
+  border: 1px solid var(--primary-color);
+  border-radius: 0.75rem;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+.guestName {
+  font-weight: 500;
+  flex: 1;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.5rem;
+  background: #e0e0e0;
+  color: #333;
+}
+
+/* Icon inside badge */
+.badge span.material-icons {
+  font-size: 1rem;
+}
