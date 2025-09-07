@@ -94,3 +94,29 @@ class S3Base:
                 print(f"Failed to delete {object_name}: {e}")
         else:
             print(f"Cannot determine object key from URL: {file_url}")
+
+    async def _copy(self, file_url: str, folder: str = "") -> str:
+        """
+        Copy an existing object in S3 / MinIO by downloading + re-uploading.
+        Returns a new URL.
+        """
+        parsed = urlparse(file_url)
+        object_name = parsed.path.lstrip("/").split("/", 1)[-1]
+
+        # Download the object
+        try:
+            response = self.client.get_object(self.bucket, object_name)
+            data = response.read()
+            response.close()
+            response.release_conn()
+        except S3Error as e:
+            raise RuntimeError(f"Failed to download object for copy: {e}")
+
+        # Wrap in UploadFile-like object
+        buffer = io.BytesIO(data)
+        buffer.seek(0)
+        filename = f"{uuid.uuid4()}.{object_name.split('.')[-1]}"
+        upload_file = UploadFile(filename=filename, file=buffer)
+
+        # Re-upload and return new URL
+        return await self._upload(upload_file, folder=folder)

@@ -15,6 +15,7 @@ export async function GET(
     ? `${process.env.API_URL_SERVER}/invitations/${param}`
     : `${process.env.API_URL_SERVER}/invitations/slug/${param}`;
 
+  console.log(backendUrl)
   const res = await fetch(backendUrl, {
     headers: { cookie: req.headers.get("cookie") || "" },
   });

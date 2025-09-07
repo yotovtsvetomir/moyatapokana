@@ -480,12 +480,6 @@ export default function Schedule() {
             </Button>
           }
 
-          {invitation.is_template && 
-            <Button variant="secondary" size="middle" width="100%">
-              Използвай шаблон
-            </Button>
-          }
-
           <Button
             variant="basic"
             color={invitation.primary_color}

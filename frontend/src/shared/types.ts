@@ -244,6 +244,76 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/templates/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Templates */
+        get: operations["list_templates_admin_templates__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/templates/new": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** New Template Form */
+        get: operations["new_template_form_admin_templates_new_get"];
+        put?: never;
+        /** Create Template */
+        post: operations["create_template_admin_templates_new_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/templates/{template_id}/edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Edit Template Form */
+        get: operations["edit_template_form_admin_templates__template_id__edit_get"];
+        put?: never;
+        /** Update Template */
+        post: operations["update_template_admin_templates__template_id__edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/templates/{template_id}/delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Delete Template */
+        post: operations["delete_template_admin_templates__template_id__delete_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/invitations/games": {
         parameters: {
             query?: never;
@@ -340,6 +410,61 @@ export interface paths {
         put?: never;
         /** Create Empty Invitation */
         post: operations["create_empty_invitation_invitations_create_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/invitations/create-from-template/{template_slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Invitation From Template */
+        post: operations["create_invitation_from_template_invitations_create_from_template__template_slug__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/invitations/templates/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Template By Slug */
+        get: operations["get_template_by_slug_invitations_templates__slug__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/invitations/templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Templates
+         * @description List templates with optional search, filters, ordering, pagination,
+         *     and include categories/subcategories for frontend filters.
+         */
+        get: operations["list_templates_invitations_templates_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -643,10 +768,92 @@ export interface components {
             /** Password */
             password: string;
         };
+        /** Body_create_template_admin_templates_new_post */
+        Body_create_template_admin_templates_new_post: {
+            /** Title */
+            title: string;
+            /** Description */
+            description?: string;
+            /** Category Id */
+            category_id?: number;
+            /** Subcategory Id */
+            subcategory_id?: number;
+            /** Font Value */
+            font_value?: string;
+            /** Primary Color */
+            primary_color?: string;
+            /** Secondary Color */
+            secondary_color?: string;
+            /**
+             * Is Released
+             * @default false
+             */
+            is_released: boolean;
+            /** Game Key */
+            game_key?: string;
+            /** Slideshow Key */
+            slideshow_key?: string;
+            /**
+             * Wallpaper
+             * Format: binary
+             */
+            wallpaper?: string;
+            /**
+             * Music
+             * Format: binary
+             */
+            music?: string;
+            /** Slide Images */
+            slide_images?: string[];
+            /**
+             * Video File
+             * Format: binary
+             */
+            video_file?: string;
+        };
         /** Body_update_profile_users_me_patch */
         Body_update_profile_users_me_patch: {
             /** Profile Picture */
             profile_picture?: string | null;
+        };
+        /** Body_update_template_admin_templates__template_id__edit_post */
+        Body_update_template_admin_templates__template_id__edit_post: {
+            /** Title */
+            title: string;
+            /** Description */
+            description?: string;
+            /** Category Id */
+            category_id?: number;
+            /** Subcategory Id */
+            subcategory_id?: number;
+            /**
+             * Wallpaper
+             * Format: binary
+             */
+            wallpaper?: string;
+            /**
+             * Music
+             * Format: binary
+             */
+            music?: string;
+            /** Slide Images */
+            slide_images?: string[];
+            /**
+             * Video File
+             * Format: binary
+             */
+            video_file?: string;
+            /** Slideshow Key */
+            slideshow_key?: string;
+            /** Primary Color */
+            primary_color?: string;
+            /** Secondary Color */
+            secondary_color?: string;
+            /**
+             * Is Released
+             * @default false
+             */
+            is_released: boolean;
         };
         /** Body_upload_invitation_audio_invitations_upload_audio__invitation_id__post */
         Body_upload_invitation_audio_invitations_upload_audio__invitation_id__post: {
@@ -672,6 +879,18 @@ export interface components {
             existing_slides: string;
             /** Selected Slideshow */
             selected_slideshow?: string | null;
+        };
+        /** CategoryRead */
+        CategoryRead: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+            /**
+             * Subcategories
+             * @default []
+             */
+            subcategories: components["schemas"]["SubCategoryRead"][] | null;
         };
         /** EventRead */
         EventRead: {
@@ -743,6 +962,8 @@ export interface components {
             name: string;
             /** Key */
             key: string;
+            /** Video */
+            video?: string | null;
         };
         /** GoogleLoginPayload */
         GoogleLoginPayload: {
@@ -1228,7 +1449,9 @@ export interface components {
             /** Slideshow Id */
             slideshow_id: number;
             /** Invitation Id */
-            invitation_id: number;
+            invitation_id?: number | null;
+            /** Template Id */
+            template_id?: number | null;
         };
         /** SlideshowImageRead */
         SlideshowImageRead: {
@@ -1242,7 +1465,9 @@ export interface components {
             /** Slideshow Id */
             slideshow_id: number;
             /** Invitation Id */
-            invitation_id: number;
+            invitation_id?: number | null;
+            /** Template Id */
+            template_id?: number | null;
             /** Id */
             id: number;
             /**
@@ -1264,6 +1489,8 @@ export interface components {
             name: string;
             /** Key */
             key: string;
+            /** Video */
+            video?: string | null;
         };
         /** Stats */
         Stats: {
@@ -1284,6 +1511,13 @@ export interface components {
             menu_counts: {
                 [key: string]: number;
             };
+        };
+        /** SubCategoryRead */
+        SubCategoryRead: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
         };
         /** SubGuestRead */
         SubGuestRead: {
@@ -1314,6 +1548,68 @@ export interface components {
             /** Full Name */
             full_name?: string | null;
         };
+        /** TemplateRead */
+        TemplateRead: {
+            /** Title */
+            title: string;
+            /** Slug */
+            slug?: string | null;
+            /** Description */
+            description?: string | null;
+            /** Extra Info */
+            extra_info?: string | null;
+            /** Selected Game */
+            selected_game?: string | null;
+            selected_game_obj?: components["schemas"]["GameRead"] | null;
+            /** Selected Slideshow */
+            selected_slideshow?: string | null;
+            selected_slideshow_obj?: components["schemas"]["SlideshowRead"] | null;
+            /** Selected Font */
+            selected_font?: string | null;
+            font_obj?: components["schemas"]["FontRead"] | null;
+            /** Primary Color */
+            primary_color?: string | null;
+            /** Secondary Color */
+            secondary_color?: string | null;
+            /** Wallpaper */
+            wallpaper?: string | null;
+            /** Background Audio */
+            background_audio?: string | null;
+            /** Category Id */
+            category_id?: number | null;
+            /** Subcategory Id */
+            subcategory_id?: number | null;
+            /**
+             * Is Released
+             * @default false
+             */
+            is_released: boolean | null;
+            /** Id */
+            id: number;
+            status?: components["schemas"]["TemplateStatus"] | null;
+            category?: components["schemas"]["CategoryRead"] | null;
+            subcategory?: components["schemas"]["SubCategoryRead"] | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /**
+             * Slideshow Images
+             * @default []
+             */
+            slideshow_images: components["schemas"]["SlideshowImageRead"][];
+        };
+        /**
+         * TemplateStatus
+         * @enum {string}
+         */
+        TemplateStatus: "draft";
         /** UserCreate */
         UserCreate: {
             /**
@@ -1842,6 +2138,206 @@ export interface operations {
             };
         };
     };
+    list_templates_admin_templates__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                admin_session_id?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    new_template_form_admin_templates_new_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                admin_session_id?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_template_admin_templates_new_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                admin_session_id?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_create_template_admin_templates_new_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    edit_template_form_admin_templates__template_id__edit_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                template_id: number;
+            };
+            cookie?: {
+                admin_session_id?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_template_admin_templates__template_id__edit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                template_id: number;
+            };
+            cookie?: {
+                admin_session_id?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_update_template_admin_templates__template_id__edit_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_template_admin_templates__template_id__delete_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                template_id: number;
+            };
+            cookie?: {
+                admin_session_id?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_games_invitations_games_get: {
         parameters: {
             query?: never;
@@ -1986,6 +2482,110 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["InvitationRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_invitation_from_template_invitations_create_from_template__template_slug__post: {
+        parameters: {
+            query?: {
+                delete_old?: boolean;
+            };
+            header?: never;
+            path: {
+                template_slug: string;
+            };
+            cookie?: {
+                session_id?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvitationRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_template_by_slug_invitations_templates__slug__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TemplateRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_templates_invitations_templates_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+                search?: string | null;
+                category_id?: number | null;
+                subcategory_id?: number | null;
+                ordering?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
                 };
             };
             /** @description Validation Error */

@@ -64,6 +64,7 @@ export default function SlideOne() {
   const [slug, setSlug] = useState("");
   const [primaryColor, setPrimaryColor] = useState("");
   const [secondaryColor, setSecondaryColor] = useState("");
+  const [ isTemplate, setIsTemplate ] = useState(false)
   const [images, setImages] = useState([])
   const [step, setStep] = useState(0);
   const [positions, setPositions] = useState([]);
@@ -90,7 +91,13 @@ export default function SlideOne() {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
     }
-    router.push(`/invitations/preview/${slug}/schedule`)
+
+    if (isTemplate) {
+      router.push(`/templates/preview/${slug}/schedule`)
+    }
+    else {
+       router.push(`/invitations/preview/${slug}/schedule`)
+    }
   };
 
   useEffect(() => {
@@ -103,6 +110,7 @@ export default function SlideOne() {
       );
       setPrimaryColor(data.primaryColor ?? "");
       setSecondaryColor(data.secondaryColor ?? "");
+      setIsTemplate(data.template ?? false)
     }
   }, []);
 

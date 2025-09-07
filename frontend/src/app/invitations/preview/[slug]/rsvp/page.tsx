@@ -126,7 +126,6 @@ export default function RSVPForm() {
 
   // -------------------- Confirmation View --------------------
   if (submittedGuests) {
-    console.log(submittedGuests)
     return (
       <div className="container centerWrapper" style={{ '--primary-color': invitation.primary_color }}>
         <div className={styles.confirmation}>
@@ -137,24 +136,31 @@ export default function RSVPForm() {
                 <span className={styles.guestName}>{g.first_name} {g.last_name}</span>
                 
                 {/* Guest type badge */}
-                <span
-                  className={`${styles.badge} ${styles[g.guest_type] || ''}`}
-                >
-                  {guestTypes.find(opt => opt.value === g.guest_type)?.label || g.guest_type}
-                </span>
+                <div className={styles.badge}>
+                  <span>
+                    Възраст
+                  </span>
+                  <span>
+                    {guestTypes.find(opt => opt.value === g.guest_type)?.label || g.guest_type}
+                  </span>
+                </div>
 
                 {/* Menu choice badge */}
                 {g.menu_choice && (
-                  <span
-                    className={`${styles.badge} ${styles[g.menu_choice] || ''}`}
-                  >
-                    {menuOptions.find(opt => opt.value === g.menu_choice)?.label || g.menu_choice}
-                  </span>
+                  <div className={styles.badge}>
+                    <span>
+                      Меню
+                    </span>
+                    <span>
+                      {menuOptions.find(opt => opt.value === g.menu_choice)?.label || g.menu_choice}
+                    </span>
+                  </div>
                 )}
               </li>
             ))}
           </ul>
-          <h3>Благодарим ви за потвърждението! 😊</h3>
+          <h3>Благодарим ви</h3>
+          <h3>за потвърждението! 😊</h3>
         </div>
       </div>
     );

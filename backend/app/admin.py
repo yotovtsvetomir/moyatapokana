@@ -11,6 +11,8 @@ from app.db.models.invitation import (
     Guest,
     Font,
     Event,
+    Category,
+    SubCategory
 )
 from app.db.models.order import PriceTier, Order, Voucher, CurrencyRate
 
@@ -701,6 +703,97 @@ class EventAdmin(ModelView, model=Event):
             return db_obj
 
 
+# -------------------- Category Admin --------------------
+class CategoryAdmin(ModelView, model=Category):
+    column_list = [Category.id, Category.name]
+    column_searchable_list = [Category.name]
+    column_sortable_list = [Category.id, Category.name]
+    column_editable_list = [Category.name]
+    form_excluded_columns = ["templates"]
+
+    async def get_session(self):
+        async for session in get_read_session():
+            return session
+
+    async def create_model(self, session, data):
+        async for s in get_write_session():
+            obj = Category(**data)
+            s.add(obj)
+            await s.commit()
+            await s.refresh(obj)
+            return obj
+
+    async def update_model(self, session, pk, data):
+        async for s in get_write_session():
+            db_obj = await s.get(Category, int(pk))
+            if not db_obj:
+                return None
+            if "name" in data:
+                db_obj.name = data["name"]
+            s.add(db_obj)
+            await s.commit()
+            await s.refresh(db_obj)
+            return db_obj
+
+    async def delete_model(self, session, pk):
+        async for s in get_write_session():
+            db_obj = await s.get(Category, int(pk))
+            if not db_obj:
+                return None
+            await s.delete(db_obj)
+            await s.commit()
+            return db_obj
+
+
+# -------------------- SubCategory Admin --------------------
+class SubCategoryAdmin(ModelView, model=SubCategory):
+    column_list = [SubCategory.id, SubCategory.name, SubCategory.category_id]
+    column_searchable_list = [SubCategory.name]
+    column_sortable_list = [SubCategory.id, SubCategory.name]
+    column_editable_list = [SubCategory.name, SubCategory.category_id]
+    form_excluded_columns = ["templates"]
+
+    # Use a dropdown for category selection
+    form_ajax_refs = {
+        "category": {"fields": (Category.name,)}
+    }
+
+    async def get_session(self):
+        async for session in get_read_session():
+            return session
+
+    async def create_model(self, session, data):
+        async for s in get_write_session():
+            obj = SubCategory(**data)
+            s.add(obj)
+            await s.commit()
+            await s.refresh(obj)
+            return obj
+
+    async def update_model(self, session, pk, data):
+        async for s in get_write_session():
+            db_obj = await s.get(SubCategory, int(pk))
+            if not db_obj:
+                return None
+            if "name" in data:
+                db_obj.name = data["name"]
+            if "category_id" in data:
+                db_obj.category_id = int(data["category_id"])
+            s.add(db_obj)
+            await s.commit()
+            await s.refresh(db_obj)
+            return db_obj
+
+    async def delete_model(self, session, pk):
+        async for s in get_write_session():
+            db_obj = await s.get(SubCategory, int(pk))
+            if not db_obj:
+                return None
+            await s.delete(db_obj)
+            await s.commit()
+            return db_obj
+
+
 # -------------------- Setup Admin --------------------
 def setup_admin(app):
     admin = Admin(
@@ -720,3 +813,5 @@ def setup_admin(app):
     admin.add_view(OrderAdmin)
     admin.add_view(CurrencyRateAdmin)
     admin.add_view(EventAdmin)
+    admin.add_view(CategoryAdmin)
+    admin.add_view(SubCategoryAdmin)

@@ -9,6 +9,7 @@ from app.core.permissions import is_admin_authenticated
 from app.api.users.users import router as users_router
 from app.api.admin.admin import router as admin_router
 from app.api.admin.analytics import router as analytics_router
+from app.api.admin.templates import router as templates_router
 from app.api.users.social_auth import router as social_router
 from app.api.invitations.invitations import router as invitations_router
 from app.api.orders.orders import router as orders_router
@@ -49,6 +50,7 @@ app.include_router(social_router, prefix="/users", tags=["users"])
 # Admin Routers
 app.include_router(admin_router, prefix="/admin", tags=["admin"])
 app.include_router(analytics_router, prefix="/admin", tags=["admin"])
+app.include_router(templates_router, prefix="/admin/templates", tags=["admin"])
 
 # Invitations Routers
 app.include_router(invitations_router, prefix="/invitations", tags=["invitations"])

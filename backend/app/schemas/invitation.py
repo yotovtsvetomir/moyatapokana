@@ -4,6 +4,17 @@ from pydantic import BaseModel, Field
 from enum import Enum
 
 
+# -------------------- Status Enums --------------------
+class InvitationStatus(str, Enum):
+    DRAFT = "draft"
+    ACTIVE = "active"
+    EXPIRED = "expired"
+
+
+class TemplateStatus(str, Enum):
+    DRAFT = "draft"
+
+
 # -------------------- Font --------------------
 class FontBase(BaseModel):
     label: str
@@ -43,6 +54,7 @@ class GuestBase(BaseModel):
     attending: bool = False
     created_at: Optional[datetime] = None
 
+
 class GuestCreate(GuestBase):
     sub_guests: Optional[List["GuestCreate"]] = None
 
@@ -53,16 +65,18 @@ class SubGuestRead(GuestBase):
 
     model_config = {"from_attributes": True}
 
+
 class GuestRead(GuestBase):
     id: int
     full_name: Optional[str] = None
-    sub_guests: Optional[List[SubGuestRead]] = None 
+    sub_guests: Optional[List[SubGuestRead]] = None
 
     model_config = {"from_attributes": True}
 
 
 # -------------------- Pagination --------------------
 T = TypeVar("T")
+
 
 class PaginatedResponse(BaseModel, Generic[T]):
     total_count: int
@@ -129,11 +143,17 @@ class CategoryRead(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class CategoriesResponse(BaseModel):
+    categories: List[CategoryRead]
+    subcategories: List[SubCategoryRead]
+
+
 # -------------------- Game / Slideshow --------------------
 class GameRead(BaseModel):
     id: int
     name: str
     key: str
+    video: Optional[str] = None
     model_config = {"from_attributes": True}
 
 
@@ -141,6 +161,7 @@ class SlideshowRead(BaseModel):
     id: int
     name: str
     key: str
+    video: Optional[str] = None
     model_config = {"from_attributes": True}
 
 
@@ -149,7 +170,8 @@ class SlideshowImageBase(BaseModel):
     file_url: str
     order: Optional[int] = 0
     slideshow_id: int
-    invitation_id: int
+    invitation_id: Optional[int] = None
+    template_id: Optional[int] = None 
 
 
 class SlideshowImageCreate(SlideshowImageBase):
@@ -193,12 +215,6 @@ class EventRead(EventBase):
 
 
 # -------------------- Invitation --------------------
-class InvitationStatus(str, Enum):
-    DRAFT = "draft"
-    ACTIVE = "active"
-    EXPIRED = "expired"
-
-
 class InvitationBase(BaseModel):
     title: Optional[str] = None
     slug: Optional[str] = None
@@ -293,6 +309,9 @@ class TemplateBase(BaseModel):
     category_id: Optional[int] = None
     subcategory_id: Optional[int] = None
 
+    # Public availability
+    is_released: Optional[bool] = False
+
 
 class TemplateCreate(TemplateBase):
     pass
@@ -304,9 +323,12 @@ class TemplateUpdate(TemplateBase):
 
 class TemplateRead(TemplateBase):
     id: int
+    status: Optional[TemplateStatus] = None
     category: Optional[CategoryRead] = None
     subcategory: Optional[SubCategoryRead] = None
     created_at: datetime
     updated_at: datetime
+    slideshow_images: List[SlideshowImageRead] = []
 
     model_config = {"from_attributes": True}
+

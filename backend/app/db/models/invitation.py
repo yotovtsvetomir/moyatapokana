@@ -11,9 +11,8 @@ from sqlalchemy import (
     Boolean,
     Computed,
 )
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, declared_attr
 from app.db.session import Base
-
 
 # -------------------- Enums --------------------
 class InvitationStatus(PyEnum):
@@ -21,10 +20,94 @@ class InvitationStatus(PyEnum):
     ACTIVE = "active"
     EXPIRED = "expired"
 
-
 class TemplateStatus(PyEnum):
     DRAFT = "draft"
-    ACTIVE = "active"
+
+# -------------------- Shared Base --------------------
+class InvitationTemplateBase:
+    @declared_attr
+    def title(cls):
+        return Column(String, nullable=False)
+
+    @declared_attr
+    def slug(cls):
+        return Column(String, unique=True, nullable=True)
+
+    @declared_attr
+    def description(cls):
+        return Column(Text, nullable=True)
+
+    @declared_attr
+    def extra_info(cls):
+        return Column(Text, nullable=True)
+
+    # Optional features
+    @declared_attr
+    def selected_game(cls):
+        return Column(String, nullable=True)
+
+    @declared_attr
+    def selected_slideshow(cls):
+        return Column(String, nullable=True)
+
+    @declared_attr
+    def selected_font(cls):
+        return Column(String, nullable=True)
+
+    # Styling / Media
+    @declared_attr
+    def primary_color(cls):
+        return Column(String, nullable=True)
+
+    @declared_attr
+    def secondary_color(cls):
+        return Column(String, nullable=True)
+
+    @declared_attr
+    def wallpaper(cls):
+        return Column(String, nullable=True)
+
+    @declared_attr
+    def background_audio(cls):
+        return Column(String, nullable=True)
+
+    # New field for video
+    @declared_attr
+    def video_file(cls):
+        return Column(String, nullable=True)
+
+    # Relationships
+    @declared_attr
+    def font_obj(cls):
+        return relationship(
+            "Font",
+            primaryjoin=f"foreign({cls.__name__}.selected_font) == Font.value",
+            viewonly=True,
+        )
+
+    @declared_attr
+    def selected_game_obj(cls):
+        return relationship(
+            "Game",
+            primaryjoin=f"foreign({cls.__name__}.selected_game) == Game.key",
+            viewonly=True,
+        )
+
+    @declared_attr
+    def selected_slideshow_obj(cls):
+        return relationship(
+            "Slideshow",
+            primaryjoin=f"foreign({cls.__name__}.selected_slideshow) == Slideshow.key",
+            viewonly=True,
+        )
+
+    @declared_attr
+    def created_at(cls):
+        return Column(DateTime, default=datetime.utcnow)
+
+    @declared_attr
+    def updated_at(cls):
+        return Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
 # -------------------- Fonts --------------------
@@ -40,7 +123,6 @@ class Font(Base):
     def __str__(self):
         return self.label
 
-
 # -------------------- Category / SubCategory --------------------
 class Category(Base):
     __tablename__ = "categories"
@@ -49,6 +131,8 @@ class Category(Base):
     name = Column(String, unique=True, nullable=False)
     templates = relationship("Template", back_populates="category")
 
+    def __str__(self):
+        return self.name
 
 class SubCategory(Base):
     __tablename__ = "subcategories"
@@ -56,8 +140,8 @@ class SubCategory(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, nullable=False)
     category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
+    category = relationship("Category")
     templates = relationship("Template", back_populates="subcategory")
-
 
 # -------------------- Games / Slideshows --------------------
 class Game(Base):
@@ -66,10 +150,10 @@ class Game(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
     key = Column(String, unique=True, nullable=False)
+    video = Column(String, nullable=True)
 
     def __str__(self):
         return self.name
-
 
 class Slideshow(Base):
     __tablename__ = "slideshows"
@@ -77,6 +161,7 @@ class Slideshow(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
     key = Column(String, unique=True, nullable=False)
+    video = Column(String, nullable=True)
     images = relationship(
         "SlideshowImage", back_populates="slideshow", cascade="all, delete-orphan"
     )
@@ -84,17 +169,16 @@ class Slideshow(Base):
     def __str__(self):
         return self.name
 
-
 class SlideshowImage(Base):
     __tablename__ = "slideshow_images"
 
     id = Column(Integer, primary_key=True, index=True)
-    invitation_id = Column(
-        Integer, ForeignKey("invitations.id", ondelete="CASCADE"), nullable=False
-    )
-    slideshow_id = Column(
-        Integer, ForeignKey("slideshows.id", ondelete="CASCADE"), nullable=False
-    )
+
+    # Make both foreign keys nullable
+    invitation_id = Column(Integer, ForeignKey("invitations.id", ondelete="CASCADE"), nullable=True)
+    template_id = Column(Integer, ForeignKey("templates.id", ondelete="CASCADE"), nullable=True)
+
+    slideshow_id = Column(Integer, ForeignKey("slideshows.id", ondelete="CASCADE"), nullable=False)
     file_url = Column(String, nullable=False)
     order = Column(Integer, default=0)
 
@@ -102,6 +186,7 @@ class SlideshowImage(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     invitation = relationship("Invitation", back_populates="slideshow_images")
+    template = relationship("Template", back_populates="slideshow_images")
     slideshow = relationship("Slideshow", back_populates="images")
 
     def __str__(self):
@@ -109,54 +194,23 @@ class SlideshowImage(Base):
 
 
 # -------------------- Template --------------------
-class Template(Base):
+class Template(Base, InvitationTemplateBase):
     __tablename__ = "templates"
 
     id = Column(Integer, primary_key=True, index=True)
-    title = Column(String, nullable=False)
-    slug = Column(String, unique=True, nullable=True)
-    description = Column(Text, nullable=True)
-    extra_info = Column(Text, nullable=True)
     status = Column(Enum(TemplateStatus), default=TemplateStatus.DRAFT)
+    is_released = Column(Boolean, default=False)
 
-    # Optional features (store keys)
-    selected_game = Column(String, nullable=True)
-    selected_slideshow = Column(String, nullable=True)
-    selected_font = Column(String, nullable=True)
-
-    # Styling / Media
-    primary_color = Column(String, nullable=True)
-    secondary_color = Column(String, nullable=True)
-    wallpaper = Column(String, nullable=True)
-    background_audio = Column(String, nullable=True)
-
-    font_obj = relationship(
-        "Font",
-        primaryjoin="foreign(Template.selected_font) == Font.value",
-        viewonly=True,
+    slideshow_images = relationship(
+        "SlideshowImage",
+        back_populates="template",
+        cascade="all, delete-orphan"
     )
 
-    # Relationships to catalog objects
-    selected_game_obj = relationship(
-        "Game",
-        primaryjoin="foreign(Template.selected_game) == Game.key",
-        viewonly=True,
-    )
-    selected_slideshow_obj = relationship(
-        "Slideshow",
-        primaryjoin="foreign(Template.selected_slideshow) == Slideshow.key",
-        viewonly=True,
-    )
-
-    # Categories
     category_id = Column(Integer, ForeignKey("categories.id"), nullable=True)
     subcategory_id = Column(Integer, ForeignKey("subcategories.id"), nullable=True)
     category = relationship("Category", back_populates="templates")
     subcategory = relationship("SubCategory", back_populates="templates")
-
-    # Timestamps
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
 # -------------------- RSVP / Guest --------------------
@@ -171,7 +225,6 @@ class RSVP(Base):
 
     def __str__(self):
         return f"RSVP #{self.id}"
-
 
 class Guest(Base):
     __tablename__ = "guests"
@@ -197,7 +250,6 @@ class Guest(Base):
     def __str__(self):
         return f"Guest #{self.id}, {self.first_name} {self.last_name}"
 
-
 # -------------------- Event --------------------
 class Event(Base):
     __tablename__ = "events"
@@ -220,78 +272,30 @@ class Event(Base):
     def __str__(self):
         return self.title
 
-
 # -------------------- Invitation --------------------
-class Invitation(Base):
+class Invitation(Base, InvitationTemplateBase):
     __tablename__ = "invitations"
 
     id = Column(Integer, primary_key=True, index=True)
-    title = Column(String, nullable=False)
-    slug = Column(String, unique=True, nullable=True)
-    description = Column(Text, nullable=True)
-    extra_info = Column(Text, nullable=True)
     status = Column(Enum(InvitationStatus), default=InvitationStatus.DRAFT)
 
-    # Optional features (store keys)
-    selected_game = Column(String, nullable=True)
-    selected_slideshow = Column(String, nullable=True)
-    selected_font = Column(String, nullable=True)
-
-    # Styling / Media
-    primary_color = Column(String, nullable=True)
-    secondary_color = Column(String, nullable=True)
-    wallpaper = Column(String, nullable=True)
-    background_audio = Column(String, nullable=True)
-
-    font_obj = relationship(
-        "Font",
-        primaryjoin="foreign(Invitation.selected_font) == Font.value",
-        viewonly=True,
-    )
-
-    # Relationships to catalog objects
-    selected_game_obj = relationship(
-        "Game",
-        primaryjoin="foreign(Invitation.selected_game) == Game.key",
-        viewonly=True,
-    )
-    selected_slideshow_obj = relationship(
-        "Slideshow",
-        primaryjoin="foreign(Invitation.selected_slideshow) == Slideshow.key",
-        viewonly=True,
-    )
-
-    slideshow_images = relationship(
-        "SlideshowImage", back_populates="invitation", cascade="all, delete-orphan"
-    )
-
-    events = relationship(
-        "Event", back_populates="invitation", cascade="all, delete-orphan"
-    )
-
-    # Ownership
-    owner_id = Column(
-        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True
-    )
+    owner_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
     anon_session_id = Column(String, nullable=True)
-
-    # Guest preview / activation
     preview_token = Column(String, unique=True, nullable=True)
 
-    # Purchasing
     active_from = Column(DateTime, nullable=True)
     active_until = Column(DateTime, nullable=True)
     is_active = Column(Boolean, default=False)
 
-    # RSVP
-    rsvp_id = Column(
-        Integer, ForeignKey("rsvps.id", ondelete="CASCADE"), nullable=False, unique=True
-    )
+    rsvp_id = Column(Integer, ForeignKey("rsvps.id", ondelete="CASCADE"), nullable=False, unique=True)
     rsvp = relationship("RSVP", back_populates="invitation")
 
-    # Timestamps
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    slideshow_images = relationship(
+        "SlideshowImage", back_populates="invitation", cascade="all, delete-orphan"
+    )
+    events = relationship(
+        "Event", back_populates="invitation", cascade="all, delete-orphan"
+    )
 
     def __str__(self):
         return self.title

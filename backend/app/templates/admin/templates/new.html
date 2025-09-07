@@ -1,0 +1,122 @@
+{% block content %}
+<style>
+    body { font-family: Arial, sans-serif; background-color: #f5f6fa; margin: 0; padding: 0; }
+    h1 { text-align: center; margin: 20px 0; color: #2f3640; }
+    form { width: 90%; max-width: 600px; margin: 0 auto 40px auto; background-color: #ffffff; padding: 25px 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    form div { margin-bottom: 15px; }
+    label { display: block; margin-bottom: 5px; font-weight: bold; color: #2f3640; }
+    input[type="text"], textarea, select, input[type="file"], input[type="color"] { width: 100%; padding: 8px 10px; border: 1px solid #dcdde1; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
+    textarea { min-height: 80px; resize: vertical; }
+    button { display: block; width: 100%; padding: 10px 0; background-color: #00a8ff; color: white; font-size: 16px; border: none; border-radius: 5px; cursor: pointer; transition: background-color 0.3s; }
+    button:hover { background-color: #0097e6; }
+    select { cursor: pointer; }
+    .slide-preview { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 10px; }
+    .slide-preview img { width: 80px; height: 80px; object-fit: cover; border-radius: 4px; border: 1px solid #ccc; }
+</style>
+
+<h1>Създаване на нов шаблон</h1>
+
+<form action="" method="post" enctype="multipart/form-data">
+
+    <div>
+        <label for="title">Заглавие</label>
+        <input type="text" name="title" required>
+    </div>
+
+    <div>
+        <label for="description">Описание</label>
+        <textarea name="description"></textarea>
+    </div>
+
+    <div>
+        <label for="category_id">Категория</label>
+        <select name="category_id">
+            <option value="">-- Изберете --</option>
+            {% for cat in categories %}
+            <option value="{{ cat.id }}">{{ cat.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div>
+        <label for="subcategory_id">Подкатегория</label>
+        <select name="subcategory_id">
+            <option value="">-- Изберете --</option>
+            {% for sub in subcategories %}
+            <option value="{{ sub.id }}">{{ sub.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div>
+        <label for="font_value">Шрифт</label>
+        <select name="font_value">
+            <option value="">-- Изберете шрифт --</option>
+            {% for font in fonts %}
+            <option value="{{ font.value }}">{{ font.label }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div>
+        <label for="primary_color">Основен цвят</label>
+        <input type="color" name="primary_color" value="#ffffff">
+    </div>
+
+    <div>
+        <label for="secondary_color">Допълнителен цвят</label>
+        <input type="color" name="secondary_color" value="#000000">
+    </div>
+
+    <div>
+        <label for="game_key">Игра</label>
+        <select name="game_key">
+            <option value="">-- Изберете игра --</option>
+            {% for game in games %}
+            <option value="{{ game.key }}">{{ game.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div>
+        <label for="slideshow_key">Слайдшоу</label>
+        <select name="slideshow_key">
+            <option value="">-- Изберете слайдшоу --</option>
+            {% for slideshow in slideshows %}
+            <option value="{{ slideshow.key }}">{{ slideshow.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div>
+        <label for="wallpaper">Фонова снимка (Wallpaper)</label>
+        <input type="file" name="wallpaper" accept="image/*">
+    </div>
+
+    <div>
+        <label for="music">Фонова музика (MP3/WAV/OGG)</label>
+        <input type="file" name="music" accept="audio/*">
+    </div>
+
+    <div>
+        <label for="slide_images">Слайдове (5 снимки)</label>
+        <input type="file" name="slide_images" accept="image/*" multiple>
+        <small>Качете точно 5 снимки или оставете празно, за да пропуснете.</small>
+    </div>
+
+    <div>
+        <label for="video_file">Видео</label>
+        <input type="file" name="video_file" accept="video/*">
+        <small>Качете видео вместо слайдове. Разрешен е само един вариант: слайдове или видео.</small>
+    </div>
+
+    <div>
+        <label for="is_released">
+            <input type="checkbox" name="is_released" value="true">
+            Публикувано (Released)
+        </label>
+    </div>
+
+    <button type="submit">Създай шаблон</button>
+</form>
+{% endblock %}

@@ -1,0 +1,171 @@
+{% block content %}
+<style>
+    body { font-family: Arial, sans-serif; background-color: #f5f6fa; margin: 0; padding: 0; }
+    h1 { text-align: center; margin: 20px 0; color: #2f3640; }
+    form { width: 90%; max-width: 600px; margin: 0 auto 40px auto; background-color: #ffffff; padding: 25px 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    form div { margin-bottom: 15px; }
+    label { display: block; margin-bottom: 5px; font-weight: bold; color: #2f3640; }
+    input[type="text"], textarea, select, input[type="file"], input[type="color"] { width: 100%; padding: 8px 10px; border: 1px solid #dcdde1; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
+    textarea { min-height: 80px; resize: vertical; }
+    button { display: block; width: 100%; padding: 10px 0; background-color: #00a8ff; color: white; font-size: 16px; border: none; border-radius: 5px; cursor: pointer; transition: background-color 0.3s; }
+    button:hover { background-color: #0097e6; }
+    select { cursor: pointer; }
+    .wallpaper { height: 200px }
+    .slide-preview { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 10px; }
+    .slide-preview img, video { width: 80px; height: 80px; object-fit: cover; border-radius: 4px; border: 1px solid #ccc; }
+</style>
+
+<h1>Редакция на шаблон: {{ tpl.title }}</h1>
+
+<form action="" method="post" enctype="multipart/form-data">
+    <!-- Title -->
+    <div>
+        <label for="title">Заглавие</label>
+        <input type="text" name="title" value="{{ tpl.title }}" required>
+    </div>
+
+    <!-- Description -->
+    <div>
+        <label for="description">Описание</label>
+        <textarea name="description">{{ tpl.description }}</textarea>
+    </div>
+
+    <!-- Category -->
+    <div>
+        <label for="category_id">Категория</label>
+        <select name="category_id">
+            <option value="">-- Избери --</option>
+            {% for cat in categories %}
+                <option value="{{ cat.id }}" {% if tpl.category_id == cat.id %}selected{% endif %}>{{ cat.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <!-- Subcategory -->
+    <div>
+        <label for="subcategory_id">Подкатегория</label>
+        <select name="subcategory_id">
+            <option value="">-- Избери --</option>
+            {% for sub in subcategories %}
+                <option value="{{ sub.id }}" {% if tpl.subcategory_id == sub.id %}selected{% endif %}>{{ sub.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <!-- Font -->
+    <div>
+        <label for="font_value">Шрифт</label>
+        <select name="font_value">
+            <option value="">-- Избери шрифт --</option>
+            {% for font in fonts %}
+                <option value="{{ font.value }}" {% if tpl.selected_font == font.value %}selected{% endif %}>{{ font.label }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <!-- Colors -->
+    <div>
+        <label for="primary_color">Основен цвят</label>
+        <input type="color" name="primary_color" value="{{ tpl.primary_color or '#ffffff' }}">
+    </div>
+
+    <div>
+        <label for="secondary_color">Вторичен цвят</label>
+        <input type="color" name="secondary_color" value="{{ tpl.secondary_color or '#000000' }}">
+    </div>
+
+    <!-- Game -->
+    <div>
+        <label for="game_key">Игра</label>
+        <select name="game_key">
+            <option value="">-- Избери игра --</option>
+            {% for game in games %}
+                <option value="{{ game.key }}" {% if tpl.selected_game == game.key %}selected{% endif %}>{{ game.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <!-- Slideshow -->
+    <div>
+        <label for="slideshow_key">Слайдшоу</label>
+        <select name="slideshow_key">
+            <option value="">-- Избери слайдшоу --</option>
+            {% for slideshow in slideshows %}
+                <option value="{{ slideshow.key }}" {% if tpl.selected_slideshow == slideshow.key %}selected{% endif %}>{{ slideshow.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <!-- Wallpaper -->
+    <div>
+        <label>Съществуваща фонова снимка</label>
+        {% if tpl.wallpaper %}
+            <img class="wallpaper" src="{{ tpl.wallpaper }}" alt="Wallpaper">
+        {% else %}
+            <p>Не е качена фонова снимка</p>
+        {% endif %}
+    </div>
+    <div>
+        <label for="wallpaper">Смени фонова снимка</label>
+        <input type="file" name="wallpaper" accept="image/*">
+    </div>
+
+    <!-- Music -->
+    <div>
+        <label>Съществуваща музика</label>
+        {% if tpl.background_audio %}
+            <audio controls>
+                <source src="{{ tpl.background_audio }}" type="audio/mpeg">
+                Вашият браузър не поддържа аудио елемента.
+            </audio>
+        {% else %}
+            <p>Не е качена музика</p>
+        {% endif %}
+    </div>
+    <div>
+        <label for="music">Смени музика</label>
+        <input type="file" name="music" accept="audio/*">
+    </div>
+
+    <!-- Slides / Video -->
+    <div>
+        <label>Съществуващи слайдове / видео</label>
+        {% if tpl.slideshow_images %}
+            <div class="slide-preview">
+                {% for slide in tpl.slideshow_images[:5] %}
+                    <img src="{{ slide.file_url }}" alt="Slide {{ loop.index }}">
+                {% endfor %}
+            </div>
+        {% elif tpl.video_file %}
+            <video width="120" controls>
+                <source src="{{ tpl.video_file }}" type="video/mp4">
+                Вашият браузър не поддържа видео таг.
+            </video>
+        {% else %}
+            <p>Не са качени слайдове или видео.</p>
+        {% endif %}
+    </div>
+
+    <div>
+        <label for="slide_images">Смени слайдове (5 изображения)</label>
+        <input type="file" name="slide_images" accept="image/*" multiple>
+        <small>Качете точно 5 изображения или оставете празно за запазване на съществуващите слайдове.</small>
+    </div>
+
+    <div>
+        <label for="video_file">Смени видео</label>
+        <input type="file" name="video_file" accept="video/*">
+        <small>Качете видео, за да замените съществуващите слайдове/видео.</small>
+    </div>
+
+    <!-- Release checkbox -->
+    <div>
+        <label for="is_released">
+            <input type="checkbox" name="is_released" value="true" {% if tpl.is_released %}checked{% endif %}>
+            Публикувано (Released)
+        </label>
+    </div>
+
+    <button type="submit">Обнови шаблона</button>
+</form>
+{% endblock %}

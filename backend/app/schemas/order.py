@@ -106,7 +106,6 @@ class OrderRead(OrderBase):
         if getattr(obj, "voucher", None):
             data.voucher_code = obj.voucher.code
         if getattr(obj, "invitation", None):
-            print(obj.invitation.active_from)
             data.invitation_status = obj.invitation.status
             data.invitation_is_active = obj.invitation.is_active
             data.invitation_active_from = obj.invitation.active_from

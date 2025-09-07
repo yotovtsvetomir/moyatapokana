@@ -1,9 +1,6 @@
 import json
-import uuid
-import re
-from typing import Dict
+from typing import Dict, Optional
 from datetime import datetime
-from unidecode import unidecode
 from fastapi import (
     APIRouter,
     HTTPException,
@@ -24,12 +21,14 @@ from app.db.session import get_write_session, get_read_session
 from app.services.s3.wallpaper import WallpaperService
 from app.services.s3.slide import SlideService
 from app.services.s3.music import MusicService
+from app.services.s3.copy import CopyService
 from app.services.pagination import paginate
 from app.services.search import apply_filters_search_ordering
-from app.services.helpers import generate_google_calendar_link
+from app.services.helpers import generate_google_calendar_link, generate_slug
 from app.db.models.invitation import (
     Invitation,
     InvitationStatus,
+    Template,
     RSVP,
     Event,
     SlideshowImage,
@@ -37,10 +36,13 @@ from app.db.models.invitation import (
     Slideshow,
     Guest,
     Font,
+    Category,
+    SubCategory,
 )
 from app.schemas.invitation import (
     InvitationUpdate,
     InvitationRead,
+    TemplateRead,
     ReadyToPurchaseResponse,
     GameRead,
     SlideshowRead,
@@ -49,6 +51,10 @@ from app.schemas.invitation import (
     RSVPWithStats,
     Stats,
     FontRead,
+    CategoryRead,
+    SubCategoryRead,
+    CategoriesResponse,
+    PaginatedResponse,
 )
 from app.services.auth import get_current_user
 from http.cookies import SimpleCookie
@@ -56,13 +62,6 @@ from typing import List
 
 
 router = APIRouter()
-
-
-def generate_slug(title: str) -> str:
-    title_ascii = unidecode(title)
-    slug_base = re.sub(r"[^a-zA-Z0-9]+", "-", title_ascii.lower()).strip("-")
-    slug = f"{slug_base}-{uuid.uuid4().hex[:16]}"
-    return slug
 
 
 # -------------------- Helper to fetch invitation with ownership --------------------
@@ -197,6 +196,7 @@ async def list_fonts(db: AsyncSession = Depends(get_read_session)):
 async def get_invitation(invitation: Invitation = Depends(fetch_invitation)):
     return invitation
 
+
 # ----------------- Get Invitation By Slug --------------
 @router.get("/slug/{slug}", response_model=InvitationRead)
 async def get_invitation_by_slug(
@@ -209,36 +209,35 @@ async def get_invitation_by_slug(
 @router.post("/create", response_model=InvitationRead)
 async def create_empty_invitation(
     request: Request,
-    db: AsyncSession = Depends(get_write_session),
+    read_db: AsyncSession = Depends(get_read_session),
+    write_db: AsyncSession = Depends(get_write_session),
     current_user: dict | None = Depends(get_current_user),
 ):
     # -------------------- Extract anonymous_session_id from header --------------------
-    anononymous_session_id = None
+    anonymous_session_id = None
     cookie_header = request.headers.get("cookie")
     if cookie_header:
         cookies = SimpleCookie(cookie_header)
         if "anonymous_session_id" in cookies:
-            anononymous_session_id = cookies["anonymous_session_id"].value
+            anonymous_session_id = cookies["anonymous_session_id"].value
 
     owner_id = int(current_user.get("user_id")) if current_user else None
 
-    # -------------------- Check Draft Limits --------------------
+    # -------------------- Check Draft Limits (read) --------------------
     query = select(Invitation).where(
         (
             (Invitation.owner_id == owner_id)
             if owner_id
-            else (Invitation.anon_session_id == anononymous_session_id)
+            else (Invitation.anon_session_id == anonymous_session_id)
         )
         & (Invitation.status == InvitationStatus.DRAFT)
     )
-    result = await db.execute(query)
+    result = await read_db.execute(query)
     existing_drafts = result.scalars().all()
 
     limit = 3 if current_user else 1
     if len(existing_drafts) >= limit:
-        user_type = (
-            "регистриран потребител" if current_user else "нерегистриран потребител"
-        )
+        user_type = "регистриран потребител" if current_user else "нерегистриран потребител"
         draft_word = "чернова" if limit == 1 else "чернови"
         raise HTTPException(
             status_code=400,
@@ -248,12 +247,12 @@ async def create_empty_invitation(
             },
         )
 
-    # -------------------- Create RSVP --------------------
+    # -------------------- Create RSVP (write) --------------------
     rsvp_obj = RSVP(ask_menu=False)
-    db.add(rsvp_obj)
-    await db.flush()
+    write_db.add(rsvp_obj)
+    await write_db.flush()
 
-    # -------------------- Create Invitation --------------------
+    # -------------------- Create Invitation (write) --------------------
     invitation_obj = Invitation(
         title="",
         description="",
@@ -261,15 +260,15 @@ async def create_empty_invitation(
         rsvp_id=rsvp_obj.id,
         is_active=False,
         owner_id=owner_id,
-        anon_session_id=None if current_user else anononymous_session_id,
+        anon_session_id=None if current_user else anonymous_session_id,
     )
 
-    db.add(invitation_obj)
-    await db.commit()
-    await db.refresh(invitation_obj)
+    write_db.add(invitation_obj)
+    await write_db.commit()
+    await write_db.refresh(invitation_obj)
 
-    # -------------------- Eager-load relationships --------------------
-    result = await db.execute(
+    # -------------------- Eager-load relationships (read) --------------------
+    result = await read_db.execute(
         select(Invitation)
         .options(
             selectinload(Invitation.rsvp),
@@ -283,6 +282,250 @@ async def create_empty_invitation(
     )
     invitation_with_rel = result.scalars().first()
     return invitation_with_rel
+
+
+@router.post("/create-from-template/{template_slug}", response_model=InvitationRead)
+async def create_invitation_from_template(
+    template_slug: str,
+    request: Request,
+    read_db: AsyncSession = Depends(get_write_session),
+    write_db: AsyncSession = Depends(get_write_session),
+    current_user: dict | None = Depends(get_current_user),
+    delete_old: bool = Query(False),
+):
+    # -------------------- Fetch Template (read) --------------------
+    result = await read_db.execute(
+        select(Template)
+        .options(
+            selectinload(Template.slideshow_images),
+            selectinload(Template.selected_game_obj),
+            selectinload(Template.selected_slideshow_obj),
+            selectinload(Template.font_obj),
+            selectinload(Template.category),
+            selectinload(Template.subcategory),
+        )
+        .where(Template.slug == template_slug)
+    )
+    template = result.scalars().first()
+    if not template:
+        raise HTTPException(status_code=404, detail="Template not found")
+
+    # -------------------- Extract anon_session_id --------------------
+    anon_session_id = None
+    cookie_header = request.headers.get("cookie")
+    if cookie_header:
+        cookies = SimpleCookie(cookie_header)
+        if "anonymous_session_id" in cookies:
+            anon_session_id = cookies["anonymous_session_id"].value
+
+    owner_id = int(current_user.get("user_id")) if current_user else None
+
+    # -------------------- Check Draft Limits (read) --------------------
+    query = select(Invitation).where(
+        (
+            (Invitation.owner_id == owner_id)
+            if owner_id
+            else (Invitation.anon_session_id == anon_session_id)
+        )
+        & (Invitation.status == InvitationStatus.DRAFT)
+    )
+    result = await read_db.execute(query)
+    existing_drafts = result.scalars().all()
+
+    limit = 3 if current_user else 1
+    if len(existing_drafts) >= limit:
+        if not current_user:
+            if delete_old:
+                for draft in existing_drafts:
+                    await write_db.delete(draft)
+                await write_db.flush()
+            else:
+                raise HTTPException(
+                    status_code=400,
+                    detail={
+                        "error": "Достигнахте лимита от 1 чернова за нерегистриран потребител. Искате ли да изтриете старата и да създадете нова?",
+                        "existingDraftId": existing_drafts[0].id,
+                        "anon": True,
+                    },
+                )
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "error": f"Достигнахте лимита от {limit} чернови",
+                    "existingDraftId": existing_drafts[0].id,
+                    "anon": False,
+                },
+            )
+
+    # -------------------- Create RSVP (write) --------------------
+    rsvp_obj = RSVP(ask_menu=False)
+    write_db.add(rsvp_obj)
+    await write_db.flush()
+
+    slug = generate_slug(template.title)
+
+    # -------------------- Duplicate Invitation (write) --------------------
+    new_invitation = Invitation(
+        title=template.title,
+        slug=slug,
+        description=template.description,
+        extra_info=template.extra_info,
+        primary_color=template.primary_color,
+        secondary_color=template.secondary_color,
+        rsvp_id=rsvp_obj.id,
+        selected_game=template.selected_game,
+        selected_slideshow=template.selected_slideshow,
+        selected_font=template.selected_font,
+        is_active=False,
+        owner_id=owner_id,
+        anon_session_id=None if current_user else anon_session_id,
+    )
+    write_db.add(new_invitation)
+    await write_db.flush()
+
+    # -------------------- Initialize Copy Service --------------------
+    copy_service = CopyService()
+
+    # -------------------- Duplicate wallpaper --------------------
+    if template.wallpaper:
+        new_invitation.wallpaper = await copy_service.copy_file(template.wallpaper, folder="wallpapers")
+
+    # -------------------- Duplicate background audio --------------------
+    if template.background_audio:
+        new_invitation.background_audio = await copy_service.copy_file(template.background_audio, folder="music")
+
+    # -------------------- Duplicate slides --------------------
+    for slide in template.slideshow_images:
+        new_file_url = await copy_service.copy_file(slide.file_url, folder="slides")
+        write_db.add(
+            SlideshowImage(
+                file_url=new_file_url,
+                invitation_id=new_invitation.id,
+                slideshow_id=slide.slideshow_id,
+                order=slide.order,
+            )
+        )
+
+    # -------------------- Commit all writes --------------------
+    await write_db.commit()
+    await write_db.refresh(new_invitation)
+
+    # -------------------- Load invitation with relationships --------------------
+    result = await write_db.execute(
+        select(Invitation)
+        .options(
+            selectinload(Invitation.rsvp),
+            selectinload(Invitation.events),
+            selectinload(Invitation.selected_game_obj),
+            selectinload(Invitation.selected_slideshow_obj),
+            selectinload(Invitation.slideshow_images),
+            selectinload(Invitation.font_obj),
+        )
+        .where(Invitation.id == new_invitation.id)
+    )
+    invitation_with_rel = result.scalars().first()
+
+    return invitation_with_rel
+
+
+@router.get("/templates/{slug}", response_model=TemplateRead)
+async def get_template_by_slug(
+    slug: str,
+    db: AsyncSession = Depends(get_read_session),
+):
+    result = await db.execute(
+        select(Template)
+        .options(
+            selectinload(Template.slideshow_images),
+            selectinload(Template.selected_game_obj),
+            selectinload(Template.selected_slideshow_obj),
+            selectinload(Template.font_obj),
+            selectinload(Template.category),
+            selectinload(Template.subcategory), 
+        )
+        .where(Template.slug == slug)
+    )
+    template = result.scalars().first()
+
+    if not template:
+        raise HTTPException(status_code=404, detail="Template not found")
+
+    return template
+
+
+# do not change url -> router can't handle it ...
+@router.get("/templates/list/view", response_model=dict)
+async def list_templates(
+    db: AsyncSession = Depends(get_read_session),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(10, ge=1, le=100),
+    search: Optional[str] = Query(None),
+    category_id: Optional[int] = Query(None),
+    subcategory_id: Optional[int] = Query(None),
+    ordering: str = Query("-created_at"),
+):
+    """List templates with optional search, filters, ordering, pagination,
+       and include categories/subcategories for frontend filters."""
+
+    print("here")
+    # --- Templates filters ---
+    filters = []
+    if category_id:
+        filters.append(Template.category_id == category_id)
+    if subcategory_id:
+        filters.append(Template.subcategory_id == subcategory_id)
+
+    filters, order_by = await apply_filters_search_ordering(
+        model=Template,
+        db=db,
+        search=search,
+        search_columns=[Template.title, Template.description],
+        filters=filters,
+        ordering=ordering,
+    )
+
+    options = [
+        selectinload(Template.slideshow_images),
+        selectinload(Template.selected_game_obj),
+        selectinload(Template.selected_slideshow_obj),
+        selectinload(Template.font_obj),
+        selectinload(Template.category),
+        selectinload(Template.subcategory),
+    ]
+
+    paginated_templates: PaginatedResponse[TemplateRead] = await paginate(
+        model=Template,
+        db=db,
+        page=page,
+        page_size=page_size,
+        options=options,
+        schema=TemplateRead,
+        extra_filters=filters,
+        ordering=order_by,
+    )
+
+    print(paginated_templates)
+
+    # --- Fetch categories & subcategories ---
+    category_result = await db.execute(select(Category))
+    categories = category_result.scalars().all()
+    subcategory_result = await db.execute(select(SubCategory))
+    subcategories = subcategory_result.scalars().all()
+
+    category_list = [CategoryRead.from_orm(c) for c in categories]
+    subcategory_list = [SubCategoryRead.from_orm(s) for s in subcategories]
+
+    categories_response = CategoriesResponse(
+        categories=category_list,
+        subcategories=subcategory_list,
+    )
+
+    # --- Return combined response ---
+    return {
+        "templates": paginated_templates,
+        "filters": categories_response.dict()
+    }
 
 
 @router.patch("/update/{invitation_id}", response_model=InvitationRead)
@@ -718,11 +961,12 @@ async def add_guest(
     slug: str,
     payload: GuestCreate,
     request: Request,
-    db: AsyncSession = Depends(get_write_session),
+    read_db: AsyncSession = Depends(get_read_session),
+    write_db: AsyncSession = Depends(get_write_session),
     current_user: dict | None = Depends(get_current_user),
 ):
-    # Fetch invitation
-    result = await db.execute(select(Invitation).where(Invitation.slug == slug))
+    # -------------------- Fetch Invitation (read) --------------------
+    result = await read_db.execute(select(Invitation).where(Invitation.slug == slug))
     invitation = result.scalars().first()
 
     if not invitation or not invitation.is_active:
@@ -753,7 +997,7 @@ async def add_guest(
             detail="Собственикът на поканата не може да бъде добавен като гост.",
         )
 
-    # --- Proceed with guest creation ---
+    # -------------------- Create Guest(s) (write) --------------------
     main_guest = Guest(
         first_name=payload.first_name,
         last_name=payload.last_name,
@@ -763,8 +1007,8 @@ async def add_guest(
         menu_choice=payload.menu_choice,
         rsvp_id=invitation.rsvp_id,
     )
-    db.add(main_guest)
-    await db.flush()
+    write_db.add(main_guest)
+    await write_db.flush()
 
     if payload.sub_guests:
         for sub in payload.sub_guests:
@@ -778,16 +1022,17 @@ async def add_guest(
                 main_guest_id=main_guest.id,
                 rsvp_id=invitation.rsvp_id,
             )
-            db.add(sub_guest)
+            write_db.add(sub_guest)
 
     try:
-        await db.commit()
-        await db.refresh(main_guest)
+        await write_db.commit()
+        await write_db.refresh(main_guest)
     except IntegrityError:
-        await db.rollback()
+        await write_db.rollback()
         raise HTTPException(status_code=400, detail="Failed to add guest(s)")
 
-    result = await db.execute(
+    # -------------------- Read created guest with sub_guests (read) --------------------
+    result = await read_db.execute(
         select(Guest)
         .where(Guest.id == main_guest.id)
         .options(selectinload(Guest.sub_guests))
