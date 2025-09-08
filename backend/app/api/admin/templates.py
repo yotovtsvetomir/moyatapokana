@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Request, Depends, Form, UploadFile, File, HTTPException
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
+from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
@@ -81,7 +82,7 @@ async def create_template(
     title: str = Form(...),
     description: str = Form(None),
     category_id: int = Form(None),
-    subcategory_id: int = Form(None),
+    subcategory_id: Optional[str] = Form(None),
     font_value: str = Form(None),
     primary_color: str = Form(None),
     secondary_color: str = Form(None),
@@ -98,6 +99,7 @@ async def create_template(
     # Filter out empty uploads
     slide_images = [f for f in (slide_images or []) if f.filename]
     video_file = video_file if video_file and video_file.filename else None
+    subcategory_id = int(subcategory_id) if subcategory_id else None
 
     # Validate mutually exclusive media
     if slide_images and video_file:
@@ -209,9 +211,10 @@ async def update_template(
     title: str = Form(...),
     description: str = Form(None),
     category_id: int = Form(None),
-    subcategory_id: int = Form(None),
+    subcategory_id: Optional[str] = Form(None),
     wallpaper: UploadFile = File(None),
     music: UploadFile = File(None),
+    font_value: str = Form(None),
     slide_images: list[UploadFile] = File(None),
     video_file: UploadFile = File(None),
     slideshow_key: str = Form(None),
@@ -229,11 +232,13 @@ async def update_template(
     tpl.slug = generate_slug(title)
     tpl.description = description
     tpl.category_id = category_id
+    subcategory_id = int(subcategory_id) if subcategory_id not in (None, "") else None
     tpl.subcategory_id = subcategory_id
     tpl.selected_slideshow = slideshow_key
     tpl.primary_color = primary_color
     tpl.secondary_color = secondary_color
     tpl.is_released = is_released
+    tpl.selected_font = font_value
 
     # Convert slideshow_key to numeric id
     slideshow_id = None

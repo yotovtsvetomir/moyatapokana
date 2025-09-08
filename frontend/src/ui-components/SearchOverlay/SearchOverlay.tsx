@@ -1,29 +1,21 @@
 'use client';
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, FormEvent } from "react";
+import { useRouter } from "next/navigation";
 import { useClickOutside } from "@/hooks/useClickOutside";
-import SearchHeader from "./SearchHeader";
-import SearchResultsBox from "./SearchResultsBox";
+import styles from "./SearchOverlay.module.css";
 
-export default function SearchOverlay({ 
-  open,
-  onClose,
-  headerRef,
-}: { 
+interface SearchOverlayProps {
   open: boolean;
   onClose: () => void;
   headerRef: React.RefObject<HTMLElement | null>;
-}) {
+}
+
+export default function SearchOverlay({ open, onClose, headerRef }: SearchOverlayProps) {
   const [searchTerm, setSearchTerm] = useState("");
-  const [searchResults, setSearchResults] = useState({
-    results: [],
-    suggested_categories: [],
-    suggested_subcategories: [],
-  });
-
-  const searchTimeout = useRef<NodeJS.Timeout | null>(null);
-
   const overlayRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
 
   useClickOutside([overlayRef, headerRef], () => {
     onClose();
@@ -32,76 +24,77 @@ export default function SearchOverlay({
   useEffect(() => {
     if (!open) {
       setSearchTerm("");
-      setSearchResults({
-        results: [],
-        suggested_categories: [],
-        suggested_subcategories: [],
-      });
+    } else {
+      inputRef.current?.focus();
     }
   }, [open]);
 
-  useEffect(() => {
-    if (searchTerm.length < 2) {
-      setSearchResults({ results: [], suggested_categories: [], suggested_subcategories: [] });
-      return;
-    }
+  const exampleSearches = ["Рожден ден", "Сватба", "Юбилей", "Кръщене", "Фирмено парти"];
 
-    if (searchTimeout.current) clearTimeout(searchTimeout.current);
-
-    searchTimeout.current = setTimeout(async () => {
-      try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/invitations/templates/search/?q=${encodeURIComponent(searchTerm)}`
-        );
-        const data = await res.json();
-        setSearchResults({
-          results: data.results || [],
-          suggested_categories: data.suggested_categories || [],
-          suggested_subcategories: data.suggested_subcategories || [],
-        });
-      } catch (err) {
-        console.error("Search failed:", err);
-        setSearchResults({ results: [], suggested_categories: [], suggested_subcategories: [] });
-      }
-    }, 500);
-
-    return () => {
-      if (searchTimeout.current) clearTimeout(searchTimeout.current);
-    };
-  }, [searchTerm]);
-
-  const handleSearchSubmit = async () => {
+  const handleSearchSubmit = (e?: FormEvent) => {
+    e?.preventDefault();
     if (!searchTerm.trim()) return;
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/invitations/templates/search/?q=${encodeURIComponent(searchTerm)}`);
-    const data = await res.json();
-    setSearchResults({
-      results: data.results || [],
-      suggested_categories: data.suggested_categories || [],
-      suggested_subcategories: data.suggested_subcategories || [],
-    });
+    router.push(`/templates/?search=${encodeURIComponent(searchTerm.trim())}`);
+    onClose();
   };
 
   if (!open) return null;
 
   return (
-    <div ref={overlayRef}>
-      <SearchHeader
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        onSubmit={handleSearchSubmit}
-        onClose={() => {
-          setSearchTerm("");
-          setSearchResults({ results: [], suggested_categories: [], suggested_subcategories: [] });
-          onClose();
-        }}
-      />
-      {(searchTerm || searchResults.results.length > 0) && (
-        <SearchResultsBox
-          searchResults={searchResults}
-          onClose={() => setSearchResults({ results: [], suggested_categories: [], suggested_subcategories: [] })}
-          clearSearch={() => setSearchTerm("")}
-        />
-      )}
+    <div ref={overlayRef} className={styles.searchOverlay}>
+      {/* Search Header */}
+      <div className={styles.searchHeader}>
+        <div className={styles.searchHeaderInner}>
+          <form className={styles.searchForm} onSubmit={handleSearchSubmit}>
+            <div className={styles.inputWrapper}>
+              <input
+                ref={inputRef}
+                type="text"
+                className={styles.searchInput}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                aria-label="Търси покана"
+                autoCapitalize="off"
+                autoCorrect="off"
+              />
+              {!searchTerm && <p className={styles.placeholder}>Търси покана...</p>}
+            </div>
+          </form>
+          <button
+            className={styles.searchButton}
+            onClick={() => {
+              setSearchTerm("");
+              onClose();
+            }}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: "1.8rem" }}>
+              close
+            </span>
+          </button>
+        </div>
+      </div>
+
+      {/* Example Searches */}
+      <div className={styles.exampleSearches}>
+        <div className={styles.exampleSearchesInner}>
+          <div className={styles.examples}>
+            {exampleSearches.map((term) => (
+              <div
+                key={term}
+                className={styles.example}
+                onClick={() => {
+                  setSearchTerm(term);
+                  router.push(`/templates/?search=${encodeURIComponent(term)}`);
+                  onClose();
+                }}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: "1.4rem" }}>search</span>
+                <p>{term}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

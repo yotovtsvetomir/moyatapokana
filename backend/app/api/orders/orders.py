@@ -25,6 +25,7 @@ from app.schemas.order import (
     OrderUpdatePrice,
     PriceTierRead,
     OrderWithTiersResponse,
+    PriceTierReadWithChoices,
 )
 from app.core.permissions import require_role
 from app.core.settings import settings
@@ -664,3 +665,18 @@ async def get_user_order(
     if not order:
         raise HTTPException(status_code=404, detail="Order not found or forbidden")
     return OrderRead.from_orm(order)
+
+@router.get("/tiers/pricing", response_model=PriceTierReadWithChoices)
+async def get_price_tiers(
+    currency: str | None = None,
+    read_db: AsyncSession = Depends(get_read_session)
+):
+    result = await read_db.execute(select(PriceTier).where(PriceTier.active))
+    all_tiers = result.scalars().all()
+    currencies = sorted(list({tier.currency for tier in all_tiers}))
+    filtered_tiers = [tier for tier in all_tiers if not currency or tier.currency == currency]
+
+    return PriceTierReadWithChoices(
+        tiers=filtered_tiers,
+        currencies=currencies
+    )

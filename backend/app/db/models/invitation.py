@@ -130,6 +130,7 @@ class Category(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, nullable=False)
     templates = relationship("Template", back_populates="category")
+    subcategories = relationship("SubCategory", back_populates="category", cascade="all, delete-orphan")
 
     def __str__(self):
         return self.name

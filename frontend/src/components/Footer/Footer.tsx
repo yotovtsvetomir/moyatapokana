@@ -33,8 +33,8 @@ export default function Footer() {
                 <TextLink color="muted" href="/about">За нас</TextLink>
                 <TextLink color="muted" href="/blog">Блог</TextLink>
                 <TextLink color="muted" href="/contact">Контакти</TextLink>
-                <TextLink color="muted" href="/terms">Условия</TextLink>
                 <TextLink color="muted" href="/privacy">Поверителност</TextLink>
+                <TextLink color="muted" href="/data-deletion">Изтриване на данни</TextLink>
                 <TextLink color="muted" href="/cookies">Бисквитки</TextLink>
               </nav>
             </div>

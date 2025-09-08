@@ -37,7 +37,6 @@ from app.db.models.invitation import (
     Guest,
     Font,
     Category,
-    SubCategory,
 )
 from app.schemas.invitation import (
     InvitationUpdate,
@@ -51,9 +50,6 @@ from app.schemas.invitation import (
     RSVPWithStats,
     Stats,
     FontRead,
-    CategoryRead,
-    SubCategoryRead,
-    CategoriesResponse,
     PaginatedResponse,
 )
 from app.services.auth import get_current_user
@@ -465,17 +461,16 @@ async def list_templates(
     subcategory_id: Optional[int] = Query(None),
     ordering: str = Query("-created_at"),
 ):
-    """List templates with optional search, filters, ordering, pagination,
-       and include categories/subcategories for frontend filters."""
+    """List templates with filters, only released, and nested categories/subcategories."""
 
-    print("here")
-    # --- Templates filters ---
-    filters = []
-    if category_id:
+    # --- Base filters ---
+    filters = [Template.is_released.is_(True)]
+    if category_id is not None:
         filters.append(Template.category_id == category_id)
-    if subcategory_id:
+    if subcategory_id is not None:
         filters.append(Template.subcategory_id == subcategory_id)
 
+    # --- Apply search + ordering ---
     filters, order_by = await apply_filters_search_ordering(
         model=Template,
         db=db,
@@ -485,6 +480,7 @@ async def list_templates(
         ordering=ordering,
     )
 
+    # --- Load related objects ---
     options = [
         selectinload(Template.slideshow_images),
         selectinload(Template.selected_game_obj),
@@ -505,26 +501,25 @@ async def list_templates(
         ordering=order_by,
     )
 
-    print(paginated_templates)
-
-    # --- Fetch categories & subcategories ---
-    category_result = await db.execute(select(Category))
-    categories = category_result.scalars().all()
-    subcategory_result = await db.execute(select(SubCategory))
-    subcategories = subcategory_result.scalars().all()
-
-    category_list = [CategoryRead.from_orm(c) for c in categories]
-    subcategory_list = [SubCategoryRead.from_orm(s) for s in subcategories]
-
-    categories_response = CategoriesResponse(
-        categories=category_list,
-        subcategories=subcategory_list,
+    # --- Fetch categories with subcategories ---
+    category_result = await db.execute(
+        select(Category).options(selectinload(Category.subcategories))
     )
+    categories = category_result.scalars().unique().all()
 
-    # --- Return combined response ---
+    category_list = [
+        {
+            "id": c.id,
+            "name": c.name,
+            "subcategories": [{"id": s.id, "name": s.name} for s in c.subcategories]
+        }
+        for c in categories
+    ]
+
+    # --- Return response ---
     return {
         "templates": paginated_templates,
-        "filters": categories_response.dict()
+        "filters": {"categories": category_list}
     }
 
 

@@ -143,6 +143,11 @@ class CategoryRead(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class CategoryTemplateRead(BaseModel):
+    id: int
+    name: str
+    model_config = {"from_attributes": True}
+
 class CategoriesResponse(BaseModel):
     categories: List[CategoryRead]
     subcategories: List[SubCategoryRead]
@@ -324,11 +329,10 @@ class TemplateUpdate(TemplateBase):
 class TemplateRead(TemplateBase):
     id: int
     status: Optional[TemplateStatus] = None
-    category: Optional[CategoryRead] = None
-    subcategory: Optional[SubCategoryRead] = None
     created_at: datetime
     updated_at: datetime
+    category: Optional[CategoryTemplateRead] = None
+    subcategory: Optional[SubCategoryRead] = None
     slideshow_images: List[SlideshowImageRead] = []
 
     model_config = {"from_attributes": True}
-

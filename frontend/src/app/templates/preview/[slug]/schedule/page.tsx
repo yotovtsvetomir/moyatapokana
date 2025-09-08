@@ -10,6 +10,7 @@ import { useDynamicFont } from "@/hooks/useDynamicFont";
 import { motion } from "framer-motion";
 import { Button } from "@/ui-components/Button/Button";
 import ConfirmModal from "@/ui-components/ConfirmModal/ConfirmModal";
+import confetti from "canvas-confetti";
 import styles from "./schedule.module.css";
 
 export default function TemplatePreview() {
@@ -106,6 +107,79 @@ export default function TemplatePreview() {
       audioRef.current.play().catch(() => setIsPlaying(false));
     }
   }, [template?.background_audio]);
+
+  useEffect(() => {
+    const duration = 3 * 1000;
+    const animationEnd = Date.now() + duration;
+    const defaults = { startVelocity: 30, spread: 360, ticks: 120, zIndex: 0 };
+
+    const interval = setInterval(() => {
+      const timeLeft = animationEnd - Date.now();
+
+      if (timeLeft <= 0) {
+        clearInterval(interval);
+        return;
+      }
+
+      const particleCount = 50 * (timeLeft / duration);
+
+      confetti({
+        ...defaults,
+        particleCount,
+        origin: { x: Math.random(), y: Math.random() * 0.5 },
+        colors: ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff'],
+        shapes: ['circle'],
+      });
+    }, 250);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const defaults = {
+      spread: 360,
+      ticks: 50,
+      gravity: 0,
+      decay: 0.94,
+      startVelocity: 30,
+      colors: ['#FFE400', '#FFBD00', '#E89400', '#FFCA6C', '#FDFFB8']
+    };
+
+    let repeatCount = 0;
+
+    const shootStars = () => {
+      repeatCount++;
+      function shoot() {
+        confetti({
+          ...defaults,
+          particleCount: 40,
+          scalar: 1.2,
+          shapes: ['star']
+        });
+
+        confetti({
+          ...defaults,
+          particleCount: 10,
+          scalar: 0.75,
+          shapes: ['circle']
+        });
+      }
+
+      const timeouts = [
+        setTimeout(shoot, 0),
+        setTimeout(shoot, 100),
+        setTimeout(shoot, 200)
+      ];
+
+      if (repeatCount < 3) {
+        setTimeout(shootStars, 1000);
+      }
+
+      return () => timeouts.forEach(clearTimeout);
+    };
+
+    shootStars();
+  }, []);
 
   const containerVariants = {
     hidden: { opacity: 1 },

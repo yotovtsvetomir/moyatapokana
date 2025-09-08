@@ -3,9 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 export async function GET(req: NextRequest) {
   try {
     const url = new URL(req.url);
-    const params = url.search;  
     const cookieHeader = req.headers.get("cookie") || "";
-    const fastApiUrl = `${process.env.API_URL_SERVER}/invitations/templates/list/view`;
+    const fastApiUrl = `${process.env.API_URL_SERVER}/invitations/templates/list/view${url.search}`;
 
     const res = await fetch(fastApiUrl, {
       headers: {
