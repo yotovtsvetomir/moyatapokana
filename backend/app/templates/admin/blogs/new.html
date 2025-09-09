@@ -1,0 +1,136 @@
+{% block content %}
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f5f6fa;
+        margin: 0;
+        padding: 0;
+    }
+
+    h1 {
+        text-align: center;
+        margin: 30px 0;
+        color: #2f3640;
+        font-size: 28px;
+    }
+
+    form {
+        width: 90%;
+        max-width: 600px;
+        margin: 0 auto 50px auto;
+        background-color: #ffffff;
+        padding: 30px 35px;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        transition: transform 0.2s;
+    }
+
+    form div {
+        margin-bottom: 20px;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: bold;
+        color: #2f3640;
+        font-size: 14px;
+    }
+
+    input[type="text"], textarea, input[type="file"] {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #dcdde1;
+        border-radius: 6px;
+        box-sizing: border-box;
+        font-size: 14px;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    input[type="text"]:focus, textarea:focus {
+        border-color: #00a8ff;
+        box-shadow: 0 0 5px rgba(0, 168, 255, 0.3);
+        outline: none;
+    }
+
+    textarea {
+        min-height: 120px;
+        resize: vertical;
+    }
+
+    button {
+        display: block;
+        width: 100%;
+        padding: 12px 0;
+        background-color: #00a8ff;
+        color: white;
+        font-size: 16px;
+        font-weight: bold;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background-color 0.3s, transform 0.2s;
+    }
+
+    button:hover {
+        background-color: #0097e6;
+        transform: translateY(-1px);
+    }
+
+    /* Image preview */
+    .image-preview {
+        margin-top: 10px;
+    }
+
+    .image-preview img {
+        max-width: 200px;
+        max-height: 150px;
+        border-radius: 6px;
+        border: 1px solid #dcdde1;
+        display: block;
+        margin-top: 5px;
+    }
+</style>
+
+<h1>Създай нов блог пост</h1>
+
+<form action="" method="post" enctype="multipart/form-data">
+    <div>
+        <label for="title">Заглавие</label>
+        <input type="text" name="title" required>
+    </div>
+
+    <div>
+        <label for="authored_by">Автор</label>
+        <input type="text" name="authored_by" placeholder="Име на автора">
+    </div>
+
+    <div>
+        <label for="paragraphs">Параграфи (по един на ред)</label>
+        <textarea name="paragraphs" rows="5" placeholder="Всеки параграф на нов ред" required></textarea>
+    </div>
+
+    <div>
+        <label for="image">Изображение</label>
+        <input type="file" name="image" accept="image/*">
+        <div class="image-preview" id="imagePreview"></div>
+    </div>
+
+    <button type="submit">Създай пост</button>
+</form>
+
+<script>
+    const imageInput = document.querySelector('input[name="image"]');
+    const imagePreview = document.getElementById('imagePreview');
+
+    imageInput.addEventListener('change', function() {
+        imagePreview.innerHTML = '';
+        const file = this.files[0];
+        if (file) {
+            const img = document.createElement('img');
+            img.src = URL.createObjectURL(file);
+            imagePreview.appendChild(img);
+        }
+    });
+</script>
+{% endblock %}

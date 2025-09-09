@@ -1,24 +1,147 @@
 {% block content %}
-<div class="analytics-card">
-    <h1>Статистика</h1>
-    <ul>
-        <li>
-            <span>Активни потребители (последни 15 минути)</span> 
-            <span><b>{{ active_users_today }}</b></span>
-        </li>
-        <li>
-            <span>Потребители днес</span> 
-            <span><b>{{ active_users_today }}</b></span>
-        </li>
-        <li>
-            <span>Потребители този месец</span> 
-            <span><b>{{ active_users_this_month }}</b></span>
-        </li>
-        <li>
-            <span>Общо регистрирани клиенти</span> 
-            <span><b>{{ total_customers }}</b></span>
-        </li>
-    </ul>
+<div class="analytics-wrapper">
+    <!-- Users Section -->
+    <div class="analytics-card">
+        <h1>Потребители</h1>
+        <ul>
+            <li>
+                <span>Активни потребители (последни 15 минути)</span> 
+                <span><b>{{ active_users_recent }}</b></span>
+            </li>
+            <li>
+                <span>Потребители днес</span> 
+                <span><b>{{ active_users_today }}</b></span>
+            </li>
+            <li>
+                <span>Потребители този месец</span> 
+                <span><b>{{ active_users_this_month }}</b></span>
+            </li>
+            <li>
+                <span>Общо регистрирани клиенти</span> 
+                <span><b>{{ total_customers }}</b></span>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Orders - Daily -->
+    <div class="analytics-card">
+        <h1>Поръчки днес</h1>
+        <ul>
+            <li>
+                <span>Брой поръчки</span> 
+                <span><b>{{ orders_count_today }}</b></span>
+            </li>
+            <li>
+                <span>Общ приход</span> 
+                <span><b>{{ total_revenue_today_bgn | round(2) }} BGN</b></span>
+            </li>
+            <li>
+                <span>Средна стойност</span> 
+                <span><b>{{ avg_order_today_bgn | round(2) }} BGN</b></span>
+            </li>
+        </ul>
+        {% if top_tiers_daily %}
+        <h2>Топ 3 пакета днес</h2>
+        <ul>
+            {% for tier in top_tiers_daily %}
+            <li class="tier-item">
+                <span>{{ tier.duration_days }} дни - {{ tier.price }} {{ tier.currency }} ({{ tier.price_bgn|round(2) }} BGN)</span>
+                <span class="tier-count">{{ tier.orders_count }} поръчки</span>
+            </li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </div>
+
+    <!-- Orders - Monthly -->
+    <div class="analytics-card">
+        <h1>Поръчки този месец</h1>
+        <ul>
+            <li>
+                <span>Брой поръчки</span> 
+                <span><b>{{ orders_count_month }}</b></span>
+            </li>
+            <li>
+                <span>Общ приход</span> 
+                <span><b>{{ total_revenue_month_bgn | round(2) }} BGN</b></span>
+            </li>
+            <li>
+                <span>Средна стойност</span> 
+                <span><b>{{ avg_order_month_bgn | round(2) }} BGN</b></span>
+            </li>
+        </ul>
+        {% if top_tiers_month %}
+        <h2>Топ 3 пакета този месец</h2>
+        <ul>
+            {% for tier in top_tiers_month %}
+            <li class="tier-item">
+                <span>{{ tier.duration_days }} дни - {{ tier.price }} {{ tier.currency }} ({{ tier.price_bgn|round(2) }} BGN)</span>
+                <span class="tier-count">{{ tier.orders_count }} поръчки</span>
+            </li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </div>
+
+    <!-- Orders - Last Month -->
+    <div class="analytics-card">
+        <h1>Поръчки миналия месец</h1>
+        <ul>
+            <li>
+                <span>Брой поръчки</span> 
+                <span><b>{{ orders_count_last_month }}</b></span>
+            </li>
+            <li>
+                <span>Общ приход</span> 
+                <span><b>{{ total_revenue_last_month_bgn | round(2) }} BGN</b></span>
+            </li>
+            <li>
+                <span>Средна стойност</span> 
+                <span><b>{{ avg_order_last_month_bgn | round(2) }} BGN</b></span>
+            </li>
+        </ul>
+        {% if top_tiers_last_month %}
+        <h2>Топ 3 пакета миналия месец</h2>
+        <ul>
+            {% for tier in top_tiers_last_month %}
+            <li class="tier-item">
+                <span>{{ tier.duration_days }} дни - {{ tier.price }} {{ tier.currency }} ({{ tier.price_bgn|round(2) }} BGN)</span>
+                <span class="tier-count">{{ tier.orders_count }} поръчки</span>
+            </li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </div>
+
+    <!-- Orders - Yearly -->
+    <div class="analytics-card">
+        <h1>Поръчки тази година</h1>
+        <ul>
+            <li>
+                <span>Брой поръчки</span> 
+                <span><b>{{ orders_count_year }}</b></span>
+            </li>
+            <li>
+                <span>Общ приход</span> 
+                <span><b>{{ total_revenue_year_bgn | round(2) }} BGN</b></span>
+            </li>
+            <li>
+                <span>Средна стойност</span> 
+                <span><b>{{ avg_order_year_bgn | round(2) }} BGN</b></span>
+            </li>
+        </ul>
+        {% if top_tiers_year %}
+        <h2>Топ 3 пакета тази година</h2>
+        <ul>
+            {% for tier in top_tiers_year %}
+            <li class="tier-item">
+                <span>{{ tier.duration_days }} дни - {{ tier.price }} {{ tier.currency }} ({{ tier.price_bgn|round(2) }} BGN)</span>
+                <span class="tier-count">{{ tier.orders_count }} поръчки</span>
+            </li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </div>
 </div>
 {% endblock %}
 
@@ -34,21 +157,35 @@ body {
     padding-top: 50px;
 }
 
+.analytics-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    max-width: 1200px;
+    width: 90%;
+    padding-bottom: 50px;
+}
+
 .analytics-card {
     background: #fff;
     padding: 2rem 3rem;
     border-radius: 12px;
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
     text-align: center;
-    max-width: 500px;
-    width: 90%;
     transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .analytics-card h1 {
     margin-bottom: 1.5rem;
     color: #333;
-    font-size: 1.8rem;
+    font-size: 1.6rem;
+}
+
+.analytics-card h2 {
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+    color: #666;
+    font-size: 1.3rem;
 }
 
 .analytics-card ul {
@@ -62,11 +199,27 @@ body {
     justify-content: space-between;
     padding: 0.5rem 0;
     border-bottom: 1px solid #eee;
-    font-size: 1.1rem;
+    font-size: 1.05rem;
     color: #555;
 }
 
 .analytics-card li:last-child {
     border-bottom: none;
+}
+
+/* Flex for top tiers */
+.analytics-card .tier-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.3rem 0;
+    border-bottom: 1px solid #eee;
+}
+
+.analytics-card .tier-item:last-child {
+    border-bottom: none;
+}
+
+.analytics-card .tier-count {
+    font-weight: bold;
 }
 </style>

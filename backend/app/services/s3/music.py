@@ -11,8 +11,8 @@ ALLOWED_AUDIO_TYPES = {
     "audio/ogg",  # .ogg
 }
 
-# Accept up to 5MB raw upload
-MAX_AUDIO_SIZE_MB = 5
+# Accept up to 1MB raw upload
+MAX_AUDIO_SIZE_MB = 1
 
 
 class MusicService(S3Base):

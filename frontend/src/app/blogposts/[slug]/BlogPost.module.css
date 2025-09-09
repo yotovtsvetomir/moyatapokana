@@ -1,0 +1,33 @@
+.container {
+  padding: 40px 20px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: var(--color-dark-200);
+}
+
+.meta {
+  font-size: 0.875rem;
+  color: var(--color-dark-400);
+  margin-bottom: 20px;
+}
+
+.imageWrapper {
+  width: 100%;
+  height: auto;
+  margin-bottom: 25px;
+  overflow: hidden;
+  border-radius: 6px;
+}
+
+.content p {
+  font-size: 1rem;
+  color: var(--color-dark-300);
+  line-height: 1.6;
+  margin-bottom: 15px;
+}

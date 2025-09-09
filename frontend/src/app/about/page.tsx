@@ -24,7 +24,7 @@ export default function AboutPage() {
             <h2 className={styles.blockTitle}>Мисия</h2>
           </div>
           <p className={styles.text}>
-            Да предоставим възможността на всеки да създава красиви и адаптивни дигитални покани.
+            Да насърчаваме хората да се събират повече заедно, вместо пред екраните, докато се наслаждават на стилни дигитални покани, които правят всяко събитие специално.
           </p>
         </div>
 
@@ -35,7 +35,7 @@ export default function AboutPage() {
             <h2 className={styles.blockTitle}>Визия</h2>
           </div>
           <p className={styles.text}>
-            Насърчаваме хората да се събират повече на живо, докато се наслаждават на стилни дигитални покани, които правят всяко събитие специално.
+            Да предоставим възможността на всеки да създава красиви и интересни покани.
           </p>
         </div>
 
@@ -43,10 +43,10 @@ export default function AboutPage() {
         <div className={styles.block}>
           <div className={styles.blockHeader}>
             <span className="material-symbols-outlined">shield</span>
-            <h2 className={styles.blockTitle}>Наши ценности</h2>
+            <h2 className={styles.blockTitle}>Ценности</h2>
           </div>
           <p className={styles.text}>
-            Стремим се към простота, красота и функционалност.
+            Стремим се към простота, красота и полезност. Вярваме, че със здрав труд всичко е възможно.
           </p>
         </div>
       </div>

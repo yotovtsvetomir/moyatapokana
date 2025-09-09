@@ -1,8 +1,11 @@
+import string
+import random
+from sqlalchemy import event
 from sqladmin import Admin, ModelView
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from app.db.session import engine_writer, get_read_session, get_write_session
-from app.db.models.user import User
+from app.db.models.user import User, DailyUserStats
 from app.db.models.invitation import (
     Game,
     Slideshow,
@@ -523,6 +526,11 @@ class PriceTierAdmin(ModelView, model=PriceTier):
     form_excluded_columns = ["orders"]
 
 
+def generate_voucher_code(blocks=4, block_length=5):
+        """Generates a voucher code in the format XXXXX-XXXXX-XXXXX-XXXXX."""
+        chars = string.ascii_uppercase + string.digits
+        return '-'.join(''.join(random.choices(chars, k=block_length)) for _ in range(blocks))
+
 # -------------------- Voucher Admin --------------------
 class VoucherAdmin(ModelView, model=Voucher):
     column_list = [
@@ -538,7 +546,23 @@ class VoucherAdmin(ModelView, model=Voucher):
     column_searchable_list = [Voucher.code]
     column_sortable_list = [Voucher.id, Voucher.code, Voucher.amount, Voucher.active]
     column_editable_list = [Voucher.amount, Voucher.active, Voucher.usage_limit]
-    form_excluded_columns = ["orders"]
+    form_excluded_columns = ["orders", "code"]
+
+
+    # Event listener for auto-generating code
+    @event.listens_for(Voucher, "before_insert")
+    def auto_generate_voucher_code(mapper, connection, target):
+        if not target.code:  # Only generate if no code is provided
+            # Ensure uniqueness (basic approach)
+            while True:
+                new_code = generate_voucher_code()
+                # Check if code already exists
+                existing = connection.execute(
+                    Voucher.__table__.select().where(Voucher.code == new_code)
+                ).first()
+                if not existing:
+                    break
+            target.code = new_code
 
 
 # -------------------- Order Admin --------------------
@@ -794,6 +818,12 @@ class SubCategoryAdmin(ModelView, model=SubCategory):
             return db_obj
 
 
+class DailyUserStatsAdmin(ModelView, model=DailyUserStats):
+    column_list = [DailyUserStats.id, DailyUserStats.date, DailyUserStats.user_type, DailyUserStats.active_count]
+    column_searchable_list = [DailyUserStats.user_type]
+    column_sortable_list = [DailyUserStats.date, DailyUserStats.active_count]
+
+
 # -------------------- Setup Admin --------------------
 def setup_admin(app):
     admin = Admin(
@@ -802,6 +832,7 @@ def setup_admin(app):
         title="Moyata Pokana Admin",
     )
     admin.add_view(UserAdmin)
+    admin.add_view(DailyUserStatsAdmin)
     admin.add_view(InvitationAdmin)
     admin.add_view(GameAdmin)
     admin.add_view(SlideshowAdmin)

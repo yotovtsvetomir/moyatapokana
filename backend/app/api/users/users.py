@@ -31,6 +31,7 @@ from app.schemas.user import (
     PasswordResetConfirm,
 )
 from app.services.email import send_email, render_email
+from app.services.stats import increment_daily_user_stat
 from app.services.s3.profile_picture import ProfilePictureService
 from app.services.auth import (
     authenticate_user,
@@ -147,6 +148,7 @@ async def login(
     form_data: UserLogin,
     anonymous_session_id: str | None = Cookie(None),
     db_read: AsyncSession = Depends(get_read_session),
+    db_write: AsyncSession = Depends(get_write_session),
 ):
     user = await authenticate_user(form_data.email, form_data.password, db_read)
     if not user:
@@ -168,6 +170,8 @@ async def login(
 
     session_id = await create_session(user)
     expires_at = datetime.utcnow() + timedelta(seconds=settings.SESSION_EXPIRE_SECONDS)
+
+    await increment_daily_user_stat("customer", db_write)
 
     return {
         "session_id": session_id,
@@ -376,9 +380,12 @@ async def password_reset_confirm(
 # Anonymous session
 # ------------------------------
 @router.post("/anonymous-session")
-async def create_anon_session():
+async def create_anon_session(session: AsyncSession = Depends(get_write_session)):
     session_id = await create_anonymous_session()
     expires_at = datetime.utcnow() + timedelta(seconds=settings.SESSION_EXPIRE_SECONDS)
+
+    await increment_daily_user_stat("anonymous", session)
+
     return {
         "anonymous_session_id": session_id,
         "message": "Anonymous session created",

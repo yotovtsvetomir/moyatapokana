@@ -12,7 +12,7 @@
     select { cursor: pointer; }
     .wallpaper { height: 200px }
     .slide-preview { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 10px; }
-    .slide-preview img, video { width: 80px; height: 80px; object-fit: cover; border-radius: 4px; border: 1px solid #ccc; }
+    .slide-preview img { width: 80px; height: 80px; object-fit: cover; border-radius: 4px; border: 1px solid #ccc; }
 </style>
 
 <h1>Редакция на шаблон: {{ tpl.title }}</h1>
@@ -127,22 +127,16 @@
         <input type="file" name="music" accept="audio/*">
     </div>
 
-    <!-- Slides / Video -->
+    <!-- Slides -->
     <div>
-        <label>Съществуващи слайдове / видео</label>
+        <label>Съществуващи слайдове</label>
         {% if tpl.slideshow_images %}
             <div class="slide-preview">
                 {% for slide in tpl.slideshow_images[:5] %}
                     <img src="{{ slide.file_url }}" alt="Slide {{ loop.index }}">
                 {% endfor %}
             </div>
-        {% elif tpl.video_file %}
-            <video width="120" controls>
-                <source src="{{ tpl.video_file }}" type="video/mp4">
-                Вашият браузър не поддържа видео таг.
-            </video>
-        {% else %}
-            <p>Не са качени слайдове или видео.</p>
+            <p>Не са качени слайдове.</p>
         {% endif %}
     </div>
 
@@ -150,12 +144,6 @@
         <label for="slide_images">Смени слайдове (5 изображения)</label>
         <input type="file" name="slide_images" accept="image/*" multiple>
         <small>Качете точно 5 изображения или оставете празно за запазване на съществуващите слайдове.</small>
-    </div>
-
-    <div>
-        <label for="video_file">Смени видео</label>
-        <input type="file" name="video_file" accept="video/*">
-        <small>Качете видео, за да замените съществуващите слайдове/видео.</small>
     </div>
 
     <!-- Release checkbox -->

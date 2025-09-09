@@ -1,5 +1,5 @@
 from app.db.session import Base
-from sqlalchemy import Column, String, Integer, Boolean, DateTime, ForeignKey, Date
+from sqlalchemy import Column, String, Integer, Boolean, DateTime, ForeignKey, Date, UniqueConstraint
 from datetime import datetime
 
 
@@ -29,6 +29,9 @@ class PasswordResetToken(Base):
 
 class DailyUserStats(Base):
     __tablename__ = "daily_user_stats"
+    __table_args__ = (
+        UniqueConstraint("date", "user_type", name="uq_date_user_type"),
+    )
 
     id = Column(Integer, primary_key=True, index=True)
     date = Column(Date, default=datetime.utcnow().date, index=True)

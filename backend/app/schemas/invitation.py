@@ -158,7 +158,7 @@ class GameRead(BaseModel):
     id: int
     name: str
     key: str
-    video: Optional[str] = None
+    presentation_image: Optional[str] = None
     model_config = {"from_attributes": True}
 
 
@@ -166,7 +166,7 @@ class SlideshowRead(BaseModel):
     id: int
     name: str
     key: str
-    video: Optional[str] = None
+    presentation_image: Optional[str] = None
     model_config = {"from_attributes": True}
 
 

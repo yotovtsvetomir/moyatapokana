@@ -7,7 +7,7 @@ import os
 
 class WallpaperService(S3Base):
     ALLOWED_TYPES = ["image/jpeg", "image/png", "image/jpg"]
-    MAX_SIZE_MB = 7
+    MAX_SIZE_MB = 1
     OPTIMIZE_QUALITY = 80
     TARGET_SIZE = (1920, 1080)
 
@@ -31,6 +31,7 @@ class WallpaperService(S3Base):
 
         # Check size
         size_mb = buffer.tell() / (1024 * 1024)
+        print(size_mb)
         if size_mb > self.MAX_SIZE_MB:
             raise ValueError(
                 f"Размерът на файла {size_mb:.2f} MB надвишава максимално разрешените {self.MAX_SIZE_MB} MB"

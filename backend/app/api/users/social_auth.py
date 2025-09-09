@@ -5,6 +5,7 @@ from sqlalchemy import func
 from app.db.models.user import User
 from app.db.models.invitation import Invitation, InvitationStatus
 from app.db.session import get_write_session, get_read_session
+from app.services.stats import increment_daily_user_stat
 from app.services.auth import create_session, hash_password, delete_session
 import httpx
 from app.core.settings import settings
@@ -117,6 +118,8 @@ async def google_login(
     # -------------------- Create new session --------------------
     session_id = await create_session(user)
 
+    await increment_daily_user_stat("customer", db_write)
+
     return {
         "session_id": session_id,
         "message": "Login successful",
@@ -212,6 +215,8 @@ async def facebook_login(
 
     # -------------------- Create new session --------------------
     session_id = await create_session(user)
+
+    await increment_daily_user_stat("customer", db_write)
 
     return {
         "session_id": session_id,

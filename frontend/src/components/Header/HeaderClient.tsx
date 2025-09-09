@@ -49,8 +49,8 @@ export default function HeaderClient() {
     { href: '/', label: 'Начало' },
     { href: '/templates', label: 'Шаблони' },
     { href: '/invitations/create', label: 'Създай' },
-    { href: '/blog', label: 'Блог' },
     { href: '/pricing', label: 'Цени' },
+    { href: '/about', label: 'За нас' },
     { href: '/contact', label: 'Контакти' },
   ];
 

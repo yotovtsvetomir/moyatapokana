@@ -314,6 +314,219 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/slideshows/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Slideshows */
+        get: operations["list_slideshows_admin_slideshows__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/slideshows/new": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** New Slideshow Form */
+        get: operations["new_slideshow_form_admin_slideshows_new_get"];
+        put?: never;
+        /** Create Slideshow */
+        post: operations["create_slideshow_admin_slideshows_new_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/slideshows/{slideshow_id}/edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Edit Slideshow Form */
+        get: operations["edit_slideshow_form_admin_slideshows__slideshow_id__edit_get"];
+        put?: never;
+        /** Update Slideshow */
+        post: operations["update_slideshow_admin_slideshows__slideshow_id__edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/slideshows/{slideshow_id}/delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Delete Slideshow */
+        post: operations["delete_slideshow_admin_slideshows__slideshow_id__delete_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/games/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Games */
+        get: operations["list_games_admin_games__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/games/new": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * New Game Form
+         * @description Render the form to create a new game.
+         */
+        get: operations["new_game_form_admin_games_new_get"];
+        put?: never;
+        /** Create Game */
+        post: operations["create_game_admin_games_new_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/games/{game_id}/edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Edit Game Form */
+        get: operations["edit_game_form_admin_games__game_id__edit_get"];
+        put?: never;
+        /** Update Game */
+        post: operations["update_game_admin_games__game_id__edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/games/{game_id}/delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Delete Game */
+        post: operations["delete_game_admin_games__game_id__delete_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/blogs/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Blog Posts */
+        get: operations["list_blog_posts_admin_blogs__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/blogs/new": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** New Blog Form */
+        get: operations["new_blog_form_admin_blogs_new_get"];
+        put?: never;
+        /** Create Blog Post */
+        post: operations["create_blog_post_admin_blogs_new_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/blogs/{post_id}/edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Edit Blog Form */
+        get: operations["edit_blog_form_admin_blogs__post_id__edit_get"];
+        put?: never;
+        /** Update Blog Post */
+        post: operations["update_blog_post_admin_blogs__post_id__edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/blogs/{post_id}/delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Delete Blog Post */
+        post: operations["delete_blog_post_admin_blogs__post_id__delete_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/invitations/games": {
         parameters: {
             query?: never;
@@ -450,7 +663,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/invitations/templates": {
+    "/invitations/templates/list/view": {
         parameters: {
             query?: never;
             header?: never;
@@ -459,10 +672,9 @@ export interface paths {
         };
         /**
          * List Templates
-         * @description List templates with optional search, filters, ordering, pagination,
-         *     and include categories/subcategories for frontend filters.
+         * @description List templates with filters, only released, and nested categories/subcategories.
          */
-        get: operations["list_templates_invitations_templates_get"];
+        get: operations["list_templates_invitations_templates_list_view_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -757,16 +969,133 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/orders/tiers/pricing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Price Tiers */
+        get: operations["get_price_tiers_orders_tiers_pricing_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/blogposts/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Blog Posts
+         * @description Get all blog posts.
+         */
+        get: operations["list_blog_posts_blogposts__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/blogposts/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Blog Post
+         * @description Get a single blog post by ID.
+         */
+        get: operations["get_blog_post_blogposts__slug__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** BlogPostOut */
+        BlogPostOut: {
+            /** Title */
+            title: string;
+            /** Image */
+            image?: string | null;
+            /** Paragraphs */
+            paragraphs: string[];
+            /** Authored By */
+            authored_by?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Updated At */
+            updated_at?: string | null;
+            /** Id */
+            id: number;
+            /** Slug */
+            slug: string;
+        };
         /** Body_admin_login_admin_login_post */
         Body_admin_login_admin_login_post: {
             /** Email */
             email: string;
             /** Password */
             password: string;
+        };
+        /** Body_create_blog_post_admin_blogs_new_post */
+        Body_create_blog_post_admin_blogs_new_post: {
+            /** Title */
+            title: string;
+            /** Paragraphs */
+            paragraphs: string;
+            /** Authored By */
+            authored_by?: string;
+            /**
+             * Image
+             * Format: binary
+             */
+            image?: string;
+        };
+        /** Body_create_game_admin_games_new_post */
+        Body_create_game_admin_games_new_post: {
+            /** Name */
+            name: string;
+            /** Key */
+            key: string;
+            /**
+             * Presentation Image
+             * Format: binary
+             */
+            presentation_image?: string;
+        };
+        /** Body_create_slideshow_admin_slideshows_new_post */
+        Body_create_slideshow_admin_slideshows_new_post: {
+            /** Name */
+            name: string;
+            /** Key */
+            key: string;
+            /**
+             * Presentation Image
+             * Format: binary
+             */
+            presentation_image?: string;
         };
         /** Body_create_template_admin_templates_new_post */
         Body_create_template_admin_templates_new_post: {
@@ -777,7 +1106,7 @@ export interface components {
             /** Category Id */
             category_id?: number;
             /** Subcategory Id */
-            subcategory_id?: number;
+            subcategory_id?: string | null;
             /** Font Value */
             font_value?: string;
             /** Primary Color */
@@ -805,16 +1134,49 @@ export interface components {
             music?: string;
             /** Slide Images */
             slide_images?: string[];
+        };
+        /** Body_update_blog_post_admin_blogs__post_id__edit_post */
+        Body_update_blog_post_admin_blogs__post_id__edit_post: {
+            /** Title */
+            title: string;
+            /** Paragraphs */
+            paragraphs: string;
+            /** Authored By */
+            authored_by?: string;
             /**
-             * Video File
+             * Image
              * Format: binary
              */
-            video_file?: string;
+            image?: string;
+        };
+        /** Body_update_game_admin_games__game_id__edit_post */
+        Body_update_game_admin_games__game_id__edit_post: {
+            /** Name */
+            name: string;
+            /** Key */
+            key: string;
+            /**
+             * Presentation Image
+             * Format: binary
+             */
+            presentation_image?: string;
         };
         /** Body_update_profile_users_me_patch */
         Body_update_profile_users_me_patch: {
             /** Profile Picture */
             profile_picture?: string | null;
+        };
+        /** Body_update_slideshow_admin_slideshows__slideshow_id__edit_post */
+        Body_update_slideshow_admin_slideshows__slideshow_id__edit_post: {
+            /** Name */
+            name: string;
+            /** Key */
+            key: string;
+            /**
+             * Presentation Image
+             * Format: binary
+             */
+            presentation_image?: string;
         };
         /** Body_update_template_admin_templates__template_id__edit_post */
         Body_update_template_admin_templates__template_id__edit_post: {
@@ -825,7 +1187,7 @@ export interface components {
             /** Category Id */
             category_id?: number;
             /** Subcategory Id */
-            subcategory_id?: number;
+            subcategory_id?: string | null;
             /**
              * Wallpaper
              * Format: binary
@@ -836,13 +1198,10 @@ export interface components {
              * Format: binary
              */
             music?: string;
+            /** Font Value */
+            font_value?: string;
             /** Slide Images */
             slide_images?: string[];
-            /**
-             * Video File
-             * Format: binary
-             */
-            video_file?: string;
             /** Slideshow Key */
             slideshow_key?: string;
             /** Primary Color */
@@ -880,17 +1239,12 @@ export interface components {
             /** Selected Slideshow */
             selected_slideshow?: string | null;
         };
-        /** CategoryRead */
-        CategoryRead: {
+        /** CategoryTemplateRead */
+        CategoryTemplateRead: {
             /** Id */
             id: number;
             /** Name */
             name: string;
-            /**
-             * Subcategories
-             * @default []
-             */
-            subcategories: components["schemas"]["SubCategoryRead"][] | null;
         };
         /** EventRead */
         EventRead: {
@@ -962,8 +1316,8 @@ export interface components {
             name: string;
             /** Key */
             key: string;
-            /** Video */
-            video?: string | null;
+            /** Presentation Image */
+            presentation_image?: string | null;
         };
         /** GoogleLoginPayload */
         GoogleLoginPayload: {
@@ -1409,6 +1763,13 @@ export interface components {
             /** Active */
             active: boolean;
         };
+        /** PriceTierReadWithChoices */
+        PriceTierReadWithChoices: {
+            /** Tiers */
+            tiers: components["schemas"]["PriceTierRead"][];
+            /** Currencies */
+            currencies: string[];
+        };
         /** RSVPInvitationRead */
         RSVPInvitationRead: {
             /** Id */
@@ -1489,8 +1850,8 @@ export interface components {
             name: string;
             /** Key */
             key: string;
-            /** Video */
-            video?: string | null;
+            /** Presentation Image */
+            presentation_image?: string | null;
         };
         /** Stats */
         Stats: {
@@ -1587,8 +1948,6 @@ export interface components {
             /** Id */
             id: number;
             status?: components["schemas"]["TemplateStatus"] | null;
-            category?: components["schemas"]["CategoryRead"] | null;
-            subcategory?: components["schemas"]["SubCategoryRead"] | null;
             /**
              * Created At
              * Format: date-time
@@ -1599,6 +1958,8 @@ export interface components {
              * Format: date-time
              */
             updated_at: string;
+            category?: components["schemas"]["CategoryTemplateRead"] | null;
+            subcategory?: components["schemas"]["SubCategoryRead"] | null;
             /**
              * Slideshow Images
              * @default []
@@ -2338,6 +2699,606 @@ export interface operations {
             };
         };
     };
+    list_slideshows_admin_slideshows__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                admin_session_id?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    new_slideshow_form_admin_slideshows_new_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                admin_session_id?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_slideshow_admin_slideshows_new_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                admin_session_id?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_create_slideshow_admin_slideshows_new_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    edit_slideshow_form_admin_slideshows__slideshow_id__edit_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slideshow_id: number;
+            };
+            cookie?: {
+                admin_session_id?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_slideshow_admin_slideshows__slideshow_id__edit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slideshow_id: number;
+            };
+            cookie?: {
+                admin_session_id?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_update_slideshow_admin_slideshows__slideshow_id__edit_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_slideshow_admin_slideshows__slideshow_id__delete_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slideshow_id: number;
+            };
+            cookie?: {
+                admin_session_id?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_games_admin_games__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                admin_session_id?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    new_game_form_admin_games_new_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                admin_session_id?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_game_admin_games_new_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                admin_session_id?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_create_game_admin_games_new_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    edit_game_form_admin_games__game_id__edit_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                game_id: number;
+            };
+            cookie?: {
+                admin_session_id?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_game_admin_games__game_id__edit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                game_id: number;
+            };
+            cookie?: {
+                admin_session_id?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_update_game_admin_games__game_id__edit_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_game_admin_games__game_id__delete_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                game_id: number;
+            };
+            cookie?: {
+                admin_session_id?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_blog_posts_admin_blogs__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                admin_session_id?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    new_blog_form_admin_blogs_new_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                admin_session_id?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_blog_post_admin_blogs_new_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                admin_session_id?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_create_blog_post_admin_blogs_new_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    edit_blog_form_admin_blogs__post_id__edit_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                post_id: number;
+            };
+            cookie?: {
+                admin_session_id?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_blog_post_admin_blogs__post_id__edit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                post_id: number;
+            };
+            cookie?: {
+                admin_session_id?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_update_blog_post_admin_blogs__post_id__edit_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_blog_post_admin_blogs__post_id__delete_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                post_id: number;
+            };
+            cookie?: {
+                admin_session_id?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_games_invitations_games_get: {
         parameters: {
             query?: never;
@@ -2561,7 +3522,7 @@ export interface operations {
             };
         };
     };
-    list_templates_invitations_templates_get: {
+    list_templates_invitations_templates_list_view_get: {
         parameters: {
             query?: {
                 page?: number;
@@ -3128,6 +4089,88 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OrderRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_price_tiers_orders_tiers_pricing_get: {
+        parameters: {
+            query?: {
+                currency?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PriceTierReadWithChoices"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_blog_posts_blogposts__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BlogPostOut"][];
+                };
+            };
+        };
+    };
+    get_blog_post_blogposts__slug__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BlogPostOut"];
                 };
             };
             /** @description Validation Error */

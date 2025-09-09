@@ -154,13 +154,22 @@
   }
 }
 
+@keyframes slideDownFromTop {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
 .exampleSearches {
   position: fixed;
   top: var(--mobile-header-height);
   left: 0;
   right: 0;
   margin: 0 auto;
-  z-index: 1000;
+  z-index: 99;
 }
 
 .exampleSearchesInner {
@@ -168,6 +177,9 @@
   border: 1px solid #eee;
   border-bottom-left-radius: 8px;
   border-bottom-right-radius: 8px;
+
+  transform: translateY(-100%);
+  animation: slideDownFromTop 0.3s ease-out forwards;
 }
 
 .examples {

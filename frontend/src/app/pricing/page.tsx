@@ -27,7 +27,7 @@ async function fetchTiers(currency: string): Promise<PriceTierResponse> {
 export default function PricingPage() {
   const [tiers, setTiers] = useState<PriceTier[]>([])
   const [currencies, setCurrencies] = useState<Option[]>([])
-  const [selectedCurrency, setSelectedCurrency] = useState<Option>({ value: 'BGN', label: 'BGN' }) // default BGN
+  const [selectedCurrency, setSelectedCurrency] = useState<Option>({ value: 'BGN', label: 'BGN' })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -72,25 +72,42 @@ export default function PricingPage() {
       <div className={styles.tiersGrid}>
         {tiers.map((tier) => (
           <div key={tier.id} className={styles.tierCard}>
-            <h2 className={styles.tierPrice}>
-              {tier.price.toFixed(2)} {tier.currency}
-            </h2>
-            <p className={styles.tierDuration}>{formatDuration(tier.duration_days)}</p>
+            <div className={styles.tierContent}>
+              <h2>
+                {tier.price.toFixed(2)} {tier.currency}
+              </h2>
+              <p>/</p>
+              <p>{formatDuration(tier.duration_days)}</p>
+            </div>
 
             <ul className={styles.tierFeatures}>
-              <li>Поканата</li>
-              <li>Статистика</li>
-              <li>Информация за гостите</li>
-              <li>Линк за споделяне</li>
+              <li>
+                <span className="material-symbols-outlined">check</span>
+                <p>Игра</p>
+              </li>
+              <li>
+                <span className="material-symbols-outlined">check</span>
+                <p>Анимация</p>
+              </li>
+              <li>
+                <span className="material-symbols-outlined">check</span>
+                <p>Покана</p>
+              </li>
+              <li>
+                <span className="material-symbols-outlined">check</span>
+                <p>Статистика</p>
+              </li>
+              <li>
+                <span className="material-symbols-outlined">check</span>
+                <p>Информация за гостите</p>
+              </li>
+              <li>
+                <span className="material-symbols-outlined">check</span>
+                <p>Линк за споделяне</p>
+              </li>
             </ul>
           </div>
         ))}
-      </div>
-
-      <div className={styles.tierInfo}>
-        <h2>Свържете се с нас</h2>
-        <p>Повече от 6 месеца</p>
-        <p>support@moyatapokana.com</p>
       </div>
     </div>
   )

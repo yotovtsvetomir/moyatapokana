@@ -675,6 +675,7 @@ async def get_price_tiers(
     all_tiers = result.scalars().all()
     currencies = sorted(list({tier.currency for tier in all_tiers}))
     filtered_tiers = [tier for tier in all_tiers if not currency or tier.currency == currency]
+    filtered_tiers = sorted(filtered_tiers, key=lambda t: t.price)
 
     return PriceTierReadWithChoices(
         tiers=filtered_tiers,

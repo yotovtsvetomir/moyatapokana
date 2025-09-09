@@ -31,7 +31,7 @@ export default function Footer() {
             <div className={styles.linksWrapper}>
               <nav className={styles.links} aria-label="Footer navigation">
                 <TextLink color="muted" href="/about">За нас</TextLink>
-                <TextLink color="muted" href="/blog">Блог</TextLink>
+                <TextLink color="muted" href="/blogposts">Блог</TextLink>
                 <TextLink color="muted" href="/contact">Контакти</TextLink>
                 <TextLink color="muted" href="/privacy">Поверителност</TextLink>
                 <TextLink color="muted" href="/data-deletion">Изтриване на данни</TextLink>

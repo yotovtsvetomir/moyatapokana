@@ -15,6 +15,7 @@ from app.db.session import Base
 from app.db.models import user  # noqa: F401
 from app.db.models import invitation  # noqa: F401
 from app.db.models import order  # noqa: F401
+from app.db.models import blog # noqa: F401
 
 # Alembic Config object
 config = context.config

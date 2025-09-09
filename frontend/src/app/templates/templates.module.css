@@ -11,7 +11,6 @@
 
 .templateList {
 	list-style: none;
-	padding-bottom: 2rem;
 }
 
 .templateItem {
@@ -122,4 +121,11 @@
 	.filters {
 		margin-bottom: 2rem;
 	}
+}
+
+.scrollEnd {
+  text-align: center;
+  font-size: var(--font-lg);
+  margin-top: 1rem;
+  margin-bottom: 2rem;
 }

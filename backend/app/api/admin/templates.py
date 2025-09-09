@@ -17,14 +17,16 @@ from app.core.permissions import is_admin_authenticated
 router = APIRouter()
 jinja_templates = Jinja2Templates(directory="app/templates/admin/templates")
 
+
 # -------------------- Helpers --------------------
 async def upload_file(file: UploadFile, service, old_url: str | None = None):
     if old_url:
         try:
-            await service.delete_slide(old_url)  # works for slide/video
+            await service.delete_slide(old_url)
         except Exception as e:
             print("Failed to delete old file:", e)
     return await service.upload_slide(file)
+
 
 # -------------------- List --------------------
 @router.get("/")
@@ -50,7 +52,8 @@ async def list_templates(
         "list.html", {"request": request, "templates": templates_list}
     )
 
-# -------------------- New --------------------
+
+# -------------------- New Form --------------------
 @router.get("/new")
 async def new_template_form(
     request: Request,
@@ -75,7 +78,8 @@ async def new_template_form(
         },
     )
 
-# -------------------- New --------------------
+
+# -------------------- Create --------------------
 @router.post("/new")
 async def create_template(
     request: Request,
@@ -92,19 +96,14 @@ async def create_template(
     wallpaper: UploadFile = File(None),
     music: UploadFile = File(None),
     slide_images: list[UploadFile] = File(None),
-    video_file: UploadFile = File(None),
     db: AsyncSession = Depends(get_write_session),
     admin=Depends(is_admin_authenticated),
 ):
     # Filter out empty uploads
     slide_images = [f for f in (slide_images or []) if f.filename]
-    video_file = video_file if video_file and video_file.filename else None
-    subcategory_id = int(subcategory_id) if subcategory_id else None
 
-    # Validate mutually exclusive media
-    if slide_images and video_file:
-        raise HTTPException(400, "Upload either 5 slides or a video, not both")
-    if slide_images and len(slide_images) != 5:
+    # Enforce exactly 5 slides
+    if len(slide_images) != 5:
         raise HTTPException(400, "Exactly 5 slides must be uploaded")
 
     # Convert slideshow_key to numeric id
@@ -122,7 +121,7 @@ async def create_template(
         slug=generate_slug(title),
         description=description,
         category_id=category_id,
-        subcategory_id=subcategory_id,
+        subcategory_id=int(subcategory_id) if subcategory_id else None,
         selected_font=font_value,
         primary_color=primary_color,
         secondary_color=secondary_color,
@@ -140,25 +139,23 @@ async def create_template(
     db.add(tpl)
     await db.commit()  # commit to get tpl.id
 
-    # Handle slides / video
+    # Handle slides
     slide_service = SlideService()
-    if slide_images:
-        for idx, f in enumerate(slide_images):
-            url = await slide_service.upload_slide(f)
-            slide = SlideshowImage(
-                file_url=url,
-                template_id=tpl.id,
-                slideshow_id=slideshow_id,
-                order=idx,
-            )
-            db.add(slide)
-    if video_file:
-        tpl.video_file = await slide_service.upload_slide(video_file)
+    for idx, f in enumerate(slide_images):
+        url = await slide_service.upload_slide(f)
+        slide = SlideshowImage(
+            file_url=url,
+            template_id=tpl.id,
+            slideshow_id=slideshow_id,
+            order=idx,
+        )
+        db.add(slide)
 
     await db.commit()
     return RedirectResponse(url="/admin/templates/", status_code=303)
 
-# Show edit form
+
+# -------------------- Edit Form --------------------
 @router.get("/{template_id}/edit")
 async def edit_template_form(
     request: Request,
@@ -203,7 +200,7 @@ async def edit_template_form(
     )
 
 
-# -------------------- Edit --------------------
+# -------------------- Update --------------------
 @router.post("/{template_id}/edit")
 async def update_template(
     request: Request,
@@ -216,7 +213,6 @@ async def update_template(
     music: UploadFile = File(None),
     font_value: str = Form(None),
     slide_images: list[UploadFile] = File(None),
-    video_file: UploadFile = File(None),
     slideshow_key: str = Form(None),
     primary_color: str = Form(None),
     secondary_color: str = Form(None),
@@ -232,8 +228,7 @@ async def update_template(
     tpl.slug = generate_slug(title)
     tpl.description = description
     tpl.category_id = category_id
-    subcategory_id = int(subcategory_id) if subcategory_id not in (None, "") else None
-    tpl.subcategory_id = subcategory_id
+    tpl.subcategory_id = int(subcategory_id) if subcategory_id not in (None, "") else None
     tpl.selected_slideshow = slideshow_key
     tpl.primary_color = primary_color
     tpl.secondary_color = secondary_color
@@ -295,15 +290,6 @@ async def update_template(
             )
             db.add(slide)
 
-    # Update video
-    if video_file and video_file.filename:
-        if tpl.video_file:
-            try:
-                await slide_service.delete_slide(tpl.video_file)
-            except Exception as e:
-                print("Failed to delete old video:", e)
-        tpl.video_file = await slide_service.upload_slide(video_file)
-
     db.add(tpl)
     await db.commit()
     return RedirectResponse(url="/admin/templates/", status_code=303)
@@ -347,13 +333,6 @@ async def delete_template(
             await db.delete(slide)
         except Exception as e:
             print("Failed to delete slide:", e)
-
-    # Delete video
-    if tpl.video_file:
-        try:
-            await slide_service.delete_slide(tpl.video_file)
-        except Exception as e:
-            print("Failed to delete video:", e)
 
     # Delete template itself
     await db.delete(tpl)

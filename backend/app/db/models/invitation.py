@@ -71,11 +71,6 @@ class InvitationTemplateBase:
     def background_audio(cls):
         return Column(String, nullable=True)
 
-    # New field for video
-    @declared_attr
-    def video_file(cls):
-        return Column(String, nullable=True)
-
     # Relationships
     @declared_attr
     def font_obj(cls):
@@ -151,7 +146,7 @@ class Game(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
     key = Column(String, unique=True, nullable=False)
-    video = Column(String, nullable=True)
+    presentation_image = Column(String, nullable=True)
 
     def __str__(self):
         return self.name
@@ -162,7 +157,7 @@ class Slideshow(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
     key = Column(String, unique=True, nullable=False)
-    video = Column(String, nullable=True)
+    presentation_image = Column(String, nullable=True)
     images = relationship(
         "SlideshowImage", back_populates="slideshow", cascade="all, delete-orphan"
     )

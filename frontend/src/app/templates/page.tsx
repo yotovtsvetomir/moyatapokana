@@ -1,11 +1,10 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import Image from 'next/image';
 import { useSearchParams } from "next/navigation";
 import { useDebounce } from "@/hooks/useDebounce";
 import { Input } from '@/ui-components/Input/Input';
-import Pagination from '@/ui-components/Pagination/Pagination';
 import { Spinner } from '@/ui-components/Spinner/Spinner';
 import styles from './templates.module.css';
 import type { components } from '@/shared/types';
@@ -124,6 +123,8 @@ export default function TemplatesPage() {
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+
   const [categoryId, setCategoryId] = useState<number | null>(null);
   const [subcategoryId, setSubcategoryId] = useState<number | null>(null);
   const [categories, setCategories] = useState<CategoryWithSubs[]>([]);
@@ -134,7 +135,9 @@ export default function TemplatesPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const debouncedInput = useDebounce(inputSearchValue, 700);
 
-  const fetchTemplates = async () => {
+  const fetchTemplates = useCallback(async (append = false) => {
+    if (loading) return;
+
     try {
       setLoading(true);
       setError(null);
@@ -155,21 +158,26 @@ export default function TemplatesPage() {
       if (!res.ok) throw new Error(data.error || 'Грешка при зареждане на шаблони');
 
       // Templates
-      setTemplates(data.templates.items);
+      setTemplates(prev =>
+        append ? [...prev, ...data.templates.items] : data.templates.items
+      );
+
       setTotalPages(data.templates.total_pages);
+      setHasMore(data.templates.current_page < data.templates.total_pages);
 
       // Categories
-      setCategories(data.filters.categories);
-      setCategoryOptions([
-        { value: '', label: 'Без' }, // empty option
-        ...data.filters.categories.map(c => ({ value: c.id.toString(), label: c.name })),
-      ]);
+      if (!append) {
+        setCategories(data.filters.categories);
+        setCategoryOptions([
+          { value: '', label: 'Без' },
+          ...data.filters.categories.map(c => ({ value: c.id.toString(), label: c.name })),
+        ]);
+      }
 
-      // Reset subcategory options if category changed
       if (categoryId) {
         const selectedCat = data.filters.categories.find(c => c.id === categoryId);
         setSubcategoryOptions([
-          { value: '', label: 'Без' }, // empty option
+          { value: '', label: 'Без' },
           ...(selectedCat ? selectedCat.subcategories.map(s => ({ value: s.id.toString(), label: s.name })) : []),
         ]);
       } else {
@@ -182,7 +190,7 @@ export default function TemplatesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, searchTerm, categoryId, subcategoryId, loading]);
 
   useEffect(() => {
     const param = searchParams.get("search") || "";
@@ -194,9 +202,29 @@ export default function TemplatesPage() {
   }, [debouncedInput]);
 
   useEffect(() => {
-    fetchTemplates();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, searchTerm, categoryId, subcategoryId]);
+    setPage(1);
+    fetchTemplates(false);
+  }, [searchTerm, categoryId, subcategoryId]);
+
+  useEffect(() => {
+    if (page > 1) fetchTemplates(true);
+  }, [page]);
+
+  // Infinite scroll handler
+  useEffect(() => {
+    const handleScroll = () => {
+      if (
+        window.innerHeight + window.scrollY >= document.body.offsetHeight - 300 &&
+        hasMore &&
+        !loading
+      ) {
+        setPage(prev => prev + 1);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [hasMore, loading]);
 
   return (
     <div className="container fullHeight centerWrapper">
@@ -222,12 +250,12 @@ export default function TemplatesPage() {
                   value: categoryId.toString(),
                   label: categoryOptions.find(o => o.value === categoryId.toString())?.label || '',
                 }
-              : { value: '', label: 'Изберете категория' } // changed placeholder
+              : { value: '', label: 'Изберете категория' }
           }
           onChange={(option) => {
             const newCatId = option && option.value !== '' ? parseInt(option.value, 10) : null;
             setCategoryId(newCatId);
-            setSubcategoryId(null); // reset subcategory
+            setSubcategoryId(null);
 
             if (newCatId) {
               const selectedCat = categories.find(c => c.id === newCatId);
@@ -272,25 +300,16 @@ export default function TemplatesPage() {
         />
       </div>
 
-      {loading ? (
-        <Spinner />
-      ) : error ? (
-        <p className={styles.error}>{error}</p>
-      ) : (
-        <>
-          <ul className={styles.templateList}>
-            {templates.map(template => (
-              <TemplateItem key={template.id} template={template} />
-            ))}
-          </ul>
+      {error && <p className={styles.error}>{error}</p>}
 
-          <Pagination
-            currentPage={page}
-            totalPages={totalPages}
-            onPageChange={(p) => setPage(p)}
-          />
-        </>
-      )}
+      <ul className={styles.templateList}>
+        {templates.map(template => (
+          <TemplateItem key={template.id} template={template} />
+        ))}
+      </ul>
+
+      {loading && <Spinner />}
+      {!hasMore && <p className={styles.scrollEnd}>Няма повече резултати</p>}
     </div>
   );
 }

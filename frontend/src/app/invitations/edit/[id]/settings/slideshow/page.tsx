@@ -35,7 +35,7 @@ export default function Page() {
   const [showBackModal, setShowBackModal] = useState(false)
   const [showOverwriteModal, setShowOverwriteModal] = useState(false)
 
-  const toOption = (s: SlideshowRead): Option => ({ label: s.name, value: s.id.toString(), id: s.id })
+  const toOption = (s: SlideshowRead): Option => ({ label: s.name, value: s.id.toString(), id: s.id, presentationImage: s.presentation_image })
 
   // -------------------- totalSlides --------------------
   const totalSlides = slides.filter(s => s.file || s.file_url).length
@@ -180,6 +180,18 @@ export default function Page() {
         onChange={setSelectedSlideshow}
         placeholder="Избери слайдшоу"
       />
+
+      {selectedSlideshow && selectedSlideshow.label !== 'Без' &&
+        <div className="presentImageSlideshow">
+          <Image
+            src={selectedSlideshow.presentationImage}
+            alt="Wallpaper Preview"
+            fill
+            style={{ objectFit: 'contain' }}
+            unoptimized
+          />
+        </div>
+      }
 
       {selectedSlideshow && selectedSlideshow.value !== '' && (
         <div className={styles.slidesContainer}>

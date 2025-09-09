@@ -138,3 +138,19 @@ a {
     padding-top: 0 !important;
   }
 }
+
+.presentImage {
+  margin: 1rem 0;
+  height: 500px;
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.presentImageSlideshow {
+  margin-top: 1rem;
+  aspect-ratio: 16 / 9;
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+}

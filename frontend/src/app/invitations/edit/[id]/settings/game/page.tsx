@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 
 import { useInvitation } from '@/context/InvitationContext'
 import { Button } from '@/ui-components/Button/Button'
@@ -17,6 +18,7 @@ const toOption = (game: GameRead): Option => ({
   label: game.name,
   value: game.key,
   id: game.id,
+  presentationImage: game.presentation_image
 })
 
 export default function GameSettingsPage() {
@@ -94,6 +96,18 @@ export default function GameSettingsPage() {
         }}
         placeholder="Избери игра"
       />
+
+      {selectedGame &&
+        <div className="presentImage">
+          <Image
+            src={selectedGame.presentationImage}
+            alt="Wallpaper Preview"
+            fill
+            style={{ objectFit: 'contain' }}
+            unoptimized
+          />
+        </div>
+      }
 
       <div className="editActions">
         <Link href={`/invitations/edit/${id}/settings`} style={{ width: '47%' }}>

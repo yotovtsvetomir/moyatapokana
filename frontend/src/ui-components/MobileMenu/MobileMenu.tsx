@@ -73,10 +73,6 @@ export default function MobileMenu({
               initial="hidden"
               animate={footControls}
             >
-              <motion.div className={styles.accCta} variants={midItemVariants}>
-                <p>Създавай и споделяй покани лесно.</p>
-              </motion.div>
-
               <motion.div className={styles.account} variants={midItemVariants}>
                 <Link href="/login" onClick={onClose}>
                   <Button size="large" variant="secondary">Вход</Button>

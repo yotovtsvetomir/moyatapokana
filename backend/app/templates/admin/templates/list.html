@@ -11,7 +11,6 @@
     tr:hover { background-color: #f1f2f6; }
     img { max-width: 40px; max-height: 40px; border-radius: 4px; }
     audio { width: 150px; }
-    video { border-radius: 4px; }
     form button { background-color: #e84118; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; transition: background-color 0.2s; }
     form button:hover { background-color: #c23616; }
     a { color: #00a8ff; text-decoration: none; }
@@ -32,7 +31,7 @@
             <th>Подкатегория</th>
             <th>Фонова снимка</th>
             <th>Музика</th>
-            <th>Слайд / Видео</th>
+            <th>Слайдове</th>
             <th>Публикувано</th>
             <th>Създаден на</th>
             <th>Действия</th>
@@ -40,7 +39,7 @@
     </thead>
     <tbody>
         {% for tpl in templates %}
-        <tr class="{% if not tpl.wallpaper or (not tpl.slideshow_images and not tpl.video_file) %}missing-file{% endif %}">
+        <tr class="{% if not tpl.wallpaper or (not tpl.slideshow_images) %}missing-file{% endif %}">
             <td>{{ tpl.id }}</td>
             <td>{{ tpl.title }}</td>
             <td>{{ tpl.category.name if tpl.category else '' }}</td>
@@ -67,13 +66,6 @@
                     {% for slide in tpl.slideshow_images[:5] %}
                         <img src="{{ slide.file_url }}" alt="Слайд {{ loop.index }}">
                     {% endfor %}
-                {% elif tpl.video_file %}
-                    <video width="120" controls>
-                        <source src="{{ tpl.video_file }}" type="video/mp4">
-                        Вашият браузър не поддържа видео елемента.
-                    </video>
-                {% else %}
-                    -
                 {% endif %}
             </td>
             <td>{{ 'Да' if tpl.is_released else 'Не' }}</td>
