@@ -1,0 +1,47 @@
+.headingBanner {
+  margin-top: 2rem;
+  width: 90%;
+  max-width: 100%;
+  padding: 0.85rem 0;
+  background: var(--invitation-bg-medium);
+  border: 2px solid color-mix(in srgb, var(--invitation-primary) 80%, transparent);
+  border-radius: 1.6rem;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 24px color-mix(in srgb, var(--invitation-primary) 33%, transparent);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.headingBanner::before,
+.headingBanner::after {
+  content: "";
+  position: absolute;
+  width: 46px;
+  height: 10px;
+  background: linear-gradient(90deg, var(--invitation-primary), var(--invitation-bg-light));
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.headingBanner::before { left: -20px; border-radius: 4px 0 0 4px; }
+.headingBanner::after { right: -20px; border-radius: 0 4px 4px 0; }
+
+.heading {
+  font-family: var(--font-dynamic), sans-serif;
+  font-size: 1.7rem;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.3;
+  letter-spacing: 0.02em;
+  color: var(--invitation-text-main);
+  text-shadow: 0 1px 2px rgba(24,24,24,0.06), 0 1px 6px color-mix(in srgb, var(--invitation-primary) 25%, transparent);
+  padding: 0 2vw;
+  pointer-events: none;
+  width: 100%;
+  box-sizing: border-box;
+  z-index: 2;
+}

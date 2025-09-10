@@ -22,12 +22,12 @@
   height: auto;
   margin-bottom: 25px;
   overflow: hidden;
-  border-radius: 6px;
+  border-radius: 12px;
 }
 
 .content p {
   font-size: 1rem;
   color: var(--color-dark-300);
-  line-height: 1.6;
+  line-height: 1.7;
   margin-bottom: 15px;
 }

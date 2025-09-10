@@ -214,6 +214,7 @@ async def update_template(
     font_value: str = Form(None),
     slide_images: list[UploadFile] = File(None),
     slideshow_key: str = Form(None),
+    game_key: str = Form(None),
     primary_color: str = Form(None),
     secondary_color: str = Form(None),
     is_released: bool = Form(False),
@@ -230,6 +231,7 @@ async def update_template(
     tpl.category_id = category_id
     tpl.subcategory_id = int(subcategory_id) if subcategory_id not in (None, "") else None
     tpl.selected_slideshow = slideshow_key
+    tpl.selected_game = game_key
     tpl.primary_color = primary_color
     tpl.secondary_color = secondary_color
     tpl.is_released = is_released

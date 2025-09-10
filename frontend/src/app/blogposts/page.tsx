@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import { Button } from '@/ui-components/Button/Button'
 import styles from "./BlogPosts.module.css";
 import type { components } from '@/shared/types';
 
@@ -46,15 +47,31 @@ export default function BlogPostsPage() {
                   fill
                   className={styles.image}
                   unoptimized
-                  style={{ objectFit: 'cover', borderRadius: '6px' }}
+                  style={{ objectFit: 'cover' }}
                 />
               </div>
             )}
             <h2 className={styles.title}>{post.title}</h2>
             <p className={styles.author}>{post.authored_by ? `От ${post.authored_by}` : ""}</p>
-            <p className={styles.date}>{new Date(post.created_at).toLocaleDateString("bg-BG")}</p>
+            <p className={styles.date}>
+              {new Date(post.updated_at).toLocaleDateString("bg-BG", {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric"
+              })}
+            </p>
             <p className={styles.excerpt}>{post.paragraphs[0].slice(0, 120)}...</p>
-            <a href={`/blogposts/${post.slug}`} className={styles.readMore}>Прочети повече</a>
+            <div className={styles.cardActions}>
+              <Button
+                variant="primary"
+                width="100%"
+                icon="article"
+                iconPosition="left"
+                href={`/blogposts/${post.slug}`}
+              >
+                Прочети повече
+              </Button>
+            </div>
           </div>
         ))}
       </div>

@@ -3,16 +3,13 @@
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import Yellow from "@/assets/yellow.png";
-import Red from "@/assets/red.png";
-import Blue from "@/assets/blue.png";
-import Green from "@/assets/green.png";
+import Bubble from "@/assets/bubble.png";
 import GameHeader from "@/components/GameHeader/GameHeader";
 import GameFooter from "@/components/GameFooter/GameFooter";
 import GameSuccess from "@/components/GameSuccess/GameSuccess";
-import styles from "./balloons.module.css";
+import styles from "./bubbles.module.css";
 
-const BALLOON_IMAGES = [Yellow, Red, Blue, Green];
+const BALLOON_IMAGES = [Bubble];
 const BALLOON_WIDTH = 130;
 const BALLOON_HEIGHT = 130;
 const POP_TARGET = 7;
@@ -127,11 +124,10 @@ export default function BalloonGame() {
   return (
     <div className={styles.wrapper}>
       <Image src="/bgr.webp" alt="Background" fill style={{ objectFit: "cover", position: "absolute", top: 0, left: 0, zIndex: 0 }} priority />
-      <audio ref={popSound} src="/pop.wav" preload="auto" />
+      <audio ref={popSound} src="/bubblepop.wav" preload="auto" />
       <audio ref={victorySound} src="/tada.wav" preload="auto" />
-      <audio ref={progressSound} src="/blip.wav" preload="auto" />
 
-      <GameHeader title={`Спукай ${POP_TARGET} балона и виж изненада!`} />
+      <GameHeader title={`Спукай ${POP_TARGET} мехурчета и виж изненада!`} />
 
       <div style={{ flex: 1, position: "relative" }}>
         {balloons.map((b) => {
@@ -167,7 +163,7 @@ export default function BalloonGame() {
       {showSuccess && (
         <GameSuccess
           title="🎉 Браво! 🎉"
-          message="Ти спука всички балони! Ето твоята изненада!"
+          message="Ти спука всички мехурчета! Ето твоята изненада!"
           onConfirm={handleSuccess}
           onSkip={showSkip ? handleSuccess : undefined}
           onReset={() => {

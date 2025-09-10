@@ -39,7 +39,12 @@ export default function BlogPostPage() {
     <div className="container fullHeight centerWrapper">
       <h1 className={styles.title}>{post.title}</h1>
       <p className={styles.meta}>
-        {post.authored_by ? `От ${post.authored_by}` : ""} | {new Date(post.created_at).toLocaleDateString()}
+        {post.authored_by ? `От ${post.authored_by}` : ""} {' / '}
+        {new Date(post.updated_at).toLocaleDateString("bg-BG", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric"
+        })}
       </p>
       {post.image && (
         <div className={styles.imageWrapper}>

@@ -1,0 +1,88 @@
+.progressBarFooter {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 24px 0 22px 0;
+  background: var(--invitation-bg-medium);
+  position: relative;
+  z-index: 2;
+}
+
+.progressBarFooter button {
+  padding: 0.78em 2.1em;
+  font-size: 1.18rem;
+  background: linear-gradient(90deg, var(--invitation-primary) 15%, var(--invitation-bg-light) 100%);
+  color: var(--invitation-text-main);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 700;
+  box-shadow: 0 2px 8px 0 color-mix(in srgb, var(--invitation-primary) 38%, transparent);
+  letter-spacing: 0.04em;
+  transition: background 0.22s;
+  margin-top: 1.3rem;
+}
+
+@media (min-width: 767px) {
+  .progressBarFooter button {
+    position: absolute;
+    right: 2rem;
+    bottom: 1rem;
+  }
+}
+
+.progressBarWrapper {
+  width: 320px;
+  height: 40px;
+  background: var(--invitation-bg-medium);
+  border-radius: 2rem;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 4px 24px 0 color-mix(in srgb, var(--invitation-primary) 20%, transparent), 0 1.5px 7px 0 color-mix(in srgb, var(--invitation-primary) 8%, transparent);
+}
+
+.progressBarBG {
+  width: 100%;
+  height: 100%;
+  border-radius: 2rem;
+  background: linear-gradient(90deg, var(--invitation-primary) 0%, var(--invitation-bg-light) 100%);
+  opacity: 0.17;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 0;
+}
+
+.progressBarFill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 40px;
+  border-radius: 2rem;
+  background: linear-gradient(90deg, var(--invitation-primary) 0%, var(--invitation-bg-light) 100%);
+  box-shadow: 0 2px 8px 0 color-mix(in srgb, var(--invitation-primary) 18%, transparent);
+  transition: width 0.4s cubic-bezier(.42,0,.58,1);
+  z-index: 1;
+}
+
+.progressBarText {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--invitation-text-main);
+  font-family: var(--font-dynamic), sans-serif;
+  font-size: 1.28rem;
+  font-weight: 800;
+  text-shadow: 0 2px 12px #0008, 0 0 8px var(--invitation-bg-light);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+}
+
+.currentNum { font-size: 1.45em; font-weight: 900; color: var(--invitation-text-main); transition: color 0.3s; }
+.totalNum { font-size: 1.15em; color: var(--invitation-text-main); opacity: 0.7; }
+.slash { font-size: 1.1em; color: var(--invitation-text-main); margin: 0 0.15em; opacity: 0.7; }
