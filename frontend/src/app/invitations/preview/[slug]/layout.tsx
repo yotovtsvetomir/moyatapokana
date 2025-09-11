@@ -1,46 +1,47 @@
-"use client";
+import { cookies } from "next/headers";
+import { notFound } from "next/navigation";
+import { InvitationProvider } from "@/context/InvitationContext";
+import PreviewInvitationLayoutClient from "./PreviewInvitationLayoutClient";
+import type { components } from "@/shared/types";
 
-import { ReactNode, useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { useInvitation } from "@/context/InvitationContext";
-import { Spinner } from "@/ui-components/Spinner/Spinner";
+type Invitation = components["schemas"]["InvitationRead"];
 
-export default function PreviewInvitationLayout({ children }: { children: ReactNode }) {
-  const { slug } = useParams<{ slug: string }>();
-  const router = useRouter();
-  const { invitation, setInvitation } = useInvitation();
-  const [loading, setLoading] = useState(true);
+async function getInvitation(slug: string): Promise<Invitation | null> {
+  try {
+    const cookieStore = await cookies();
+    const cookieHeader = cookieStore.getAll().map(c => `${c.name}=${c.value}`).join("; ");
 
-  useEffect(() => {
-    let cancelled = false;
+    const res = await fetch(`${process.env.API_URL_SERVER}/invitations/slug/${slug}`, {
+      headers: {
+        "Content-Type": "application/json",
+        "Cookie": cookieHeader,
+      },
+      cache: "no-store",
+    });
 
-    async function fetchInvitation() {
-      try {
-        if (invitation && invitation.slug === slug) {
-          setLoading(false);
-          return;
-        }
+    if (!res.ok) return null;
+    return res.json();
+  } catch (err) {
+    console.error("Failed to fetch invitation:", err);
+    return null;
+  }
+}
 
-        const res = await fetch(`/api/invitations/${slug}`, { credentials: "include" });
-        if (!res.ok) throw new Error("Invitation not found");
+export default async function PreviewInvitationLayout({
+  children,
+  params,
+}: {
+  children: React.ReactNode;
+  params: { slug: string };
+}) {
+  const invitation = await getInvitation(params.slug);
+  if (!invitation) return notFound();
 
-        const data = await res.json();
-        if (!cancelled) setInvitation(data);
-      } catch {
-        if (!cancelled) console.error(data);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-
-    fetchInvitation();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [slug, invitation, setInvitation, router]);
-
-  if (loading) return <Spinner size={60} />;
-
-  return <div>{children}</div>;
+  return (
+    <InvitationProvider>
+      <PreviewInvitationLayoutClient invitation={invitation}>
+        {children}
+      </PreviewInvitationLayoutClient>
+    </InvitationProvider>
+  );
 }

@@ -1,51 +1,36 @@
 'use client';
-import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { Spinner } from '@/ui-components/Spinner/Spinner';
-import { Button } from '@/ui-components/Button/Button';
-import styles from './guests.module.css';
-import type { components } from '@/shared/types';
 
-type RSVPWithStats = components['schemas']['RSVPWithStats'];
+import { useGuests } from "@/context/GuestsContext";
+import { useRouter, useParams } from 'next/navigation';
+import { Button } from '@/ui-components/Button/Button';
+import styles from "./guests.module.css";
 
 const menuMap: Record<string, { bgName: string; icon: string }> = {
-  meat: { bgName: 'Месо', icon: 'outdoor_grill' },
-  fish: { bgName: 'Риба', icon: 'phishing' },
-  vegetarian: { bgName: 'Вегетарианско', icon: 'nutrition' },
-  kid: { bgName: 'Детско меню', icon: 'child_care' },
+  meat: { bgName: "Месо", icon: "outdoor_grill" },
+  fish: { bgName: "Риба", icon: "phishing" },
+  vegetarian: { bgName: "Вегетарианско", icon: "nutrition" },
+  kid: { bgName: "Детско меню", icon: "child_care" },
 };
 
-export default function GuestsPage() {
-  const { id } = useParams();
+
+export default function GuestsPageClient() {
   const router = useRouter();
+  const { id } = useParams();
+  const { stats } = useGuests();
 
-  const [data, setData] = useState<RSVPWithStats | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (!id) return;
-
-    setLoading(true);
-    fetch(`/api/invitations/${id}/rsvp`)
-      .then((res) => res.json())
-      .then((d) => setData(d))
-      .finally(() => setLoading(false));
-  }, [id]);
-
-  if (loading) return <Spinner />;
-  if (!data) return <p>Няма отговорили гости.</p>;
+  if (!stats) return null;
 
   return (
     <div className="container fullHeight centerWrapper">
       <div className={styles.guests}>
-        <div className={styles.guests_actions}>
+        <div className={styles.guests_actions_top}>
           <Button
             variant="ghost"
             size="middle"
-            onClick={() => router.push(`/profile/invitations/${id}`)}
             width="47%"
             icon="arrow_back"
             iconPosition="left"
+            onClick={() => router.back()}
           >
             Назад
           </Button>
@@ -61,21 +46,21 @@ export default function GuestsPage() {
                 <span className="material-symbols-outlined">people</span>
                 <span>Общо</span>
               </div>
-              <b>{data.stats.total_guests}</b>
+              <b>{stats.total_guests}</b>
             </li>
             <li>
               <div>
                 <span className="material-symbols-outlined">done_all</span>
                 <span>Присъстващи</span>
               </div>
-              <b>{data.stats.total_attending}</b>
+              <b>{stats.total_attending}</b>
             </li>
             <li>
               <div>
                 <span className="material-symbols-outlined">close</span>
                 <span>Неприсъстващи</span>
               </div>
-              <b>{data.stats.total_not_attending}</b>
+              <b>{stats.total_not_attending}</b>
             </li>
           </ul>
 
@@ -85,23 +70,23 @@ export default function GuestsPage() {
                 <span className="material-symbols-outlined">groups</span>
                 <span>Възрастни</span>
               </div>
-              <b>{data.stats.total_adults}</b>
+              <b>{stats.total_adults}</b>
             </li>
             <li>
               <div>
                 <span className="material-symbols-outlined">child_care</span>
                 <span>Деца</span>
               </div>
-              <b>{data.stats.total_kids}</b>
+              <b>{stats.total_kids}</b>
             </li>
           </ul>
 
-          {data.ask_menu && (
+          {stats.menu_counts && Object.keys(stats.menu_counts).length > 0 && (
             <>
               <h5>Менюта</h5>
               <ul>
-                {Object.entries(data.stats.menu_counts).map(([menu, count]) => {
-                  const menuInfo = menuMap[menu] || { bgName: menu, icon: 'nutrition' };
+                {Object.entries(stats.menu_counts).map(([menu, count]) => {
+                  const menuInfo = menuMap[menu] || { bgName: menu, icon: "nutrition" };
                   return (
                     <li key={menu}>
                       <div>
@@ -117,9 +102,7 @@ export default function GuestsPage() {
           )}
         </div>
 
-        <div className={styles.replies}>
-          <h5>Отговорили на поканата: {data.stats.total_attending}</h5>
-
+        <div className={styles.guests_actions_bottom}>
           <Button
             variant="secondary"
             size="middle"

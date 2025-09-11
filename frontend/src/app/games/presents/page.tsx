@@ -127,7 +127,6 @@ export default function PresentGame() {
       <Image src="/bgr.webp" alt="Background" fill style={{ objectFit: "cover", position: "absolute", top: 0, left: 0, zIndex: 0 }} priority />
       <audio ref={popSound} src="/present.wav" preload="auto" />
       <audio ref={victorySound} src="/tada.wav" preload="auto" />
-      <audio ref={progressSound} src="/blip.wav" preload="auto" />
 
       <GameHeader title={`Отвори ${POP_TARGET} подаръка и виж изненада!`} />
 

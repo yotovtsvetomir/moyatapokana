@@ -1,52 +1,48 @@
-"use client";
+import { cookies } from "next/headers";
+import { notFound } from "next/navigation";
+import { InvitationProvider } from "@/context/InvitationContext";
+import EditInvitationLayoutClient from "./EditInvitationLayoutClient";
+import type { components } from "@/shared/types";
 
-import { ReactNode, useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { useInvitation } from "@/context/InvitationContext";
-import { Spinner } from "@/ui-components/Spinner/Spinner";
-import Stepper from "@/components/Stepper/Stepper";
+type Invitation = components["schemas"]["InvitationRead"];
 
-export default function EditInvitationLayout({ children }: { children: ReactNode }) {
-  const { id } = useParams<{ id: string }>();
-  const router = useRouter();
-  const { invitation, setInvitation } = useInvitation();
-  const [localLoading, setLocalLoading] = useState(true);
+async function getInvitation(id: string): Promise<Invitation | null> {
+  try {
+    const cookieStore = await cookies();
+    const cookieHeader = cookieStore.getAll().map(c => `${c.name}=${c.value}`).join("; ");
 
-  useEffect(() => {
-    let cancelled = false;
+    const res = await fetch(`${process.env.API_URL_SERVER}/invitations/${id}`, {
+      headers: {
+        "Content-Type": "application/json",
+        "Cookie": cookieHeader,
+      },
+      cache: "no-store",
+    });
 
-    async function fetchInvitation() {
-      try {
-        if (invitation && invitation.id === Number(id)) {
-          setLocalLoading(false);
-          return;
-        }
+    if (!res.ok) return null;
+    return res.json();
+  } catch (err) {
+    console.error("Failed to fetch invitation:", err);
+    return null;
+  }
+}
 
-        const res = await fetch(`/api/invitations/${id}`, { credentials: "include" });
-        if (!res.ok) throw new Error("Invitation not found");
-
-        const data = await res.json();
-        if (!cancelled) setInvitation(data);
-      } catch {
-        if (!cancelled) router.push("/");
-      } finally {
-        if (!cancelled) setLocalLoading(false);
-      }
-    }
-
-    fetchInvitation();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [id, invitation, setInvitation, router]);
-
-  if (localLoading) return <Spinner size={60} />;
+export default async function EditInvitationLayout({
+  children,
+  params,
+}: {
+  children: React.ReactNode;
+  params: { id: string };
+}) {
+  const pm = await params;
+  const invitation = await getInvitation(pm.id);
+  if (!invitation) return notFound();
 
   return (
-    <div style={{ marginTop: "7rem" }}>
-      <Stepper />
-      <div>{children}</div>
-    </div>
+    <InvitationProvider>
+      <EditInvitationLayoutClient invitation={invitation}>
+        {children}
+      </EditInvitationLayoutClient>
+    </InvitationProvider>
   );
 }

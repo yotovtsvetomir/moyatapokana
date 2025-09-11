@@ -12,25 +12,6 @@ export default function InvitationSettingsPage() {
   const { id } = useParams<{ id: string }>();
   const { invitation, setInvitation, loading, setLoading } = useInvitation();
 
-  useEffect(() => {
-    const fetchInvitation = async () => {
-      if (invitation?.id === Number(id)) return;
-
-      setLoading(true);
-      try {
-        const res = await fetch(`/api/invitations/${id}`, { credentials: "include" });
-        const data: components["schemas"]["InvitationRead"] = await res.json();
-        setInvitation(data);
-      } catch (err) {
-        console.error("Неуспешно зареждане на поканата", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchInvitation();
-  }, [id, invitation, setInvitation, setLoading]);
-
   if (loading) return <Spinner size={60} />;
   if (!invitation) return <p>Не е намерена покана</p>;
 

@@ -6,16 +6,21 @@ import type { components } from "@/shared/types";
 type Template = components["schemas"]["TemplateRead"];
 
 interface TemplateContextType {
-  template?: Template | null;
+  template: Template | null;
   setTemplate: (template: Template) => void;
   loading: boolean;
   setLoading: (loading: boolean) => void;
 }
 
+interface ProviderProps {
+  children: ReactNode;
+  initialTemplate?: Template | null;
+}
+
 const TemplateContext = createContext<TemplateContextType | undefined>(undefined);
 
-export function TemplateProvider({ children }: { children: ReactNode }) {
-  const [template, setTemplate] = useState<Template | null>(null);
+export function TemplateProvider({ children, initialTemplate = null }: ProviderProps) {
+  const [template, setTemplate] = useState<Template | null>(initialTemplate);
   const [loading, setLoading] = useState(false);
 
   return (

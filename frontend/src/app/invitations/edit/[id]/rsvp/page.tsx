@@ -32,7 +32,7 @@ export default function RSVPPage() {
 
     try {
       setLoading(true);
-      const res = await fetch(`/api/invitations/update/${invitation.id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/invitations/update/${invitation.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

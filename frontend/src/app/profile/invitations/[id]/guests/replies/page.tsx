@@ -1,18 +1,18 @@
 'use client';
+
 import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import ReactSelect from '@/ui-components/Select/ReactSelect';
-import { Spinner } from '@/ui-components/Spinner/Spinner';
-import { Button } from '@/ui-components/Button/Button';
-import Pagination from '@/ui-components/Pagination/Pagination';
 import { Input } from '@/ui-components/Input/Input';
+import Pagination from '@/ui-components/Pagination/Pagination';
 import Accordion from '@/ui-components/Accordion/Accordion';
+import { Button } from '@/ui-components/Button/Button';
+import { Spinner } from '@/ui-components/Spinner/Spinner';
 import styles from '../guests.module.css';
 import type { components } from '@/shared/types';
+import { useGuests } from '@/context/GuestsContext';
 
 type Guest = components['schemas']['GuestRead'];
-type PaginatedGuests = components['schemas']['PaginatedResponse_GuestRead_'];
-type RSVPWithStats = components['schemas']['RSVPWithStats'];
 
 type Option = { value: string; label: string };
 
@@ -34,48 +34,55 @@ const orderingOptions: Option[] = [
   { value: 'created_at', label: 'Най-стари' },
 ];
 
-export default function GuestsPage() {
-  const { id } = useParams();
+export default function GuestsRepliesClient() {
   const router = useRouter();
+  const { id } = useParams();
+  const { guests: initialGuests, stats: initialStats } = useGuests();
 
-  const [rsvps, setRsvps] = useState<PaginatedGuests | null>(null);
-  const [stats, setStats] = useState<RSVPWithStats['stats'] | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [rsvps, setRsvps] = useState(initialGuests);
+  const [stats, setStats] = useState(initialStats);
   const [page, setPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [attendingFilter, setAttendingFilter] = useState(attendingOptions[0]);
   const [orderingFilter, setOrderingFilter] = useState(orderingOptions[0]);
+  const [loading, setLoading] = useState(false);
 
-  // Debounce search input
+  // Debounce search
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearch(searchQuery);
-      setPage(1); // reset page on new search
+      setPage(1);
     }, 500);
-
     return () => clearTimeout(handler);
   }, [searchQuery]);
 
-  // Fetch RSVPs whenever filters/page change
+  // Fetch RSVPs on filter/page change
   useEffect(() => {
-    if (!id) return;
-    setLoading(true);
-
     const params = new URLSearchParams();
     params.append('page', page.toString());
     if (debouncedSearch) params.append('search', debouncedSearch);
     if (attendingFilter.value) params.append('attending', attendingFilter.value);
     if (orderingFilter.value) params.append('ordering', orderingFilter.value);
 
-    fetch(`/api/invitations/${id}/rsvp?${params.toString()}`)
+    setLoading(true);
+    fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/invitations/rsvp/${id}/?${params.toString()}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      }
+    )
       .then(res => res.json())
-      .then((data) => {
+      .then(data => {
         setRsvps(data.guests || null);
         setStats(data.stats || null);
       })
       .finally(() => setLoading(false));
-  }, [id, page, debouncedSearch, attendingFilter, orderingFilter]);
+  }, [page, debouncedSearch, attendingFilter, orderingFilter, id]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
@@ -84,7 +91,7 @@ export default function GuestsPage() {
   return (
     <div className="container fullHeight centerWrapper">
       <div className={styles.replies}>
-        <div className={styles.guests_actions}>
+        <div className={styles.guests_actions_top}>
           <Button
             variant="ghost"
             size="middle"

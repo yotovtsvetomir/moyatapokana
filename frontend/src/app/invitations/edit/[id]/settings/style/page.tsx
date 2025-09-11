@@ -10,7 +10,7 @@ import ColorPicker from '@/ui-components/ColorPicker/ColorPicker'
 import { Spinner } from '@/ui-components/Spinner/Spinner'
 
 export default function StylingSettingsPage() {
-  const { invitation, setInvitation } = useInvitation()
+  const { invitation, updateInvitation } = useInvitation()
   const { id } = useParams()
 
   const [primaryColor, setPrimaryColor] = useState('#ffffff')
@@ -29,20 +29,7 @@ export default function StylingSettingsPage() {
   const handleSave = async () => {
     setSaving(true)
     try {
-      const res = await fetch(`/api/invitations/update/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ primary_color: primaryColor, secondary_color: secondaryColor })
-      })
-
-      const data = await res.json()
-
-      if (!res.ok) {
-        throw new Error(data?.error || 'Неуспешно запазване на цветовете')
-      }
-
-      setInvitation(data)
+      await updateInvitation({ primary_color: primaryColor, secondary_color: secondaryColor })
     } catch (err) {
       console.error(err)
       alert(err instanceof Error ? err.message : 'Неуспешно запазване на цветовете')

@@ -1,5 +1,9 @@
-.guests_actions {
+.guests_actions_top {
 	margin-bottom: 1rem;
+}
+
+.guests_actions_bottom {
+  margin-top: 2rem;
 }
 
 .guests h1 {

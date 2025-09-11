@@ -12,7 +12,7 @@ import { Textarea } from '@/ui-components/Input/Textarea'
 import { Spinner } from '@/ui-components/Spinner/Spinner'
 
 export default function TextSettingsPage() {
-  const { invitation, setInvitation } = useInvitation()
+  const { invitation, updateInvitation } = useInvitation()
   const { id } = useParams()
 
   const [title, setTitle] = useState('')
@@ -33,20 +33,7 @@ export default function TextSettingsPage() {
   const handleSave = async () => {
     setSaving(true)
     try {
-      const res = await fetch(`/api/invitations/update/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, description, extra_info: extraInfo }),
-        credentials: 'include',
-      })
-
-      if (!res.ok) {
-        const errorData = await res.json()
-        throw new Error(errorData.error || 'Неуспешно запазване на текста')
-      }
-
-      const updated = await res.json()
-      setInvitation(updated)
+      await updateInvitation({ title, description, extra_info: extraInfo })
     } catch (err) {
       console.error(err)
       alert(err instanceof Error ? err.message : 'Неуспешно запазване на текста')
@@ -64,7 +51,6 @@ export default function TextSettingsPage() {
     <div className="container fullHeight centerWrapper steps" style={{ paddingBottom: "3rem"}}>
       <h1>Редакция на текста #{invitation.id}</h1>
 
-      {/* Title */}
       <Input
         id="title"
         name="title"
@@ -76,7 +62,6 @@ export default function TextSettingsPage() {
         hint={"Препоръчваме до 64 символа.\nПример:\n Заповядайте на първият рожден ден на Кати"}
       />
 
-      {/* Description */}
       <Textarea
         id="description"
         name="description"
@@ -87,7 +72,6 @@ export default function TextSettingsPage() {
         hint={`Препоръчваме до 4 абзаца общо, до 7-8 изречения.\nПример:\nСкъпи приятели,\n\nС огромна радост ви каним да отпразнуваме заедно първия рожден ден на нашата малка принцеса Катерина!\n\nТова е един много специален момент за нас и ще бъде истинско щастие да го споделим с най-близките си хора.\n\nНадяваме се да бъдете част от този незабравим празник и да зарадвате Кати с вашето присъствие.`}
       />
 
-      {/* Extra Info */}
       <Textarea
         id="extraInfo"
         name="extraInfo"

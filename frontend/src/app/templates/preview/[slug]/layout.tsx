@@ -1,46 +1,37 @@
-"use client";
+import type { ReactNode } from "react";
+import { TemplateProvider } from "@/context/TemplateContext";
+import type { components } from "@/shared/types";
 
-import { ReactNode, useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { useTemplate } from "@/context/TemplateContext";
-import { Spinner } from "@/ui-components/Spinner/Spinner";
+type Template = components["schemas"]["TemplateRead"];
 
-export default function PreviewTemplateLayout({ children }: { children: ReactNode }) {
-  const { slug } = useParams<{ slug: string }>();
-  const router = useRouter();
-  const { template, setTemplate } = useTemplate();
-  const [loading, setLoading] = useState(true);
+interface Props {
+  children: ReactNode;
+  params: { slug: string };s
+}
 
-  useEffect(() => {
-    let cancelled = false;
+async function getTemplateBySlug(slug: string): Promise<Template | null> {
+  try {
 
-    async function fetchTemplate() {
-      try {
-        if (template && template.slug === slug) {
-          setLoading(false);
-          return;
-        }
+    const res = await fetch(`${process.env.API_URL_SERVER}/invitations/templates/${slug}`, {
+      headers: {
+        "Content-Type": "application/json"
+      },
+      cache: "no-store",
+    });
 
-        const res = await fetch(`/api/invitations/templates/${slug}`, { credentials: "include" });
-        if (!res.ok) throw new Error("Template not found");
+    if (!res.ok) return null;
 
-        const data = await res.json();
-        if (!cancelled) setTemplate(data);
-      } catch (err) {
-        if (!cancelled) console.error(err);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
+    const data: Template = await res.json();
+    return data;
+  } catch (err) {
+    console.error("Failed to fetch template:", err);
+    return null;
+  }
+}
 
-    fetchTemplate();
+export default async function PreviewTemplateLayout({ children, params }: Props) {
+  const { slug } = await params;
+  const template = await getTemplateBySlug(slug);
 
-    return () => {
-      cancelled = true;
-    };
-  }, [slug, template, setTemplate, router]);
-
-  if (loading) return <Spinner size={60} />;
-
-  return <div>{children}</div>;
+  return <TemplateProvider initialTemplate={template}>{children}</TemplateProvider>;
 }

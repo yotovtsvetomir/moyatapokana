@@ -36,7 +36,7 @@ export default function TemplatePreview() {
 
     try {
       const res = await fetch(
-        `/api/invitations/create-from-template/${template.slug}${
+        `${process.env.NEXT_PUBLIC_API_URL}/invitations/create-from-template/${template.slug}${
           deleteOld ? "?delete_old=true" : ""
         }`,
         { method: "POST", credentials: "include" }

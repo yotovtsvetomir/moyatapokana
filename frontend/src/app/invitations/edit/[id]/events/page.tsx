@@ -18,25 +18,6 @@ export default function EventsPage() {
   const timelineRef = useRef<HTMLDivElement | null>(null);
   const fillRef = useRef<HTMLDivElement | null>(null);
 
-  useEffect(() => {
-    const fetchInvitation = async () => {
-      if (invitation?.id === Number(id)) return;
-
-      setLoading(true);
-      try {
-        const res = await fetch(`/api/invitations/${id}`, { credentials: "include" });
-        const data: components["schemas"]["InvitationRead"] = await res.json();
-        setInvitation(data);
-      } catch (err) {
-        console.error("Неуспешно зареждане на поканата", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchInvitation();
-  }, [id, invitation, setInvitation, setLoading]);
-
   const handleDelete = async (eventId: number) => {
     if (!invitation) return;
 
@@ -44,7 +25,7 @@ export default function EventsPage() {
 
     try {
       setLoading(true);
-      const res = await fetch(`/api/invitations/update/${invitation.id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/invitations/update/${invitation.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -71,7 +52,7 @@ export default function EventsPage() {
 
     try {
       setLoading(true);
-      const res = await fetch(`/api/invitations/update/${invitation.id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/invitations/update/${invitation.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

@@ -41,7 +41,12 @@ export default function ProfileInvitationsList() {
       try {
         const statusParam =
           selectedStatus.value === 'all' ? '' : `&status=${selectedStatus.value}`;
-        const res = await fetch(`/api/invitations?page=${page}&page_size=7${statusParam}`);
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/invitations?page=${page}&page_size=7${statusParam}`,
+          {
+            credentials: "include",
+          }
+        );
         const data: { items: Invitation[]; total_pages: number } = await res.json();
 
         setInvitations(data.items);

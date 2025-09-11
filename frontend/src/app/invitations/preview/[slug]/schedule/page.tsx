@@ -38,7 +38,7 @@ function hexToRgba(hex, alpha = 1) {
 export default function Schedule() {
   const router = useRouter();
   const { invitation } = useInvitation();
-  const fontFamily = useDynamicFont(invitation.font_obj)
+  const fontFamily = useDynamicFont(invitation?.font_obj)
   const [isPlaying, setIsPlaying] = useState(true);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [showPurchaseConfirm, setShowPurchaseConfirm] = useState(false);
@@ -57,12 +57,12 @@ export default function Schedule() {
   const handleReplay = () => {
     if (!invitation?.slug) return;
     localStorage.setItem("replay", "true");
-    router.replace(`/invitations/preview/${invitation.slug}`);
+    router.replace(`/invitations/preview/${invitation?.slug}`);
   };
 
   const handleBuyClick = async () => {
     try {
-      const res = await fetch(`/api/invitations/${invitation.id}/ready`);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/invitations/${invitation.id}/ready`);
       if (!res.ok) throw new Error("Failed to check readiness");
 
       const data = await res.json();
@@ -166,13 +166,12 @@ export default function Schedule() {
     if (invitation.background_audio && audioRef.current) {
       audioRef.current.play().catch(() => setIsPlaying(false));
     }
-  }, [invitation.background_audio]);
+  }, [invitation?.background_audio]);
 
   const renderTimeline = (events: Event[]) => {
     const timelineRef = useRef<HTMLDivElement | null>(null);
     const fillRef = useRef<HTMLDivElement | null>(null);
 
-    // Scroll-fill effect
     useEffect(() => {
       const handleScroll = () => {
         if (!timelineRef.current || !fillRef.current) return;
@@ -320,13 +319,13 @@ export default function Schedule() {
     <div 
       className={styles.wrapper}
       style={{
-        '--primary-color': invitation.primary_color,
-        '--secondary-color': invitation.secondary_color || invitation.primary_color,
+        '--primary-color': invitation?.primary_color,
+        '--secondary-color': invitation?.secondary_color || invitation?.primary_color,
       } as React.CSSProperties}
     >
       <div className={styles.invitation}>
         <Image
-          src={invitation.wallpaper}
+          src={invitation?.wallpaper}
           alt="Invitation background"
           fill
           priority
@@ -339,7 +338,7 @@ export default function Schedule() {
           initial="hidden"
           animate="show"
         >
-          {invitation.title && (
+          {invitation?.title && (
             <motion.div
               className={styles.title}
               style={{ color: invitation.primary_color, fontFamily }}
@@ -349,14 +348,14 @@ export default function Schedule() {
             </motion.div>
           )}
 
-          {invitation.description &&
+          {invitation?.description &&
             invitation.description
               .split("\n")
               .filter((p) => p.trim())
               .map((p, i) => (
                 <motion.p
                   key={i}
-                  style={{ color: invitation.primary_color, fontFamily }}
+                  style={{ color: invitation?.primary_color, fontFamily }}
                   className={styles.description}
                   variants={itemVariants}
                 >
@@ -376,7 +375,7 @@ export default function Schedule() {
             <span
               className={`material-symbols-outlined ${styles.arrowBounce}`}
               style={{
-                color: `${invitation.primary_color}`,
+                color: `${invitation?.primary_color}`,
                 fontSize: "2rem"
               }}
             >
@@ -389,12 +388,12 @@ export default function Schedule() {
       <div id="events" className="container cneterWrapper">
         {/* Events Timeline */}
         <h2 className={styles.sectionTitle}>
-          {invitation.events.length === 1 ? "Събитие" : "Събития"}
+          {invitation?.events.length === 1 ? "Събитие" : "Събития"}
         </h2>
-        {renderTimeline(invitation.events)}
+        {renderTimeline(invitation?.events)}
 
         {/* Extra Info */}
-        {invitation.extra_info && (
+        {invitation?.extra_info && (
           <>
             <h2 className={styles.sectionTitle}>Инфо</h2>
             <div 
@@ -418,7 +417,7 @@ export default function Schedule() {
                     <span
                       className="material-symbols-outlined"
                       style={{
-                        color: `${invitation.primary_color}`,
+                        color: `${invitation?.primary_color}`,
                         fontSize: "1.5rem"
                       }}
                     >
@@ -439,16 +438,16 @@ export default function Schedule() {
             variant="basic"
             icon="person_check"
             iconPosition="left"
-            color={invitation.primary_color}
+            color={invitation?.primary_color}
             width="100%"
-            href={`/invitations/preview/${invitation.slug}/rsvp`}
+            href={`/invitations/preview/${invitation?.slug}/rsvp`}
           >
             Потвърдете
           </Button>
         </div>
 
         {/* Background Music */}
-        {invitation.background_audio && (
+        {invitation?.background_audio && (
           <>
             <audio ref={audioRef} src={invitation.background_audio} loop />
             <div className={styles.audioToggle}>
@@ -466,10 +465,10 @@ export default function Schedule() {
 
         {/* Footer Controls */}
         <div className={styles.footer}>
-          {invitation.status === 'draft' && 
+          {invitation?.status === 'draft' && 
             <Button 
               variant="basic"
-              color={invitation.primary_color}
+              color={invitation?.primary_color}
               size="large"
               width="100%"
               icon="edit"
@@ -482,7 +481,7 @@ export default function Schedule() {
 
           <Button
             variant="basic"
-            color={invitation.primary_color}
+            color={invitation?.primary_color}
             size="large"
             width="100%"
             icon="replay"
@@ -492,7 +491,7 @@ export default function Schedule() {
             Повтори
           </Button>
 
-          {invitation.status === 'draft' && (
+          {invitation?.status === 'draft' && (
             <Button
               variant="primary"
               size="middle"
@@ -516,7 +515,7 @@ export default function Schedule() {
             </div>
           )}
 
-          {invitation.status === 'draft' &&
+          {invitation?.status === 'draft' &&
             <div className={styles.footerInfo}>
               <span className="material-symbols-outlined">error</span>
               <p className={styles.draftInfo}>

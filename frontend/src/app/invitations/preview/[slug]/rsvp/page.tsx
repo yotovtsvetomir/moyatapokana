@@ -88,8 +88,8 @@ export default function RSVPForm() {
     setLoading(true);
     try {
       const payload = { ...mainGuest, sub_guests: subGuests };
-      console.log(payload)
-      const res = await fetch(`/api/invitations/${invitation.slug}/guest`, {
+
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/invitations/guest/${invitation.slug}`, {
         method: 'POST',
         credentials: "include",
         headers: { 'Content-Type': 'application/json' },

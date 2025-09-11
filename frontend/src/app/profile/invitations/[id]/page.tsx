@@ -30,7 +30,12 @@ export default function InvitationDetail() {
   useEffect(() => {
     const fetchInvitation = async () => {
       try {
-        const res = await fetch(`/api/invitations/${id}`);
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/invitations/${id}`,
+          {
+            credentials: "include",
+          }
+        );
         if (!res.ok) throw new Error('Failed to fetch invitation');
 
         const data: Invitation = await res.json();
@@ -48,7 +53,7 @@ export default function InvitationDetail() {
   
   const handleBuyClick = async () => {
     try {
-      const res = await fetch(`/api/invitations/${id}/ready`);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/invitations/${id}/ready`);
       if (!res.ok) throw new Error("Failed to check readiness");
 
       const data = await res.json();
@@ -69,7 +74,7 @@ export default function InvitationDetail() {
     if (!invitation) return;
 
     try {
-      const res = await fetch(`/api/invitations/delete/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/invitations/delete/${id}`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
       });

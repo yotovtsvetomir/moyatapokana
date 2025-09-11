@@ -43,13 +43,13 @@ export default function CreateInvitationPage() {
 
     try {
       // Delete existing draft (anonymous user)
-      await fetch(`/api/invitations/delete/${existingDraftId}`, {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/invitations/delete/${existingDraftId}`, {
         method: "DELETE",
         credentials: "include",
       });
 
       // Create new draft
-      const res = await fetch("/api/invitations/create", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/invitations/create`, {
         method: "POST",
         credentials: "include",
       });
@@ -73,7 +73,7 @@ export default function CreateInvitationPage() {
       setLoading(true);
 
       try {
-        const res = await fetch("/api/invitations/create", {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/invitations/create`, {
           method: "POST",
           credentials: "include",
         });
@@ -81,13 +81,13 @@ export default function CreateInvitationPage() {
 
         if (!res.ok) {
           // Draft limit reached
-          if (data.error?.existingDraftId != null) {
-            setExistingDraftId(data.error.existingDraftId);
-            setErrorMessage(data.error.error);
+          if (data.detail?.existingDraftId != null) {
+            setExistingDraftId(data.detail.existingDraftId);
+            setErrorMessage(data.detail.error);
             setShowModal(true);
             return;
           }
-          throw new Error(data.error?.error || "Failed to create invitation");
+          throw new Error(data.detail?.error || "Failed to create invitation");
         }
 
         // Successfully created

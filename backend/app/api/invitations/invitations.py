@@ -1,4 +1,5 @@
 import json
+import re
 from typing import Dict, Optional
 from datetime import datetime
 from fastapi import (
@@ -12,6 +13,7 @@ from fastapi import (
     File,
     Form,
 )
+from transliterate import translit
 from sqlalchemy import desc
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -452,6 +454,18 @@ async def get_template_by_slug(
 
     return template
 
+def slugifycats(name: str) -> str:
+    latin_name = translit(name, reversed=True)
+    slug = re.sub(r'[^a-z0-9]+', '-', latin_name.lower()).strip('-')
+    return slug
+
+def deslugifycats(slug: str) -> str:
+    name_guess = slug.replace("-", " ")
+    try:
+        name_guess_cyrillic = translit(name_guess, "bg")
+        return name_guess_cyrillic.capitalize()
+    except Exception:
+        return name_guess
 
 # do not change url -> router can't handle it ...
 @router.get("/templates/list/view", response_model=dict)
@@ -460,21 +474,24 @@ async def list_templates(
     page: int = Query(1, ge=1),
     page_size: int = Query(10, ge=1, le=100),
     search: Optional[str] = Query(None),
-    category_id: Optional[int] = Query(None),
-    subcategory_id: Optional[int] = Query(None),
-    subcategory_variant_id: Optional[int] = Query(None),
+    category: Optional[str] = Query(None),
+    subcategory: Optional[str] = Query(None),
+    variant: Optional[str] = Query(None),
     ordering: str = Query("-created_at"),
 ):
-    """List templates with filters, only released, and nested categories/subcategories."""
+    """List templates with filters, only released, using slugs for categories/subcategories/variants."""
 
-    # --- Base filters ---
     filters = [Template.is_released.is_(True)]
-    if category_id is not None:
-        filters.append(Template.category_id == category_id)
-    if subcategory_id is not None:
-        filters.append(Template.subcategory_id == subcategory_id)
-    if subcategory_variant_id is not None:
-        filters.append(Template.subcategory_variant_id == subcategory_variant_id)
+
+    # --- Resolve slugs to IDs ---
+    if category:
+        filters.append(Template.category.has(name=deslugifycats(category)))
+
+    if subcategory:
+        filters.append(Template.subcategory.has(name=deslugifycats(subcategory)))
+
+    if variant:
+        filters.append(Template.subcategory_variant.has(name=deslugifycats(variant)))
 
     # --- Apply search + ordering ---
     filters, order_by = await apply_filters_search_ordering(
@@ -516,27 +533,31 @@ async def list_templates(
     )
     categories = category_result.scalars().unique().all()
 
-    # --- Build response including variants ---
+    # --- Build response including slugs ---
     category_list = [
         {
             "id": c.id,
             "name": c.name,
+            "slug": slugifycats(c.name),
             "subcategories": [
                 {
                     "id": s.id,
                     "name": s.name,
-                    "variants": [{"id": v.id, "name": v.name} for v in s.variants]
+                    "slug": slugifycats(s.name),
+                    "variants": [
+                        {"id": v.id, "name": v.name, "slug": slugifycats(v.name)}
+                        for v in s.variants
+                    ],
                 }
                 for s in c.subcategories
-            ]
+            ],
         }
         for c in categories
     ]
 
-    # --- Return response ---
     return {
         "templates": paginated_templates,
-        "filters": {"categories": category_list}
+        "filters": {"categories": category_list},
     }
 
 
@@ -668,6 +689,11 @@ async def list_invitations(
     status: InvitationStatus | None = None,
 ):
     owner_id = int(current_user.get("user_id")) if current_user else None
+
+    if owner_id is None:
+        raise HTTPException(
+            status_code=403, detail="Not authorized"
+        )
 
     options = [
         selectinload(Invitation.rsvp),
@@ -826,7 +852,7 @@ async def upload_invitation_wallpaper(
 async def upload_slides(
     invitation_id: int,
     slides: list[UploadFile] = File(None),
-    existing_slides: str = Form("[]"),  # JSON string from frontend
+    existing_slides: str = Form("[]"),
     selected_slideshow: str | None = Form(None),
     write_db: AsyncSession = Depends(get_write_session),
     read_db: AsyncSession = Depends(get_read_session),
@@ -1072,8 +1098,10 @@ async def get_rsvp_for_owner(
         .options(selectinload(Invitation.rsvp))
     )
     invitation = result.scalars().first()
+
     if not invitation:
         raise HTTPException(status_code=404, detail="Invitation not found")
+
     if invitation.owner_id != int(current_user.get("user_id")):
         raise HTTPException(status_code=403, detail="Access denied")
 

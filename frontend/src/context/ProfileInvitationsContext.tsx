@@ -1,3 +1,4 @@
+// context/ProfileInvitationsContext.tsx
 'use client';
 
 import { createContext, useContext, useState, ReactNode } from 'react';
@@ -16,8 +17,11 @@ interface ProfileInvitationsContextType {
 
 const ProfileInvitationsContext = createContext<ProfileInvitationsContextType | undefined>(undefined);
 
-export function ProfileInvitationsProvider({ children }: { children: ReactNode }) {
-  const [invitations, setInvitations] = useState<Invitation[]>([]);
+export function ProfileInvitationsProvider({
+  children,
+  initialInvitations = [],
+}: { children: ReactNode; initialInvitations?: Invitation[] }) {
+  const [invitations, setInvitations] = useState<Invitation[]>(initialInvitations);
   const [selectedInvitation, setSelectedInvitation] = useState<Invitation | null>(null);
   const [loading, setLoading] = useState(false);
 

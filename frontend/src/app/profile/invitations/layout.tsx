@@ -1,40 +1,38 @@
-'use client';
+import type { ReactNode } from 'react';
+import { ProfileInvitationsProvider } from '@/context/ProfileInvitationsContext';
+import type { components } from '@/shared/types';
 
-import { ReactNode, useEffect } from 'react';
-import { ProfileInvitationsProvider, useProfileInvitations } from '@/context/ProfileInvitationsContext';
+type Invitation = components['schemas']['InvitationRead'];
 
-interface InvitationsLayoutProps {
+interface Props {
   children: ReactNode;
 }
 
-function InvitationsLoader({ children }: { children: ReactNode }) {
-  const { setInvitations, setLoading } = useProfileInvitations();
-
-  useEffect(() => {
-    const fetchInvitations = async () => {
-      setLoading(true);
-      try {
-        const res = await fetch(`/api/invitations?page=1&page_size=7`);
-        const data = await res.json();
-        setInvitations(data.items || []);
-      } catch (err) {
-        console.error('Failed to fetch invitations:', err);
-        setInvitations([]);
-      } finally {
-        setLoading(false);
+// --- Server-side fetch ---
+async function getInvitations(): Promise<Invitation[]> {
+  try {
+    const res = await fetch(
+      `${process.env.API_URL_SERVER}/invitations?page=1&page_size=7`,
+      {
+        headers: { 'Content-Type': 'application/json' },
+        cache: 'no-store',
       }
-    };
-
-    fetchInvitations();
-  }, [setInvitations, setLoading]);
-
-  return <>{children}</>;
+    );
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.items || [];
+  } catch (err) {
+    console.error('Failed to fetch invitations:', err);
+    return [];
+  }
 }
 
-export default function InvitationsLayout({ children }: InvitationsLayoutProps) {
+export default async function InvitationsLayout({ children }: Props) {
+  const invitations = await getInvitations();
+
   return (
-    <ProfileInvitationsProvider>
-      <InvitationsLoader>{children}</InvitationsLoader>
+    <ProfileInvitationsProvider initialInvitations={invitations}>
+      {children}
     </ProfileInvitationsProvider>
   );
 }
