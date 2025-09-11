@@ -130,11 +130,16 @@ class RSVPInvitationRead(BaseModel):
 
 
 # -------------------- Category / SubCategory --------------------
-class SubCategoryRead(BaseModel):
+class SubCategoryVariantRead(BaseModel):
     id: int
     name: str
     model_config = {"from_attributes": True}
 
+class SubCategoryRead(BaseModel):
+    id: int
+    name: str
+    variants: Optional[List[SubCategoryVariantRead]] = []
+    model_config = {"from_attributes": True}
 
 class CategoryRead(BaseModel):
     id: int
@@ -142,6 +147,10 @@ class CategoryRead(BaseModel):
     subcategories: Optional[List[SubCategoryRead]] = []
     model_config = {"from_attributes": True}
 
+class SubCategoryTemplateRead(BaseModel):
+    id: int
+    name: str
+    model_config = {"from_attributes": True}
 
 class CategoryTemplateRead(BaseModel):
     id: int
@@ -151,6 +160,7 @@ class CategoryTemplateRead(BaseModel):
 class CategoriesResponse(BaseModel):
     categories: List[CategoryRead]
     subcategories: List[SubCategoryRead]
+    variants: List[SubCategoryVariantRead]
 
 
 # -------------------- Game / Slideshow --------------------
@@ -313,6 +323,7 @@ class TemplateBase(BaseModel):
     # Categories
     category_id: Optional[int] = None
     subcategory_id: Optional[int] = None
+    subcategory_variant_id: Optional[int] = None
 
     # Public availability
     is_released: Optional[bool] = False
@@ -332,7 +343,8 @@ class TemplateRead(TemplateBase):
     created_at: datetime
     updated_at: datetime
     category: Optional[CategoryTemplateRead] = None
-    subcategory: Optional[SubCategoryRead] = None
+    subcategory: Optional[SubCategoryTemplateRead] = None
+    subcategory_variant: Optional[SubCategoryVariantRead] = None
     slideshow_images: List[SlideshowImageRead] = []
 
     model_config = {"from_attributes": True}

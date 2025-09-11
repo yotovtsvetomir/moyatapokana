@@ -52,6 +52,17 @@
         </select>
     </div>
 
+    <!-- Subcategory Variants -->
+    <div>
+        <label for="subcategory_variant_id">Вариянт</label>
+        <select name="subcategory_variant_id">
+            <option value="">-- Избери --</option>
+            {% for var in subcategories_variants %}
+                <option value="{{ var.id }}" {% if tpl.subcategory_variant_id == var.id %}selected{% endif %}>{{ var.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
     <!-- Font -->
     <div>
         <label for="font_value">Шрифт</label>

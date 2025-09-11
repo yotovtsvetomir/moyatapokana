@@ -37,6 +37,7 @@ from app.db.models.invitation import (
     Guest,
     Font,
     Category,
+    SubCategory
 )
 from app.schemas.invitation import (
     InvitationUpdate,
@@ -299,6 +300,7 @@ async def create_invitation_from_template(
             selectinload(Template.font_obj),
             selectinload(Template.category),
             selectinload(Template.subcategory),
+            selectinload(Template.subcategory_variant),
         )
         .where(Template.slug == template_slug)
     )
@@ -438,7 +440,8 @@ async def get_template_by_slug(
             selectinload(Template.selected_slideshow_obj),
             selectinload(Template.font_obj),
             selectinload(Template.category),
-            selectinload(Template.subcategory), 
+            selectinload(Template.subcategory),
+            selectinload(Template.subcategory_variant),
         )
         .where(Template.slug == slug)
     )
@@ -459,6 +462,7 @@ async def list_templates(
     search: Optional[str] = Query(None),
     category_id: Optional[int] = Query(None),
     subcategory_id: Optional[int] = Query(None),
+    subcategory_variant_id: Optional[int] = Query(None),
     ordering: str = Query("-created_at"),
 ):
     """List templates with filters, only released, and nested categories/subcategories."""
@@ -469,6 +473,8 @@ async def list_templates(
         filters.append(Template.category_id == category_id)
     if subcategory_id is not None:
         filters.append(Template.subcategory_id == subcategory_id)
+    if subcategory_variant_id is not None:
+        filters.append(Template.subcategory_variant_id == subcategory_variant_id)
 
     # --- Apply search + ordering ---
     filters, order_by = await apply_filters_search_ordering(
@@ -488,6 +494,7 @@ async def list_templates(
         selectinload(Template.font_obj),
         selectinload(Template.category),
         selectinload(Template.subcategory),
+        selectinload(Template.subcategory_variant),
     ]
 
     paginated_templates: PaginatedResponse[TemplateRead] = await paginate(
@@ -501,17 +508,27 @@ async def list_templates(
         ordering=order_by,
     )
 
-    # --- Fetch categories with subcategories ---
+    # --- Fetch categories with subcategories and their variants ---
     category_result = await db.execute(
-        select(Category).options(selectinload(Category.subcategories))
+        select(Category).options(
+            selectinload(Category.subcategories).selectinload(SubCategory.variants)
+        )
     )
     categories = category_result.scalars().unique().all()
 
+    # --- Build response including variants ---
     category_list = [
         {
             "id": c.id,
             "name": c.name,
-            "subcategories": [{"id": s.id, "name": s.name} for s in c.subcategories]
+            "subcategories": [
+                {
+                    "id": s.id,
+                    "name": s.name,
+                    "variants": [{"id": v.id, "name": v.name} for v in s.variants]
+                }
+                for s in c.subcategories
+            ]
         }
         for c in categories
     ]

@@ -7,7 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
 from app.db.session import get_write_session, get_read_session
-from app.db.models.invitation import Template, Category, SubCategory, Font, Game, Slideshow, SlideshowImage
+from app.db.models.invitation import Template, Category, SubCategory, SubCategoryVariant, Font, Game, Slideshow, SlideshowImage
 from app.services.s3.wallpaper import WallpaperService
 from app.services.s3.music import MusicService
 from app.services.s3.slide import SlideService
@@ -40,6 +40,7 @@ async def list_templates(
         .options(
             selectinload(Template.category),
             selectinload(Template.subcategory),
+            selectinload(Template.subcategory_variant),
             selectinload(Template.font_obj),
             selectinload(Template.selected_game_obj),
             selectinload(Template.selected_slideshow_obj),
@@ -62,6 +63,7 @@ async def new_template_form(
 ):
     categories = (await db.execute(select(Category).order_by(Category.name))).scalars().all()
     subcategories = (await db.execute(select(SubCategory).order_by(SubCategory.name))).scalars().all()
+    subcategories_variants = (await db.execute(select(SubCategoryVariant).order_by(SubCategoryVariant.name))).scalars().all()
     fonts = (await db.execute(select(Font).order_by(Font.label))).scalars().all()
     games = (await db.execute(select(Game).order_by(Game.name))).scalars().all()
     slideshows = (await db.execute(select(Slideshow).order_by(Slideshow.name))).scalars().all()
@@ -72,6 +74,7 @@ async def new_template_form(
             "request": request,
             "categories": categories,
             "subcategories": subcategories,
+            "subcategories_variants": subcategories_variants,
             "fonts": fonts,
             "games": games,
             "slideshows": slideshows,
@@ -87,6 +90,7 @@ async def create_template(
     description: str = Form(None),
     category_id: int = Form(None),
     subcategory_id: Optional[str] = Form(None),
+    subcategory_variant_id: Optional[str] = Form(None),
     font_value: str = Form(None),
     primary_color: str = Form(None),
     secondary_color: str = Form(None),
@@ -122,6 +126,7 @@ async def create_template(
         description=description,
         category_id=category_id,
         subcategory_id=int(subcategory_id) if subcategory_id else None,
+        subcategory_variant_id=int(subcategory_variant_id) if subcategory_variant_id else None,
         selected_font=font_value,
         primary_color=primary_color,
         secondary_color=secondary_color,
@@ -168,6 +173,7 @@ async def edit_template_form(
         .options(
             selectinload(Template.category),
             selectinload(Template.subcategory),
+            selectinload(Template.subcategory_variant),
             selectinload(Template.font_obj),
             selectinload(Template.selected_game_obj),
             selectinload(Template.selected_slideshow_obj),
@@ -182,6 +188,7 @@ async def edit_template_form(
 
     categories = (await db.execute(select(Category).order_by(Category.name))).scalars().all()
     subcategories = (await db.execute(select(SubCategory).order_by(SubCategory.name))).scalars().all()
+    subcategories_variants = (await db.execute(select(SubCategoryVariant).order_by(SubCategoryVariant.name))).scalars().all()
     fonts = (await db.execute(select(Font).order_by(Font.label))).scalars().all()
     games = (await db.execute(select(Game).order_by(Game.name))).scalars().all()
     slideshows = (await db.execute(select(Slideshow).order_by(Slideshow.name))).scalars().all()
@@ -193,6 +200,7 @@ async def edit_template_form(
             "tpl": tpl,
             "categories": categories,
             "subcategories": subcategories,
+            "subcategories_variants": subcategories_variants,
             "fonts": fonts,
             "games": games,
             "slideshows": slideshows,
@@ -209,6 +217,7 @@ async def update_template(
     description: str = Form(None),
     category_id: int = Form(None),
     subcategory_id: Optional[str] = Form(None),
+    subcategory_variant_id: Optional[str] = Form(None),
     wallpaper: UploadFile = File(None),
     music: UploadFile = File(None),
     font_value: str = Form(None),
@@ -230,6 +239,7 @@ async def update_template(
     tpl.description = description
     tpl.category_id = category_id
     tpl.subcategory_id = int(subcategory_id) if subcategory_id not in (None, "") else None
+    tpl.subcategory_variant_id=int(subcategory_variant_id) if subcategory_variant_id not in (None, "") else None
     tpl.selected_slideshow = slideshow_key
     tpl.selected_game = game_key
     tpl.primary_color = primary_color

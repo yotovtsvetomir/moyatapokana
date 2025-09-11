@@ -15,7 +15,8 @@ from app.db.models.invitation import (
     Font,
     Event,
     Category,
-    SubCategory
+    SubCategory,
+    SubCategoryVariant,
 )
 from app.db.models.order import PriceTier, Order, Voucher, CurrencyRate
 
@@ -817,6 +818,54 @@ class SubCategoryAdmin(ModelView, model=SubCategory):
             await s.commit()
             return db_obj
 
+# -------------------- SubCategoryVariant Admin --------------------
+class SubCategoryVariantAdmin(ModelView, model=SubCategoryVariant):
+    column_list = [SubCategoryVariant.id, SubCategoryVariant.name, SubCategoryVariant.subcategory_id]
+    column_searchable_list = [SubCategoryVariant.name]
+    column_sortable_list = [SubCategoryVariant.id, SubCategoryVariant.name]
+    column_editable_list = [SubCategoryVariant.name, SubCategoryVariant.subcategory_id]
+    form_excluded_columns = ["templates"]
+
+    # Use a dropdown for subcategory selection
+    form_ajax_refs = {
+        "subcategory": {"fields": (SubCategory.name,)}
+    }
+
+    async def get_session(self):
+        async for session in get_read_session():
+            return session
+
+    async def create_model(self, session, data):
+        async for s in get_write_session():
+            obj = SubCategoryVariant(**data)
+            s.add(obj)
+            await s.commit()
+            await s.refresh(obj)
+            return obj
+
+    async def update_model(self, session, pk, data):
+        async for s in get_write_session():
+            db_obj = await s.get(SubCategoryVariant, int(pk))
+            if not db_obj:
+                return None
+            if "name" in data:
+                db_obj.name = data["name"]
+            if "subcategory_id" in data:
+                db_obj.subcategory_id = int(data["subcategory_id"])
+            s.add(db_obj)
+            await s.commit()
+            await s.refresh(db_obj)
+            return db_obj
+
+    async def delete_model(self, session, pk):
+        async for s in get_write_session():
+            db_obj = await s.get(SubCategoryVariant, int(pk))
+            if not db_obj:
+                return None
+            await s.delete(db_obj)
+            await s.commit()
+            return db_obj
+
 
 class DailyUserStatsAdmin(ModelView, model=DailyUserStats):
     column_list = [DailyUserStats.id, DailyUserStats.date, DailyUserStats.user_type, DailyUserStats.active_count]
@@ -846,3 +895,4 @@ def setup_admin(app):
     admin.add_view(EventAdmin)
     admin.add_view(CategoryAdmin)
     admin.add_view(SubCategoryAdmin)
+    admin.add_view(SubCategoryVariantAdmin)

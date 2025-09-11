@@ -49,6 +49,16 @@
     </div>
 
     <div>
+        <label for="subcategory_variant_id">Вариянт</label>
+        <select name="subcategory_variant_id">
+            <option value="">-- Изберете --</option>
+            {% for var in subcategories_variants %}
+            <option value="{{ var.id }}">{{ var.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div>
         <label for="font_value">Шрифт</label>
         <select name="font_value">
             <option value="">-- Изберете шрифт --</option>

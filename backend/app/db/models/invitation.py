@@ -138,6 +138,24 @@ class SubCategory(Base):
     category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
     category = relationship("Category")
     templates = relationship("Template", back_populates="subcategory")
+    variants = relationship(
+        "SubCategoryVariant",
+        back_populates="subcategory",
+        cascade="all, delete-orphan"
+    )
+
+    def __str__(self):
+        return self.name
+
+class SubCategoryVariant(Base):
+    __tablename__ = "subcategory_variants"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, unique=True, nullable=False)
+    subcategory_id = Column(Integer, ForeignKey("subcategories.id"), nullable=False)
+
+    subcategory = relationship("SubCategory", back_populates="variants")
+    templates = relationship("Template", back_populates="subcategory_variant")
 
 # -------------------- Games / Slideshows --------------------
 class Game(Base):
@@ -205,8 +223,10 @@ class Template(Base, InvitationTemplateBase):
 
     category_id = Column(Integer, ForeignKey("categories.id"), nullable=True)
     subcategory_id = Column(Integer, ForeignKey("subcategories.id"), nullable=True)
+    subcategory_variant_id = Column(Integer, ForeignKey("subcategory_variants.id"))
     category = relationship("Category", back_populates="templates")
     subcategory = relationship("SubCategory", back_populates="templates")
+    subcategory_variant = relationship("SubCategoryVariant", back_populates="templates")
 
 
 # -------------------- RSVP / Guest --------------------
