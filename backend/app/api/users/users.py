@@ -398,9 +398,10 @@ async def create_anon_session(
 ):
     session_id = await create_anonymous_session()
     expires_at = datetime.utcnow() + timedelta(seconds=settings.SESSION_EXPIRE_SECONDS)
-    unique_id = request.cookies.get("unique_id") or str(uuid.uuid4())
+    unique_id = request.cookies.get("unique_id")
+    if not unique_id:
+        unique_id = str(uuid.uuid4())
 
-    # record unique user for today
     await increment_daily_user_stat(unique_id, session)
 
     return {

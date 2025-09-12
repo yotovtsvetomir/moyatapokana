@@ -1,13 +1,16 @@
 import { NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
 
-export async function POST() {
+export async function POST(req: Request) {
   try {
     const response = await fetch(
       `${process.env.API_URL_SERVER}/users/anonymous-session`,
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Cookie": req.headers.get("cookie") || "",
+        },
       }
     );
 
