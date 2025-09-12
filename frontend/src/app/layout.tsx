@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import { Nunito } from "next/font/google";
 import { cookies } from "next/headers";
 import "@/styles/global.css";
@@ -17,11 +16,6 @@ const nunito = Nunito({
   display: 'swap',
 });
 
-export const metadata: Metadata = {
-  title: "Моята Покана",
-  description: "Покани, които впечатляват.",
-};
-
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -37,7 +31,7 @@ export default async function RootLayout({
         <UserProvider initialUser={user}>
           <SessionTimeoutHandler />
           <LayoutWrapper>
-            <main>{children}</main>
+            {children}
           </LayoutWrapper>
           <CookieConsent />
         </UserProvider>

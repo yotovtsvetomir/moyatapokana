@@ -79,7 +79,7 @@ export default function TemplateItem({ template, priority }: { template: Templat
           width="100%"
           icon="visibility"
           iconPosition="right"
-          href={`/templates/preview/${template.slug}`}
+          href={`/template/preview/${template.slug}`}
         >
           Визуализирай
         </Button>

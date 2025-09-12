@@ -49,7 +49,7 @@ export default function BlogPostsClient({ posts }: Props) {
                 width="100%"
                 icon="article"
                 iconPosition="left"
-                href={`/blogposts/${post.slug}`}
+                href={`/blogpost/${post.slug}`}
               >
                 Прочети повече
               </Button>

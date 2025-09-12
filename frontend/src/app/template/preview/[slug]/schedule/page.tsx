@@ -92,7 +92,7 @@ export default function TemplatePreview() {
   const handleReplay = () => {
     if (!template?.slug) return;
     localStorage.setItem("replay", "true");
-    router.replace(`/templates/preview/${template.slug}`);
+    router.replace(`/template/preview/${template.slug}`);
   };
 
   const toggleAudio = () => {

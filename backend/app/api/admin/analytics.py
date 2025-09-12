@@ -10,7 +10,6 @@ from sqlalchemy.orm import aliased
 from app.db.session import get_read_session
 from app.db.models.user import User, DailyUserStats
 from app.db.models.order import Order, CurrencyRate, PriceTier
-from app.core.redis_client import get_redis_client
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
@@ -49,57 +48,35 @@ async def get_top_tiers(db: AsyncSession, start_date=None, end_date=None):
 async def admin_analytics(
     request: Request, db: AsyncSession = Depends(get_read_session)
 ):
-    redis = await get_redis_client()
     now = datetime.now(timezone.utc)
     today = now.date()
     first_day_month = today.replace(day=1)
     first_day_year = today.replace(month=1, day=1)
+    window_start = (datetime.now(timezone.utc) - timedelta(minutes=ACTIVE_MINUTES)).replace(tzinfo=None)
 
-    # --- Previous month calculation ---
-    first_day_last_month = (first_day_month - timedelta(days=1)).replace(day=1)
-    last_day_last_month = first_day_month - timedelta(days=1)
+    # --- Active users in last 15 minutes ---
+    recent_stats_result = await db.execute(
+        select(func.count(func.distinct(DailyUserStats.unique_id))).where(
+            DailyUserStats.created_at >= window_start
+        )
+    )
+    active_users_recent = recent_stats_result.scalar() or 0
 
-    # --- Currently active sessions (last 15 minutes) ---
-    keys = await redis.keys("user_session:*") + await redis.keys("anonymous_session:*")
-    active_recent = set()
-
-    if keys:
-        raw_sessions = await redis.mget(*keys)
-        for raw in raw_sessions:
-            if not raw:
-                continue
-            session_data = json.loads(raw)
-            created_at_str = session_data.get("created_at")
-            if not created_at_str:
-                continue
-            created_at = datetime.fromisoformat(created_at_str.replace("Z", "+00:00"))
-            if now - created_at <= timedelta(minutes=ACTIVE_MINUTES):
-                session_id = (
-                    session_data.get("user_id")
-                    or session_data.get("anonymous_id")
-                    or "anon"
-                )
-                active_recent.add(session_id)
-
-    # --- Daily aggregates from DailyUserStats ---
+    # --- Daily unique users ---
     daily_stats_result = await db.execute(
-        select(func.sum(DailyUserStats.active_count)).where(
+        select(func.count(func.distinct(DailyUserStats.unique_id))).where(
             DailyUserStats.date == today
         )
     )
-    daily_total_db = daily_stats_result.scalar() or 0
+    active_users_today = daily_stats_result.scalar() or 0
 
-    # --- Monthly aggregates from DailyUserStats ---
+    # --- Monthly unique users ---
     monthly_stats_result = await db.execute(
-        select(func.sum(DailyUserStats.active_count)).where(
+        select(func.count(func.distinct(DailyUserStats.unique_id))).where(
             DailyUserStats.date >= first_day_month
         )
     )
-    monthly_total_db = monthly_stats_result.scalar() or 0
-
-    # Combine Redis + DB for today
-    active_users_today = daily_total_db + len(active_recent)
-    active_users_this_month = monthly_total_db + len(active_recent)
+    active_users_this_month = monthly_stats_result.scalar() or 0
 
     # --- Total registered customers ---
     total_customers = await db.scalar(
@@ -129,6 +106,8 @@ async def admin_analytics(
     monthly = monthly_result.mappings().first() or {}
 
     # Last month
+    first_day_last_month = (first_day_month - timedelta(days=1)).replace(day=1)
+    last_day_last_month = first_day_month - timedelta(days=1)
     last_month_query = base_query.where(
         Order.created_at >= first_day_last_month,
         Order.created_at <= last_day_last_month
@@ -151,27 +130,27 @@ async def admin_analytics(
         "admin/analytics.html",
         {
             "request": request,
-            "active_users_recent": len(active_recent),
+            "active_users_recent": active_users_recent,
             "active_users_today": active_users_today,
             "active_users_this_month": active_users_this_month,
             "total_customers": total_customers,
             # Orders - daily
-            "orders_count_today": daily.get("orders_count", 0) or 0,
+            "orders_count_today": daily.get("orders_count", 0),
             "total_revenue_today_bgn": float(daily.get("total_revenue_bgn") or 0),
             "avg_order_today_bgn": float(daily.get("avg_order_bgn") or 0),
             "top_tiers_daily": top_tiers_daily,
             # Orders - monthly
-            "orders_count_month": monthly.get("orders_count", 0) or 0,
+            "orders_count_month": monthly.get("orders_count", 0),
             "total_revenue_month_bgn": float(monthly.get("total_revenue_bgn") or 0),
             "avg_order_month_bgn": float(monthly.get("avg_order_bgn") or 0),
             "top_tiers_month": top_tiers_month,
             # Orders - last month
-            "orders_count_last_month": last_month.get("orders_count", 0) or 0,
+            "orders_count_last_month": last_month.get("orders_count", 0),
             "total_revenue_last_month_bgn": float(last_month.get("total_revenue_bgn") or 0),
             "avg_order_last_month_bgn": float(last_month.get("avg_order_bgn") or 0),
             "top_tiers_last_month": top_tiers_last_month,
             # Orders - yearly
-            "orders_count_year": yearly.get("orders_count", 0) or 0,
+            "orders_count_year": yearly.get("orders_count", 0),
             "total_revenue_year_bgn": float(yearly.get("total_revenue_bgn") or 0),
             "avg_order_year_bgn": float(yearly.get("avg_order_bgn") or 0),
             "top_tiers_year": top_tiers_year,

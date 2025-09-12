@@ -118,10 +118,13 @@ async def google_login(
     # -------------------- Create new session --------------------
     session_id = await create_session(user)
 
-    await increment_daily_user_stat("customer", db_write)
+    # -------------------- Track unique user --------------------
+    unique_id = request.cookies.get("unique_id") or str(user.id)
+    await increment_daily_user_stat(unique_id, db_write)
 
     return {
         "session_id": session_id,
+        "unique_id": unique_id,
         "message": "Login successful",
     }
 
@@ -216,9 +219,11 @@ async def facebook_login(
     # -------------------- Create new session --------------------
     session_id = await create_session(user)
 
-    await increment_daily_user_stat("customer", db_write)
+    unique_id = request.cookies.get("unique_id") or str(user.id)
+    await increment_daily_user_stat(unique_id, db_write)
 
     return {
         "session_id": session_id,
+        "unique_id": unique_id,
         "message": "Login successful",
     }

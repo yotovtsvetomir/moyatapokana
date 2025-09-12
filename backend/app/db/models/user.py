@@ -30,12 +30,11 @@ class PasswordResetToken(Base):
 class DailyUserStats(Base):
     __tablename__ = "daily_user_stats"
     __table_args__ = (
-        UniqueConstraint("date", "user_type", name="uq_date_user_type"),
+        UniqueConstraint("date", "unique_id", name="uq_date_unique_user"),
     )
 
     id = Column(Integer, primary_key=True, index=True)
     date = Column(Date, default=datetime.utcnow().date, index=True)
-    user_type = Column(String, default="customer")  # "customer" or "anonymous"
-    active_count = Column(Integer, default=0)
+    unique_id = Column(String, nullable=False, index=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

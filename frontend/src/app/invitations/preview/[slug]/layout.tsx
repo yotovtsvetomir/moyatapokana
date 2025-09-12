@@ -37,11 +37,28 @@ export default async function PreviewInvitationLayout({
   const invitation = await getInvitation(params.slug);
   if (!invitation) return notFound();
 
+  const ogTitle = invitation.title ?? "";
+  const ogDescription = invitation.description ?? "";
+  const ogImage = invitation.og_image_url ?? "";
+  const ogUrl = `https://moyatapokana.bg/invitations/preview/${params.slug}`;
+
   return (
-    <InvitationProvider>
-      <PreviewInvitationLayoutClient invitation={invitation}>
-        {children}
-      </PreviewInvitationLayoutClient>
-    </InvitationProvider>
+    <>
+      <head>
+        <title>{ogTitle}</title>
+        <meta name="description" content={ogDescription} />
+        <meta property="og:title" content={ogTitle} />
+        <meta property="og:description" content={ogDescription} />
+        <meta property="og:image" content={ogImage} />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={ogUrl} />
+      </head>
+
+      <InvitationProvider>
+        <PreviewInvitationLayoutClient invitation={invitation}>
+          {children}
+        </PreviewInvitationLayoutClient>
+      </InvitationProvider>
+    </>
   );
 }

@@ -868,9 +868,8 @@ class SubCategoryVariantAdmin(ModelView, model=SubCategoryVariant):
 
 
 class DailyUserStatsAdmin(ModelView, model=DailyUserStats):
-    column_list = [DailyUserStats.id, DailyUserStats.date, DailyUserStats.user_type, DailyUserStats.active_count]
-    column_searchable_list = [DailyUserStats.user_type]
-    column_sortable_list = [DailyUserStats.date, DailyUserStats.active_count]
+    column_list = [DailyUserStats.id, DailyUserStats.date, DailyUserStats.unique_id]
+    column_sortable_list = [DailyUserStats.date]
 
 
 # -------------------- Setup Admin --------------------

@@ -1,5 +1,6 @@
 import aiodns
 from datetime import datetime, timedelta
+import uuid
 from fastapi import (
     APIRouter,
     Depends,
@@ -65,6 +66,7 @@ async def check_email_mx(email: str) -> bool:
 @router.post("/")
 async def register(
     user_create: UserCreate,
+    request: Request,
     anonymous_session_id: str | None = Cookie(None),
     db_read: AsyncSession = Depends(get_read_session),
     db_write: AsyncSession = Depends(get_write_session),
@@ -115,6 +117,10 @@ async def register(
 
         await delete_session(anonymous_session_id, anonymous=True)
 
+    # -------------------- Track unique user --------------------
+    unique_id = request.cookies.get("unique_id") or str(user.id)
+    await increment_daily_user_stat(unique_id, db_write)
+
     # -------------------- Send Welcome Email --------------------
     html_content = render_email(
         "customers/welcome.html",
@@ -135,6 +141,7 @@ async def register(
 
     return {
         "session_id": session_id,
+        "unique_id": unique_id,
         "message": "Registration successful",
         "expires_at": expires_at.isoformat() + "Z",
     }
@@ -146,6 +153,7 @@ async def register(
 @router.post("/login")
 async def login(
     form_data: UserLogin,
+    request: Request,
     anonymous_session_id: str | None = Cookie(None),
     db_read: AsyncSession = Depends(get_read_session),
     db_write: AsyncSession = Depends(get_write_session),
@@ -168,13 +176,17 @@ async def login(
     if anonymous_session_id:
         await delete_session(anonymous_session_id, anonymous=True)
 
+    # Create user session
     session_id = await create_session(user)
     expires_at = datetime.utcnow() + timedelta(seconds=settings.SESSION_EXPIRE_SECONDS)
 
-    await increment_daily_user_stat("customer", db_write)
+    # Use the existing unique_id cookie (or fallback to user id if missing)
+    unique_id = request.cookies.get("unique_id") or str(user.id)
+    await increment_daily_user_stat(unique_id, db_write)
 
     return {
         "session_id": session_id,
+        "unique_id": unique_id,
         "message": "Login successful",
         "expires_at": expires_at.isoformat() + "Z",
     }
@@ -380,14 +392,20 @@ async def password_reset_confirm(
 # Anonymous session
 # ------------------------------
 @router.post("/anonymous-session")
-async def create_anon_session(session: AsyncSession = Depends(get_write_session)):
+async def create_anon_session(
+    request: Request,
+    session: AsyncSession = Depends(get_write_session),
+):
     session_id = await create_anonymous_session()
     expires_at = datetime.utcnow() + timedelta(seconds=settings.SESSION_EXPIRE_SECONDS)
+    unique_id = request.cookies.get("unique_id") or str(uuid.uuid4())
 
-    await increment_daily_user_stat("anonymous", session)
+    # record unique user for today
+    await increment_daily_user_stat(unique_id, session)
 
     return {
         "anonymous_session_id": session_id,
+        "unique_id": unique_id,
         "message": "Anonymous session created",
         "expires_at": expires_at.isoformat() + "Z",
     }

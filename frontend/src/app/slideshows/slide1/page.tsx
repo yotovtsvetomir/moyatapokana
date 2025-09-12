@@ -93,7 +93,7 @@ export default function SlideOne() {
     }
 
     if (isTemplate) {
-      router.push(`/templates/preview/${slug}/schedule`)
+      router.push(`/template/preview/${slug}/schedule`)
     }
     else {
        router.push(`/invitations/preview/${slug}/schedule`)

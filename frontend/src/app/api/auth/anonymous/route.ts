@@ -1,11 +1,15 @@
 import { NextResponse } from "next/server";
+import { v4 as uuidv4 } from "uuid";
 
 export async function POST() {
   try {
-    const response = await fetch(`${process.env.API_URL_SERVER}/users/anonymous-session`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-    });
+    const response = await fetch(
+      `${process.env.API_URL_SERVER}/users/anonymous-session`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      }
+    );
 
     const data = await response.json();
 
@@ -17,15 +21,26 @@ export async function POST() {
     }
 
     const res = NextResponse.json(data);
-
     const isProd = process.env.NODE_ENV === "production";
 
+    // --- short-lived anonymous session ---
     res.cookies.set("anonymous_session_id", data.anonymous_session_id, {
       httpOnly: true,
       secure: isProd,
       sameSite: "lax",
       path: "/",
       expires: new Date(data.expires_at),
+    });
+
+    // --- long-lived unique_id ---
+    // backend should already return unique_id, but fallback to uuid if missing
+    const uniqueId = data.unique_id ?? uuidv4();
+    res.cookies.set("unique_id", uniqueId, {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 365, // 1 year
     });
 
     return res;

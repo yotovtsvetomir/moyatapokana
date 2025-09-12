@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Input } from '@/ui-components/Input/Input';
 import TemplateItem from './TemplateItem';
 import type { TemplatesApiResponse, Template, CategoryWithSubs } from './types';
@@ -25,48 +25,78 @@ export default function TemplatesClient({
   initialSubcategory,
   initialVariant,
 }: Props) {
+  // --- Helpers ---
+  const getParam = (key: string) =>
+    typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get(key) : null;
+
+  // --- Templates & Pagination ---
   const [templates, setTemplates] = useState<Template[]>(initialData.templates.items);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(initialData.templates.current_page < initialData.templates.total_pages);
 
-  const [inputSearchValue, setInputSearchValue] = useState(initialSearch);
-  const [searchTerm, setSearchTerm] = useState(initialSearch);
+  // --- Search & Filters ---
+  const initialSearchValue = getParam('search') ?? initialSearch ?? '';
+  const [inputSearchValue, setInputSearchValue] = useState(initialSearchValue);
+  const [searchTerm, setSearchTerm] = useState(initialSearchValue);
 
-  // Filters state
   const [categories] = useState<CategoryWithSubs[]>(initialCategories);
-  const [category, setCategory] = useState<string | null>(initialCategory ?? null);
-  const [subcategory, setSubcategory] = useState<string | null>(initialSubcategory ?? null);
-  const [variant, setVariant] = useState<string | null>(initialVariant ?? null);
+  const initialCategoryValue = getParam('category') ?? initialCategory ?? null;
+  const initialSubcategoryValue = getParam('subcategory') ?? initialSubcategory ?? null;
+  const initialVariantValue = getParam('variant') ?? initialVariant ?? null;
 
-  // Options
+  const [category, setCategory] = useState<string | null>(initialCategoryValue);
+  const [subcategory, setSubcategory] = useState<string | null>(initialSubcategoryValue);
+  const [variant, setVariant] = useState<string | null>(initialVariantValue);
+
+  // --- Select Options (computed upfront to avoid state updates on mount) ---
   const [categoryOptions] = useState<Option[]>([
     { value: '', label: 'Без' },
-    ...initialCategories.map(c => ({ value: c.slug, label: c.name })),
+    ...categories.map(c => ({ value: c.slug, label: c.name })),
   ]);
-  const [subcategoryOptions, setSubcategoryOptions] = useState<Option[]>([{ value: '', label: 'Първо изберете категория' }]);
-  const [variantOptions, setVariantOptions] = useState<Option[]>([{ value: '', label: 'Без' }]);
 
-  // Update query params in URL
+  const initialSubOptions = (() => {
+    if (!initialCategoryValue) return [{ value: '', label: 'Първо изберете категория' }];
+    const selectedCat = categories.find(c => c.slug === initialCategoryValue);
+    return [
+      { value: '', label: 'Без' },
+      ...(selectedCat?.subcategories.map(s => ({ value: s.slug, label: s.name })) || []),
+    ];
+  })();
+
+  const initialVarOptions = (() => {
+    if (!initialSubcategoryValue) return [{ value: '', label: 'Без' }];
+    const selectedCat = categories.find(c => c.slug === initialCategoryValue);
+    const selectedSub = selectedCat?.subcategories.find(s => s.slug === initialSubcategoryValue);
+    return [
+      { value: '', label: 'Без' },
+      ...(selectedSub?.variants.map(v => ({ value: v.slug, label: v.name })) || []),
+    ];
+  })();
+
+  const [subcategoryOptions, setSubcategoryOptions] = useState<Option[]>(initialSubOptions);
+  const [variantOptions, setVariantOptions] = useState<Option[]>(initialVarOptions);
+
+  const firstMount = useRef(true);
+
+  // --- Update URL ---
   const updateURL = () => {
     const params = new URLSearchParams();
     if (searchTerm) params.set('search', searchTerm);
     if (category) params.set('category', category);
     if (subcategory) params.set('subcategory', subcategory);
     if (variant) params.set('variant', variant);
-    window.history.replaceState(null, '', `?${params.toString()}`);
+    if (params.toString() != "") {
+        window.history.replaceState(null, '', `?${params.toString()}`);
+      }
   };
 
-  // Fetch templates
+  // --- Fetch templates ---
   const fetchTemplates = useCallback(async (append = false) => {
     try {
       setLoading(true);
-      const params = new URLSearchParams({
-        page: page.toString(),
-        page_size: '7',
-        ordering: '-created_at',
-      });
+      const params = new URLSearchParams({ page: page.toString(), page_size: '7', ordering: '-created_at' });
       if (searchTerm) params.append('search', searchTerm);
       if (category) params.append('category', category);
       if (subcategory) params.append('subcategory', subcategory);
@@ -86,7 +116,7 @@ export default function TemplatesClient({
     }
   }, [page, searchTerm, category, subcategory, variant]);
 
-  // Cascading selects handlers
+  // --- Cascading select handlers ---
   const handleCategoryChange = (option: Option | null) => {
     const value = option?.value || null;
     setCategory(value);
@@ -94,10 +124,7 @@ export default function TemplatesClient({
     setVariant(null);
 
     const selectedCat = categories.find(c => c.slug === value);
-    setSubcategoryOptions([
-      { value: '', label: 'Без' },
-      ...(selectedCat?.subcategories.map(s => ({ value: s.slug, label: s.name })) || [])
-    ]);
+    setSubcategoryOptions([{ value: '', label: 'Без' }, ...(selectedCat?.subcategories.map(s => ({ value: s.slug, label: s.name })) || [])]);
     setVariantOptions([{ value: '', label: 'Без' }]);
   };
 
@@ -108,37 +135,34 @@ export default function TemplatesClient({
 
     const selectedCat = categories.find(c => c.slug === category);
     const selectedSub = selectedCat?.subcategories.find(s => s.slug === value);
-    setVariantOptions([
-      { value: '', label: 'Без' },
-      ...(selectedSub?.variants.map(v => ({ value: v.slug, label: v.name })) || [])
-    ]);
+    setVariantOptions([{ value: '', label: 'Без' }, ...(selectedSub?.variants.map(v => ({ value: v.slug, label: v.name })) || [])]);
   };
 
-  const handleVariantChange = (option: Option | null) => {
-    setVariant(option?.value || null);
-  };
+  const handleVariantChange = (option: Option | null) => setVariant(option?.value || null);
 
-  // Effects
+  // --- Debounced search ---
   useEffect(() => {
     const timeout = setTimeout(() => setSearchTerm(inputSearchValue), 500);
     return () => clearTimeout(timeout);
   }, [inputSearchValue]);
 
+  // --- Fetch on search/filter change ---
   useEffect(() => {
+    if (firstMount.current) {
+      firstMount.current = false;
+      updateURL();
+      return;
+    }
     setPage(1);
     updateURL();
     fetchTemplates(false);
   }, [searchTerm, category, subcategory, variant]);
 
-  useEffect(() => {
-    if (page > 1) fetchTemplates(true);
-  }, [page]);
-
+  // --- Infinite scroll ---
+  useEffect(() => { if (page > 1) fetchTemplates(true); }, [page]);
   useEffect(() => {
     const handleScroll = () => {
-      if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 300 && hasMore && !loading) {
-        setPage(prev => prev + 1);
-      }
+      if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 300 && hasMore && !loading) setPage(prev => prev + 1);
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
@@ -149,47 +173,19 @@ export default function TemplatesClient({
       <h1 className={styles.title}>Шаблони</h1>
 
       <div className={styles.search}>
-        <Input
-          id="search"
-          name="search"
-          label="Търсене на шаблони"
-          value={inputSearchValue}
-          onChange={e => setInputSearchValue(e.target.value)}
-        />
+        <Input id="search" name="search" label="Търсене на шаблони" value={inputSearchValue} onChange={e => setInputSearchValue(e.target.value)} />
       </div>
 
       <div className={styles.filters}>
-        <ReactSelect
-          options={categoryOptions}
-          value={category ? categoryOptions.find(o => o.value === category) : { value: '', label: 'Изберете категория' }}
-          onChange={handleCategoryChange}
-        />
-
-        <ReactSelect
-          options={subcategoryOptions}
-          value={subcategory ? subcategoryOptions.find(o => o.value === subcategory) : { value: '', label: category ? 'Изберете подкатегория' : 'Първо изберете категория' }}
-          onChange={handleSubcategoryChange}
-          isDisabled={!category}
-        />
-
-        <ReactSelect
-          options={variantOptions}
-          value={variant ? variantOptions.find(o => o.value === variant) : { value: '', label: subcategory ? 'Изберете вариант' : 'Първо изберете подкатегория' }}
-          onChange={handleVariantChange}
-          isDisabled={!subcategory}
-        />
+        <ReactSelect options={categoryOptions} value={category ? categoryOptions.find(o => o.value === category) : { value: '', label: 'Изберете категория' }} onChange={handleCategoryChange} />
+        <ReactSelect options={subcategoryOptions} value={subcategory ? subcategoryOptions.find(o => o.value === subcategory) : { value: '', label: category ? 'Изберете подкатегория' : 'Първо изберете категория' }} onChange={handleSubcategoryChange} isDisabled={!category} />
+        <ReactSelect options={variantOptions} value={variant ? variantOptions.find(o => o.value === variant) : { value: '', label: subcategory ? 'Изберете вариант' : 'Първо изберете подкатегория' }} onChange={handleVariantChange} isDisabled={!subcategory} />
       </div>
 
       {error && <p className={styles.error}>{error}</p>}
 
       <ul className={styles.templateList}>
-        {templates.map((template, index) => (
-          <TemplateItem
-            key={template.id}
-            template={template}
-            priority={index === 0}
-          />
-        ))}
+        {templates.map((template, index) => <TemplateItem key={template.id} template={template} priority={index === 0} />)}
       </ul>
 
       {loading && <Spinner />}

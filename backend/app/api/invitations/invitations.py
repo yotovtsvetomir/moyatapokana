@@ -14,7 +14,7 @@ from fastapi import (
     Form,
 )
 from transliterate import translit
-from sqlalchemy import desc
+from sqlalchemy import desc, tuple_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
@@ -1002,26 +1002,19 @@ async def add_guest(
     read_db: AsyncSession = Depends(get_read_session),
     write_db: AsyncSession = Depends(get_write_session),
     current_user: dict | None = Depends(get_current_user),
+    confirm_add: bool = Query(False)
 ):
-    # -------------------- Fetch Invitation (read) --------------------
+    # -------------------- Fetch Invitation --------------------
     result = await read_db.execute(select(Invitation).where(Invitation.slug == slug))
     invitation = result.scalars().first()
 
     if not invitation or not invitation.is_active:
-        raise HTTPException(
-            status_code=404,
-            detail="Поканата не може да бъде намерена или е неактивна.",
-        )
+        raise HTTPException(status_code=404, detail="Поканата не може да бъде намерена или е неактивна.")
 
     # --- Block owner (registered or anonymous) from RSVPing ---
-    # 1. Registered owner
     if current_user and invitation.owner_id == int(current_user.get("user_id")):
-        raise HTTPException(
-            status_code=400,
-            detail="Собственикът на поканата не може да бъде добавен като гост.",
-        )
+        raise HTTPException(status_code=400, detail="Собственикът на поканата не може да бъде добавен като гост.")
 
-    # 2. Anonymous owner
     anon_session_id = None
     cookie_header = request.headers.get("cookie")
     if cookie_header:
@@ -1030,12 +1023,35 @@ async def add_guest(
             anon_session_id = cookies["anonymous_session_id"].value
 
     if invitation.anon_session_id and anon_session_id == invitation.anon_session_id:
+        raise HTTPException(status_code=400, detail="Собственикът на поканата не може да бъде добавен като гост.")
+
+    # -------------------- Check duplicates (main + sub) --------------------
+    # Prepare all names to check
+    all_names = [(payload.first_name.strip(), payload.last_name.strip())]
+    for sub in payload.sub_guests or []:
+        all_names.append((sub.first_name.strip(), sub.last_name.strip()))
+
+    # Query DB for any existing guests with these names for this RSVP
+    duplicates = await read_db.execute(
+        select(Guest.first_name, Guest.last_name)
+        .where(
+            Guest.rsvp_id == invitation.rsvp_id,
+            tuple_(Guest.first_name, Guest.last_name).in_(
+                [(fn, ln) for fn, ln in all_names]
+            )
+        )
+    )
+    existing = duplicates.all()
+
+    if existing and not confirm_add:
+        # Return the list of duplicates without adding
+        duplicate_names = [f"{fn} {ln}" for fn, ln in existing]
         raise HTTPException(
-            status_code=400,
-            detail="Собственикът на поканата не може да бъде добавен като гост.",
+            status_code=409,
+            detail=f"Гост с това име вече е потвърден: {', '.join(duplicate_names)}. Моля потвърдете, ако искате да добавите."
         )
 
-    # -------------------- Create Guest(s) (write) --------------------
+    # -------------------- Create Guest(s) --------------------
     main_guest = Guest(
         first_name=payload.first_name,
         last_name=payload.last_name,
@@ -1048,19 +1064,18 @@ async def add_guest(
     write_db.add(main_guest)
     await write_db.flush()
 
-    if payload.sub_guests:
-        for sub in payload.sub_guests:
-            sub_guest = Guest(
-                first_name=sub.first_name,
-                last_name=sub.last_name,
-                guest_type=sub.guest_type,
-                is_main_guest=False,
-                attending=sub.attending,
-                menu_choice=sub.menu_choice,
-                main_guest_id=main_guest.id,
-                rsvp_id=invitation.rsvp_id,
-            )
-            write_db.add(sub_guest)
+    for sub in payload.sub_guests or []:
+        sub_guest = Guest(
+            first_name=sub.first_name,
+            last_name=sub.last_name,
+            guest_type=sub.guest_type,
+            is_main_guest=False,
+            attending=sub.attending,
+            menu_choice=sub.menu_choice,
+            main_guest_id=main_guest.id,
+            rsvp_id=invitation.rsvp_id,
+        )
+        write_db.add(sub_guest)
 
     try:
         await write_db.commit()
@@ -1069,7 +1084,7 @@ async def add_guest(
         await write_db.rollback()
         raise HTTPException(status_code=400, detail="Failed to add guest(s)")
 
-    # -------------------- Read created guest with sub_guests (read) --------------------
+    # -------------------- Read created guest with sub_guests --------------------
     result = await read_db.execute(
         select(Guest)
         .where(Guest.id == main_guest.id)
@@ -1078,6 +1093,7 @@ async def add_guest(
     guest_with_subs = result.scalars().first()
 
     return guest_with_subs
+
 
 
 @router.get("/rsvp/{invitation_id}", response_model=RSVPWithStats)
