@@ -161,7 +161,14 @@
     <div>
         <label for="is_released">
             <input type="checkbox" name="is_released" value="true" {% if tpl.is_released %}checked{% endif %}>
-            Публикувано (Released)
+            Публикувано
+        </label>
+    </div>
+
+    <div>
+        <label for="first_page">
+            <input type="checkbox" name="first_page" value="true" {% if tpl.first_page %}checked{% endif %}>
+            Показване на началната страница
         </label>
     </div>
 

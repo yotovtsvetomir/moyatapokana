@@ -1,25 +1,17 @@
 "use client";
 
+import Intro from '@/components/Intro/Intro';
+import { Template } from '@/shared/types';
 import styles from './home.module.css';
-import { useUser } from '@/context/UserContext';
 
-export default function Home() {
-  const { user, loading } = useUser();
+interface HomeProps {
+  templates: Template[];
+}
 
-
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-
+export default function Home({ templates }: HomeProps) {
   return (
-    <div className="container fullHeight">
-      <div className={styles.page}>
-        {user ? (
-          <h1>Здравейте отново, {user.first_name} {user.last_name}!</h1>
-        ) : (
-          <h1>Здравейте! Моля влезте или се регистрирайте за да продължите.</h1>
-        )}
-      </div>
+    <div className={styles.Home}>
+      <Intro templates={templates} />
     </div>
   );
 }

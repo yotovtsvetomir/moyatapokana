@@ -472,7 +472,7 @@ def deslugifycats(slug: str) -> str:
 async def list_templates(
     db: AsyncSession = Depends(get_read_session),
     page: int = Query(1, ge=1),
-    page_size: int = Query(10, ge=1, le=100),
+    page_size: int = Query(7, ge=1, le=100),
     search: Optional[str] = Query(None),
     category: Optional[str] = Query(None),
     subcategory: Optional[str] = Query(None),

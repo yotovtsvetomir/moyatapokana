@@ -19,6 +19,8 @@ from app.api.users.social_auth import router as social_router
 from app.api.invitations.invitations import router as invitations_router
 from app.api.orders.orders import router as orders_router
 from app.api.blogs.blogs import router as blogs_router
+from app.api.sitemap import router as sitemap_router
+from app.api.home import router as home_router
 
 from app.admin import setup_admin
 
@@ -48,6 +50,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Home page all in 1 request
+app.include_router(home_router)
+
+# Sitemap
+app.include_router(sitemap_router)
 
 # Users Routers
 app.include_router(users_router, prefix="/users", tags=["users"])

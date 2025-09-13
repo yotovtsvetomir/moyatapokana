@@ -4,6 +4,40 @@
  */
 
 export interface paths {
+    "/sitemap.xml": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Sitemap */
+        get: operations["sitemap_sitemap_xml_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sitemap/flush": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Flush Sitemap Cache */
+        get: operations["flush_sitemap_cache_sitemap_flush_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/users/": {
         parameters: {
             query?: never;
@@ -672,7 +706,7 @@ export interface paths {
         };
         /**
          * List Templates
-         * @description List templates with filters, only released, and nested categories/subcategories.
+         * @description List templates with filters, only released, using slugs for categories/subcategories/variants.
          */
         get: operations["list_templates_invitations_templates_list_view_get"];
         put?: never;
@@ -1015,7 +1049,7 @@ export interface paths {
         };
         /**
          * Get Blog Post
-         * @description Get a single blog post by ID.
+         * @description Get a single blog post by slug.
          */
         get: operations["get_blog_post_blogposts__slug__get"];
         put?: never;
@@ -1107,6 +1141,8 @@ export interface components {
             category_id?: number;
             /** Subcategory Id */
             subcategory_id?: string | null;
+            /** Subcategory Variant Id */
+            subcategory_variant_id?: string | null;
             /** Font Value */
             font_value?: string;
             /** Primary Color */
@@ -1188,6 +1224,8 @@ export interface components {
             category_id?: number;
             /** Subcategory Id */
             subcategory_id?: string | null;
+            /** Subcategory Variant Id */
+            subcategory_variant_id?: string | null;
             /**
              * Wallpaper
              * Format: binary
@@ -1204,6 +1242,8 @@ export interface components {
             slide_images?: string[];
             /** Slideshow Key */
             slideshow_key?: string;
+            /** Game Key */
+            game_key?: string;
             /** Primary Color */
             primary_color?: string;
             /** Secondary Color */
@@ -1873,8 +1913,15 @@ export interface components {
                 [key: string]: number;
             };
         };
-        /** SubCategoryRead */
-        SubCategoryRead: {
+        /** SubCategoryTemplateRead */
+        SubCategoryTemplateRead: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+        };
+        /** SubCategoryVariantRead */
+        SubCategoryVariantRead: {
             /** Id */
             id: number;
             /** Name */
@@ -1940,11 +1987,18 @@ export interface components {
             category_id?: number | null;
             /** Subcategory Id */
             subcategory_id?: number | null;
+            /** Subcategory Variant Id */
+            subcategory_variant_id?: number | null;
             /**
              * Is Released
              * @default false
              */
             is_released: boolean | null;
+            /**
+             * First Page
+             * @default false
+             */
+            first_page: boolean | null;
             /** Id */
             id: number;
             status?: components["schemas"]["TemplateStatus"] | null;
@@ -1959,7 +2013,8 @@ export interface components {
              */
             updated_at: string;
             category?: components["schemas"]["CategoryTemplateRead"] | null;
-            subcategory?: components["schemas"]["SubCategoryRead"] | null;
+            subcategory?: components["schemas"]["SubCategoryTemplateRead"] | null;
+            subcategory_variant?: components["schemas"]["SubCategoryVariantRead"] | null;
             /**
              * Slideshow Images
              * @default []
@@ -2038,6 +2093,44 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    sitemap_sitemap_xml_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    flush_sitemap_cache_sitemap_flush_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
     register_users__post: {
         parameters: {
             query?: never;
@@ -3528,8 +3621,9 @@ export interface operations {
                 page?: number;
                 page_size?: number;
                 search?: string | null;
-                category_id?: number | null;
-                subcategory_id?: number | null;
+                category?: string | null;
+                subcategory?: string | null;
+                variant?: string | null;
                 ordering?: string;
             };
             header?: never;
@@ -3769,7 +3863,9 @@ export interface operations {
     };
     add_guest_invitations_guest__slug__post: {
         parameters: {
-            query?: never;
+            query?: {
+                confirm_add?: boolean;
+            };
             header?: never;
             path: {
                 slug: string;

@@ -1,9 +1,3 @@
-.page h1 {
-  color: var(--color-dark-300);
-  margin-bottom: 1rem;
-}
-
-.buttons {
-  display: flex;
-  gap: 1rem;
+.Home {
+	padding-bottom: 2rem;
 }

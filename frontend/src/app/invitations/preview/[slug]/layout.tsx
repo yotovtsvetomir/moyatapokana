@@ -40,7 +40,7 @@ export default async function PreviewInvitationLayout({
   const ogTitle = invitation.title ?? "";
   const ogDescription = invitation.description ?? "";
   const ogImage = invitation.og_image_url ?? "";
-  const ogUrl = `https://moyatapokana.bg/invitations/preview/${params.slug}`;
+  const ogUrl = `https://www.moyatapokana.bg/invitations/preview/${params.slug}`;
 
   return (
     <>

@@ -327,6 +327,7 @@ class TemplateBase(BaseModel):
 
     # Public availability
     is_released: Optional[bool] = False
+    first_page: Optional[bool] = False
 
 
 class TemplateCreate(TemplateBase):

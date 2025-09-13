@@ -214,6 +214,7 @@ class Template(Base, InvitationTemplateBase):
     id = Column(Integer, primary_key=True, index=True)
     status = Column(Enum(TemplateStatus), default=TemplateStatus.DRAFT)
     is_released = Column(Boolean, default=False)
+    first_page = Column(Boolean, default=False)
 
     slideshow_images = relationship(
         "SlideshowImage",

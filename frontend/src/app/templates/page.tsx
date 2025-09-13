@@ -37,13 +37,13 @@ export default async function TemplatesPage({
     "@type": "ItemList",
     "name": "Templates",
     "description": "Browse templates for invitations",
-    "url": `https://moyatapokana.bg/templates${queryString}`,
+    "url": `https://www.moyatapokana.bg/templates${queryString}`,
     "numberOfItems": data.templates.items.length,
     "itemListElement": data.templates.items.map((t, index) => ({
       "@type": "ListItem",
       "position": index + 1,
       "name": t.name,
-      "url": `https://moyatapokana.bg/template/preview/${t.slug}`,
+      "url": `https://www.moyatapokana.bg/template/preview/${t.slug}`,
     })),
   };
 
@@ -56,7 +56,7 @@ export default async function TemplatesPage({
         <meta property="og:description" content="Разгледайте шаблоните за покани" />
         <meta property="og:image" content={data.templates.items[0].wallpaper} />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content={`https://moyatapokana.bg/templates${queryString}`} />
+        <meta property="og:url" content={`https://www.moyatapokana.bg/templates${queryString}`} />
 
         {/* Structured data */}
         <Script

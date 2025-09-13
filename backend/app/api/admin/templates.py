@@ -95,6 +95,7 @@ async def create_template(
     primary_color: str = Form(None),
     secondary_color: str = Form(None),
     is_released: bool = Form(False),
+    first_page: bool = Form(False),
     game_key: str = Form(None),
     slideshow_key: str = Form(None),
     wallpaper: UploadFile = File(None),
@@ -133,6 +134,7 @@ async def create_template(
         selected_game=game_key,
         selected_slideshow=slideshow_key,
         is_released=is_released,
+        first_page=first_page,
     )
 
     # Upload wallpaper and music
@@ -227,6 +229,7 @@ async def update_template(
     primary_color: str = Form(None),
     secondary_color: str = Form(None),
     is_released: bool = Form(False),
+    first_page: bool = Form(False),
     db: AsyncSession = Depends(get_write_session),
     admin=Depends(is_admin_authenticated),
 ):
@@ -246,6 +249,7 @@ async def update_template(
     tpl.secondary_color = secondary_color
     tpl.is_released = is_released
     tpl.selected_font = font_value
+    tpl.first_page = first_page
 
     # Convert slideshow_key to numeric id
     slideshow_id = None
