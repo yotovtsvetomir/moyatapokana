@@ -298,7 +298,6 @@ class Invitation(Base, InvitationTemplateBase):
 
     owner_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
     anon_session_id = Column(String, nullable=True)
-    preview_token = Column(String, unique=True, nullable=True)
 
     active_from = Column(DateTime, nullable=True)
     active_until = Column(DateTime, nullable=True)

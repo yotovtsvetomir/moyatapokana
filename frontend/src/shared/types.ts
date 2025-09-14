@@ -4,6 +4,30 @@
  */
 
 export interface paths {
+    "/home": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Home
+         * @description Get templates for the homepage:
+         *     - Only where first_page=True
+         *     - Ordered by created_at (descending)
+         *     - Limited to 7 results
+         *     - Preload related objects for efficient querying
+         */
+        get: operations["get_home_home_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sitemap.xml": {
         parameters: {
             query?: never;
@@ -1154,6 +1178,11 @@ export interface components {
              * @default false
              */
             is_released: boolean;
+            /**
+             * First Page
+             * @default false
+             */
+            first_page: boolean;
             /** Game Key */
             game_key?: string;
             /** Slideshow Key */
@@ -1253,6 +1282,11 @@ export interface components {
              * @default false
              */
             is_released: boolean;
+            /**
+             * First Page
+             * @default false
+             */
+            first_page: boolean;
         };
         /** Body_upload_invitation_audio_invitations_upload_audio__invitation_id__post */
         Body_upload_invitation_audio_invitations_upload_audio__invitation_id__post: {
@@ -1458,8 +1492,6 @@ export interface components {
             owner_id?: number | null;
             /** Anon Session Id */
             anon_session_id?: string | null;
-            /** Preview Token */
-            preview_token?: string | null;
             /** Active From */
             active_from?: string | null;
             /** Active Until */
@@ -1536,8 +1568,6 @@ export interface components {
             owner_id?: number | null;
             /** Anon Session Id */
             anon_session_id?: string | null;
-            /** Preview Token */
-            preview_token?: string | null;
             /** Active From */
             active_from?: string | null;
             /** Active Until */
@@ -2093,6 +2123,26 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    get_home_home_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TemplateRead"][];
+                };
+            };
+        };
+    };
     sitemap_sitemap_xml_get: {
         parameters: {
             query?: never;

@@ -1,8 +1,22 @@
 from urllib.parse import urlencode
 from datetime import datetime
-import uuid
-import re
-from unidecode import unidecode
+import secrets
+import string
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from app.db.models.invitation import Invitation
+
+
+SLUG_LENGTH = 64
+
+async def generate_slug(db: AsyncSession, length: int = SLUG_LENGTH) -> str:
+    alphabet = string.ascii_letters + string.digits
+    while True:
+        slug = ''.join(secrets.choice(alphabet) for _ in range(length))
+        result = await db.execute(select(Invitation).where(Invitation.slug == slug))
+        if not result.scalars().first():
+            return slug
+
 
 def generate_google_calendar_link(
     title: str,
@@ -25,9 +39,3 @@ def generate_google_calendar_link(
     }
 
     return f"https://www.google.com/calendar/render?{urlencode(params)}"
-
-def generate_slug(title: str) -> str:
-    title_ascii = unidecode(title)
-    slug_base = re.sub(r"[^a-zA-Z0-9]+", "-", title_ascii.lower()).strip("-")
-    slug = f"{slug_base}-{uuid.uuid4().hex[:16]}"
-    return slug

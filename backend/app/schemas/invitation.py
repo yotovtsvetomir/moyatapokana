@@ -253,7 +253,6 @@ class InvitationBase(BaseModel):
     # Ownership / session
     owner_id: Optional[int] = None
     anon_session_id: Optional[str] = None
-    preview_token: Optional[str] = None
 
     # Activation
     active_from: Optional[datetime] = None

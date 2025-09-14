@@ -42,7 +42,7 @@ export const ShareBlock = ({ shareUrl, invitationId }: ShareBlockProps) => {
         disabled
         icon="link"
         label="Линк за гостите"
-        size="large"
+        size=""
       />
 
       <Textarea
@@ -51,12 +51,12 @@ export const ShareBlock = ({ shareUrl, invitationId }: ShareBlockProps) => {
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         label="Съобщение за споделяне"
-        size="large"
+        size=""
       />
 
       <div className={styles.copy}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <Button variant="secondary" size="middle" onClick={handleCopy}>
+          <Button variant="secondary" size="" onClick={handleCopy}>
             Копирай
             <span className="material-symbols-outlined">content_copy</span>
           </Button>

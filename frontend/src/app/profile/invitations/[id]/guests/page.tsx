@@ -8,7 +8,7 @@ import styles from "./guests.module.css";
 const menuMap: Record<string, { bgName: string; icon: string }> = {
   meat: { bgName: "Месо", icon: "outdoor_grill" },
   fish: { bgName: "Риба", icon: "phishing" },
-  vegetarian: { bgName: "Вегетарианско", icon: "nutrition" },
+  veg: { bgName: "Вегетарианско", icon: "nutrition" },
   kid: { bgName: "Детско меню", icon: "child_care" },
 };
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Template } from "@/shared/types";
 import { Carousel } from "@/ui-components/Carousel/Carousel";
 import { Button } from "@/ui-components/Button/Button";
@@ -63,6 +64,18 @@ function TemplateSlide({ template }: { template: Template }) {
 // Intro component
 // ----------------------
 export default function Intro({ templates }: IntroProps) {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   if (!templates || templates.length === 0) return <p>No templates available</p>;
 
   return (
@@ -82,7 +95,7 @@ export default function Intro({ templates }: IntroProps) {
           </div>
 
           <div className={styles.carouselFooter}>
-            <Button href="/templates" variant="secondary" size="large">
+            <Button href="/templates" variant="secondary" size={isMobile ? "small" : "large"}>
               Разгледай
             </Button>
           </div>

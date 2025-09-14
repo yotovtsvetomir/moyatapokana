@@ -251,11 +251,14 @@ async def create_empty_invitation(
     write_db.add(rsvp_obj)
     await write_db.flush()
 
+    slug = await generate_slug(read_db)
+
     # -------------------- Create Invitation (write) --------------------
     invitation_obj = Invitation(
         title="",
         description="",
         extra_info="",
+        slug=slug,
         rsvp_id=rsvp_obj.id,
         is_active=False,
         owner_id=owner_id,
@@ -363,7 +366,7 @@ async def create_invitation_from_template(
     write_db.add(rsvp_obj)
     await write_db.flush()
 
-    slug = generate_slug(template.title)
+    slug = await generate_slug(read_db)
 
     # -------------------- Duplicate Invitation (write) --------------------
     new_invitation = Invitation(
@@ -595,13 +598,9 @@ async def update_invitation(
             "is_active",
             "active_from",
             "active_until",
-            "preview_token",
             "status",
         },
     )
-
-    if "title" in update_data and update_data["title"]:
-        update_data["slug"] = generate_slug(update_data["title"])
 
     for key, value in update_data.items():
         setattr(invitation, key, value)
@@ -1095,7 +1094,6 @@ async def add_guest(
     return guest_with_subs
 
 
-
 @router.get("/rsvp/{invitation_id}", response_model=RSVPWithStats)
 async def get_rsvp_for_owner(
     invitation_id: int,
@@ -1123,8 +1121,8 @@ async def get_rsvp_for_owner(
 
     rsvp = invitation.rsvp
 
-    # --- Fetch all guests for this RSVP ---
-    guests_all = (
+    # --- Fetch all main guests with sub_guests ---
+    guests_main = (
         (
             await db.execute(
                 select(Guest)
@@ -1136,25 +1134,33 @@ async def get_rsvp_for_owner(
         .all()
     )
 
-    # Separate attending and not attending guests
-    attending_guests = [g for g in guests_all if g.attending]
-    not_attending_guests = [g for g in guests_all if not g.attending]
+    # --- Flatten main + sub_guests into one list ---
+    guests_all: list[Guest] = []
+    for g in guests_main:
+        guests_all.append(g)
+        guests_all.extend(g.sub_guests)
 
-    # Totals for attending
+    # --- Separate guests by attendance ---
+    attending_guests = [g for g in guests_all if g.attending is True]
+    not_attending_guests = [g for g in guests_all if g.attending is False]
+    #unanswered_guests = [g for g in guests_all if g.attending is None]  # optional
+
+    # --- Totals for attending ---
     total_attending = len(attending_guests)
-    total_adults = len([g for g in attending_guests if g.guest_type != "kid"])
-    total_kids = len([g for g in attending_guests if g.guest_type == "kid"])
+    total_adults = sum(1 for g in attending_guests if g.guest_type != "kid")
+    total_kids = sum(1 for g in attending_guests if g.guest_type == "kid")
 
+    # --- Menu counts ---
     menu_counts: Dict[str, int] = {}
     for g in attending_guests:
         if g.menu_choice:
             menu_counts[g.menu_choice] = menu_counts.get(g.menu_choice, 0) + 1
 
-    # Totals for not attending
+    # --- Totals for not attending ---
     total_not_attending = len(not_attending_guests)
 
-    # Total guests (attending + not attending)
-    total_guests = total_attending + total_not_attending
+    # --- Total guests (attending + not attending + unanswered if desired) ---
+    total_guests = len(guests_all)
 
     rsvp_stats = Stats(
         total_attending=total_attending,
@@ -1165,14 +1171,14 @@ async def get_rsvp_for_owner(
         menu_counts=menu_counts,
     )
 
-    # --- Extra filters for pagination ---
+    # --- Extra filters for pagination (main guests only) ---
     extra_filters = [Guest.is_main_guest, Guest.rsvp_id == rsvp.id]
 
     if attending is not None:
         is_attending = attending.lower() == "true"
         extra_filters.append(Guest.attending == is_attending)
 
-    # --- Use generic helper for search + ordering ---
+    # --- Apply search + ordering ---
     extra_filters, order_by = await apply_filters_search_ordering(
         model=Guest,
         db=db,

@@ -68,6 +68,10 @@ export default function PricingClient({ initialTiers, initialCurrencies }: Props
     }
   };
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   // Load tiers whenever the selected currency changes
   useEffect(() => {
     if (selectedCurrency?.value) {
