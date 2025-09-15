@@ -5,7 +5,9 @@ import { useParams } from 'next/navigation'
 import { Button } from '@/ui-components/Button/Button'
 import ReactSelect, { Option } from '@/ui-components/Select/ReactSelect'
 import { useInvitation } from '@/context/InvitationContext'
-import type { FontRead } from '@/shared/types'
+import type { components } from '@/shared/types';
+
+type FontRead = components['schemas']['FontRead'];
 
 interface Props {
   fonts: FontRead[]
@@ -18,7 +20,7 @@ const toOption = (font: FontRead): Option => ({
 })
 
 export default function FontSettingsClient({ fonts }: Props) {
-  const { invitation, setInvitation, updateInvitation } = useInvitation()
+  const { invitation, updateInvitation } = useInvitation()
   const { id } = useParams<{ id: string }>()
   const [selectedFont, setSelectedFont] = useState<Option | null>(null)
   const [saving, setSaving] = useState(false)

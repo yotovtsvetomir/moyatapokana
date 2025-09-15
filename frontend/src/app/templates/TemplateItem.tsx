@@ -1,18 +1,27 @@
-import { useState, useEffect } from 'react';
-import { useDynamicFont } from "@/hooks/useDynamicFont";
 import Image from 'next/image';
 import { Button } from "@/ui-components/Button/Button";
 import styles from './templates.module.css'
+import type { components } from '@/shared/types';
 
-export default function TemplateItem({ template, priority, isMobile }: { template: Template }) {
+type TemplateRead = components['schemas']['TemplateRead'];
+
+export default function TemplateItem({ template, isMobile, priority }: 
+  { 
+    template: TemplateRead,
+    isMobile: boolean,
+    priority: boolean 
+  }
+) {
+
   const fontFamily = template.font_obj?.font_family ?? "sans-serif";
+  const primary_color: string | undefined = template?.primary_color || undefined;
 
   return (
     <li className={styles.templateItem}>
       <div className={styles.templateItemWallpaper}>
         <div
           className={styles.templateText}
-          style={{ color: template.primary_color, fontFamily }}
+          style={{ color: primary_color, fontFamily }}
         >
           <div className={styles.templateTitle}>
             <h3>{template.title}</h3>
@@ -27,7 +36,7 @@ export default function TemplateItem({ template, priority, isMobile }: { templat
           </div>
         </div>
         <Image
-          src={template.wallpaper}
+          src={template.wallpaper || "/fallback.png"}
           alt="Преглед на поканата"
           fill
           unoptimized
@@ -46,7 +55,7 @@ export default function TemplateItem({ template, priority, isMobile }: { templat
           { label: 'Шрифт', value: template.font_obj?.label ?? 'Без' },
           {
             label: 'Тема',
-            value: `${template.primary_color ?? '#ccc'} ${template.secondary_color ?? '#ccc'}`,
+            value: `${primary_color ?? '#ccc'} ${template.secondary_color ?? '#ccc'}`,
             isColor: true,
           },
         ].map((item) => (

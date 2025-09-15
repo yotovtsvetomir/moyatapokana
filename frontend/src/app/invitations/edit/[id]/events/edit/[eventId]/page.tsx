@@ -9,6 +9,7 @@ import DateInput from "@/ui-components/DateInput/DateInput";
 import DetailSection from "@/ui-components/DetailSection/DetailSection";
 import styles from "../../Events.module.css";
 import { useInvitation } from "@/context/InvitationContext";
+import type { components } from '@/shared/types';
 
 export default function EditEventPage() {
   const { id, eventId } = useParams<{ id: string; eventId: string }>();

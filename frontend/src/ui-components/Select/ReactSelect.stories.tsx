@@ -16,7 +16,7 @@ const options: Option[] = [
 
 export const Default: StoryObj = {
   render: () => {
-    const [value, setValue] = useState<Option | null>(options[0])
+    const [value, setValue] = useState<Option | null | undefined>(options[0])
 
     return (
       <div style={{ width: 250 }}>

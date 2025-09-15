@@ -7,17 +7,19 @@ export interface Option {
   label: string
   id?: string | number
   preview?: string
+  presentationImage?: string | null
+  key?: string | null
 }
 
 interface ReactSelectProps<T> {
   options: T[]
-  value: T | null
-  onChange: (option: T | null) => void
+  value: T | null | undefined
+  onChange: (option: T | null | undefined) => void
   placeholder?: string
   isDisabled?: boolean
   isClearable?: boolean
   isSearchable?: boolean
-  color?: string // <-- new color prop
+  color?: string
 }
 
 export default function ReactSelect<T extends { value: string; label: string }>({

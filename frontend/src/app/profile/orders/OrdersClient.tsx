@@ -87,7 +87,7 @@ export default function OrdersClient({ initialData }: Props) {
   }, [page, selectedStatus]);
 
   const handleFilterChange = (
-    option: { value: string; label: string } | null
+    option: { value: string; label: string } | null | undefined
   ) => {
     setSelectedStatus(option || filterOptions[0]);
     setPage(1);

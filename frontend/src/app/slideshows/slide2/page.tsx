@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
-import Lottie from 'lottie-react';
+import Lottie, { LottieRefCurrentProps } from 'lottie-react';
 import fireworks from '@/assets/boom_confetti.json';
 import styles from './slide2.module.css';
 
@@ -17,7 +17,13 @@ const steps = [
 ];
 const confettiSoundUrl = '/surprise.wav';
 
-function getRandomPositions(num, imageSize = 140, padding = 32, reservedFooterHeight = 110, buffer = 12) {
+function getRandomPositions(
+  num: number,
+  imageSize = 140,
+  padding = 32,
+  reservedFooterHeight = 110,
+  buffer = 12
+): { x: number; y: number }[] {
   let size = imageSize;
   let positions = [];
 
@@ -59,15 +65,20 @@ function getRandomPositions(num, imageSize = 140, padding = 32, reservedFooterHe
   return positions;
 }
 
+interface SlideshowImage {
+  order: number;
+  file_url: string;
+}
+
 export default function SlideOne() {
   const router = useRouter()
   const [slug, setSlug] = useState("");
   const [primaryColor, setPrimaryColor] = useState("");
   const [secondaryColor, setSecondaryColor] = useState("");
   const [ isTemplate, setIsTemplate ] = useState(false)
-  const [images, setImages] = useState([])
+  const [images, setImages] = useState<SlideshowImage[]>([]);
   const [step, setStep] = useState(0);
-  const [positions, setPositions] = useState([]);
+  const [positions, setPositions] = useState<{ x: number; y: number }[]>([]);
   const [imageSize, setImageSize] = useState(140);
   const [footerHeight, setFooterHeight] = useState(97);
   const [showLottie, setShowLottie] = useState(true);
@@ -75,9 +86,9 @@ export default function SlideOne() {
 
   const animationIsDone = step === steps.length - 1;
 
-  const audioRef = useRef(null);
-  const lottieRef = useRef(null);
-  const footerRef = useRef(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const lottieRef = useRef<LottieRefCurrentProps>(null);
+  const footerRef = useRef<HTMLDivElement>(null);
 
   const calcImageSize = () => {
     if (typeof window === 'undefined') return 140;
@@ -106,7 +117,9 @@ export default function SlideOne() {
       const data = JSON.parse(stored);
       setSlug(data.slug ?? "");
       setImages(
-        (data.slideshowImages ?? []).sort((a, b) => a.order - b.order)
+        (data.slideshowImages ?? []).sort(
+          (a: SlideshowImage, b: SlideshowImage) => a.order - b.order
+        )
       );
       setPrimaryColor(data.primaryColor ?? "");
       setSecondaryColor(data.secondaryColor ?? "");
@@ -159,6 +172,7 @@ export default function SlideOne() {
     return () => {
       if (audioRef.current) {
         audioRef.current.pause();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
         audioRef.current.currentTime = 0;
       }
     };

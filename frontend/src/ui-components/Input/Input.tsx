@@ -16,7 +16,7 @@ interface InputProps {
   required?: boolean;
   disabled?: boolean;
   color?: string;
-  size?: 'default' | 'large';
+  size?: 'default' | 'large' | 'small';
 }
 
 export const Input: React.FC<InputProps> = ({

@@ -3,15 +3,53 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Input } from '@/ui-components/Input/Input';
 import TemplateItem from './TemplateItem';
-import type { TemplatesApiResponse, Template, CategoryWithSubs } from './types';
 import { Spinner } from '@/ui-components/Spinner/Spinner';
 import styles from './templates.module.css';
 import ReactSelect, { Option } from '@/ui-components/Select/ReactSelect';
+import type { components } from '@/shared/types';
+
+type TemplateRead = components['schemas']['TemplateRead'];
+
+interface Variant {
+  id: number;
+  name: string;
+  slug: string;
+}
+
+interface Subcategory {
+  id: number;
+  name: string;
+  slug: string;
+  variants: Variant[];
+}
+
+interface Category {
+  id: number;
+  name: string;
+  slug: string;
+  subcategories: Subcategory[];
+}
+
+interface Filters {
+  categories: Category[];
+}
+
+interface TemplatesApiResponse {
+  templates: {
+    total_count: number;
+    current_page: number;
+    page_size: number;
+    total_pages: number;
+    items: TemplateRead[];
+  };
+  filters: Filters;
+  error?: string;
+}
 
 interface Props {
   initialData: TemplatesApiResponse;
   initialSearch?: string;
-  initialCategories: CategoryWithSubs[];
+  initialCategories: Category[];
   initialCategory?: string;
   initialSubcategory?: string;
   initialVariant?: string;
@@ -30,9 +68,8 @@ export default function TemplatesClient({
     typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get(key) : null;
 
   // --- Templates & Pagination ---
-  const [templates, setTemplates] = useState<Template[]>(initialData.templates.items);
+  const [templates, setTemplates] = useState<TemplateRead[]>(initialData.templates.items);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(initialData.templates.current_page < initialData.templates.total_pages);
 
@@ -41,7 +78,7 @@ export default function TemplatesClient({
   const [inputSearchValue, setInputSearchValue] = useState(initialSearchValue);
   const [searchTerm, setSearchTerm] = useState(initialSearchValue);
 
-  const [categories] = useState<CategoryWithSubs[]>(initialCategories);
+  const [categories] = useState<Category[]>(initialCategories);
   const initialCategoryValue = getParam('category') ?? initialCategory ?? null;
   const initialSubcategoryValue = getParam('subcategory') ?? initialSubcategory ?? null;
   const initialVariantValue = getParam('variant') ?? initialVariant ?? null;
@@ -110,16 +147,19 @@ export default function TemplatesClient({
 
       setTemplates(prev => append ? [...prev, ...data.templates.items] : data.templates.items);
       setHasMore(data.templates.current_page < data.templates.total_pages);
-    } catch (err: any) {
-      console.error(err);
-      setError(err.message || 'Something went wrong');
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        console.log(err.message);
+      } else {
+        console.log('Something else was thrown', err);
+      }
     } finally {
       setLoading(false);
     }
   }, [page, searchTerm, category, subcategory, variant]);
 
   // --- Cascading select handlers ---
-  const handleCategoryChange = (option: Option | null) => {
+  const handleCategoryChange = (option: Option | null | undefined) => {
     const value = option?.value || null;
     setCategory(value);
     setSubcategory(null);
@@ -130,7 +170,7 @@ export default function TemplatesClient({
     setVariantOptions([{ value: '', label: 'Без' }]);
   };
 
-  const handleSubcategoryChange = (option: Option | null) => {
+  const handleSubcategoryChange = (option: Option | null | undefined) => {
     const value = option?.value || null;
     setSubcategory(value);
     setVariant(null);
@@ -140,7 +180,7 @@ export default function TemplatesClient({
     setVariantOptions([{ value: '', label: 'Без' }, ...(selectedSub?.variants.map(v => ({ value: v.slug, label: v.name })) || [])]);
   };
 
-  const handleVariantChange = (option: Option | null) => setVariant(option?.value || null);
+  const handleVariantChange = (option: Option | null | undefined) => setVariant(option?.value || null);
 
   // --- Debounced search ---
   useEffect(() => {
@@ -158,10 +198,15 @@ export default function TemplatesClient({
     setPage(1);
     updateURL();
     fetchTemplates(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm, category, subcategory, variant]);
 
   // --- Infinite scroll ---
-  useEffect(() => { if (page > 1) fetchTemplates(true); }, [page]);
+  useEffect(() => {
+    if (page > 1) fetchTemplates(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page]);
+
   useEffect(() => {
     const handleScroll = () => {
       if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 1400 && hasMore && !loading) setPage(prev => prev + 1);
@@ -194,8 +239,6 @@ export default function TemplatesClient({
         <ReactSelect options={subcategoryOptions} value={subcategory ? subcategoryOptions.find(o => o.value === subcategory) : { value: '', label: category ? 'Изберете подкатегория' : 'Първо изберете категория' }} onChange={handleSubcategoryChange} isDisabled={!category} />
         <ReactSelect options={variantOptions} value={variant ? variantOptions.find(o => o.value === variant) : { value: '', label: subcategory ? 'Изберете вариант' : 'Първо изберете подкатегория' }} onChange={handleVariantChange} isDisabled={!subcategory} />
       </div>
-
-      {error && <p className={styles.error}>{error}</p>}
 
       <ul className={styles.templateList}>
         {templates.map((template, index) => <TemplateItem key={template.id} template={template} priority={index === 0} isMobile={isMobile} />)}

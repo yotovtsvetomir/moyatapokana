@@ -1,6 +1,10 @@
 import { redirect } from "next/navigation";
 
-export default async function EditInvitationPage({ params }: { params: Promise<{ slug: id }>}) {
-  const pm = await params
+interface Props {
+  params: Promise<{ id: string }>;
+}
+
+export default async function EditInvitationPage({ params }: Props) {
+  const pm = await params;
   redirect(`/invitations/edit/${pm.id}/settings`);
 }

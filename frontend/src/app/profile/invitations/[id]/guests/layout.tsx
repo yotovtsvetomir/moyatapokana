@@ -7,7 +7,8 @@ type PaginatedGuests = components["schemas"]["PaginatedResponse_GuestRead_"];
 type RSVPWithStats = components["schemas"]["RSVPWithStats"];
 
 interface Props {
-  children: ReactNode;
+  children: React.ReactNode;
+  params: Promise<{ id: string }>;
 }
 
 async function getRSVPWithStats(id: string): Promise<{ guests: PaginatedGuests; stats: RSVPWithStats["stats"] } | null> {
@@ -28,7 +29,7 @@ async function getRSVPWithStats(id: string): Promise<{ guests: PaginatedGuests; 
   }
 }
 
-export default async function GuestsPage({ params, children }: { params: { id: string } }) {
+export default async function GuestsPage({ params, children }: Props) {
   const { id } = await params;
   const data = await getRSVPWithStats(id);
   if (!data) return notFound();

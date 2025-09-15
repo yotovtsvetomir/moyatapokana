@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Image from "next/image";
 import styles from "./ChooseSlideshow.module.css";
 
 export default function ChooseSlideshow() {

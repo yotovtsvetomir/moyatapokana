@@ -130,13 +130,6 @@ export default function PuzzleGame() {
     e.preventDefault();
   }
 
-  function reset() {
-    const pieces = Array.from({ length: TILE_COUNT }, (_, i) => i);
-    setPlaced(shuffle(pieces));
-    setWon(false);
-    setSelected(null);
-  }
-
   return (
     <div className={styles.wrapper}>
       <Image src="/bgr.webp" alt="Background" fill style={{ objectFit: "cover", position: "absolute", top: 0, left: 0, zIndex: 0 }} priority />
@@ -179,8 +172,6 @@ export default function PuzzleGame() {
           title="🎉 Браво! 🎉"
           message="Ти подреди картинката успешно! Ето твоята изненада!"
           onConfirm={() => router.push(`/slideshows/${slideshowKey || "demo"}`)}
-          onSkip={showSkip ? () => router.push(`/slideshows/${slideshowKey || "demo"}`) : undefined}
-          onReset={reset}
         />
       )}
     </div>

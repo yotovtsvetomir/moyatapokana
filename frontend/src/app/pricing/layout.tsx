@@ -1,5 +1,3 @@
-// app/pricing/layout.tsx
-import { Metadata } from "next";
 import Script from "next/script";
 import PricingClient from "./PricingClient";
 import type { components } from "@/shared/types";
@@ -15,35 +13,6 @@ async function getInitialPricing(currency = "BGN"): Promise<PriceTierResponse> {
   return res.json();
 }
 
-// Generate metadata for pricing page
-export async function generateMetadata(): Promise<Metadata> {
-  const data = await getInitialPricing();
-
-  const title = "Цени - Moyatapokana.bg";
-  const description = "Разгледайте нашите ценови пакети за покани и услуги. Изберете най-подходящия за вас.";
-  const url = `${process.env.NEXT_PUBLIC_CLIENT_URL}/pricing`;
-
-  return {
-    title,
-    description,
-    openGraph: {
-      title,
-      description,
-      type: "website",
-      url,
-      siteName: "Moyatapokana.bg",
-    },
-    twitter: {
-      card: "summary_large_image",
-      title,
-      description,
-    },
-    alternates: {
-      canonical: url,
-    },
-  };
-}
-
 // Layout component
 interface Props {
   children?: React.ReactNode;
@@ -55,6 +24,10 @@ export default async function PricingLayout({ children }: Props) {
   if (!data || !data.tiers || data.tiers.length === 0) {
     return <p>Ценовите пакети не са налични в момента.</p>;
   }
+
+  const title = "Цени - Moyatapokana.bg";
+  const description = "Разгледайте нашите ценови пакети за покани и услуги. Изберете най-подходящия за вас.";
+  const url = `${process.env.NEXT_PUBLIC_CLIENT_URL}/pricing`;
 
   // JSON-LD structured data for pricing
   const structuredData = {
@@ -73,6 +46,24 @@ export default async function PricingLayout({ children }: Props) {
 
   return (
     <>
+      <head>
+        <title>{title}</title>
+        <meta name="description" content={description} />
+        <link rel="canonical" href={url} />
+
+        {/* Open Graph */}
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="Moyatapokana.bg" />
+        <meta property="og:title" content={title} />
+        <meta property="og:description" content={description} />
+        <meta property="og:url" content={url} />
+
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={title} />
+        <meta name="twitter:description" content={description} />
+      </head>
+
       {/* JSON-LD */}
       <Script
         id="jsonld-pricing"

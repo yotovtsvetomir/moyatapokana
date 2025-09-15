@@ -5,7 +5,7 @@ interface ButtonProps {
   children: React.ReactNode;
   type?: 'button' | 'submit' | 'reset';
   variant?: 'primary' | 'secondary' | 'danger' | 'ghost' | 'basic';
-  size?: 'default' | 'large' | 'middle';
+  size?: 'default' | 'large' | 'middle' | 'small';
   width?: string | number;
   disabled?: boolean;
   loading?: boolean;

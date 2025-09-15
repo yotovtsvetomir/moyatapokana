@@ -1,5 +1,3 @@
-import { cookies } from 'next/headers'
-import { notFound } from 'next/navigation'
 import GameSettingsClient from './GameSettingsClient'
 import type { components } from '@/shared/types'
 

@@ -1,10 +1,11 @@
-// app/page.tsx
-import { Metadata } from "next";
 import Script from "next/script";
 import Home from "./Home";
-import { Template, BlogPost } from "@/shared/types";
+import type { components } from '@/shared/types';
 
-async function getHomeData(): Promise<{ templates: Template[]; blogposts: BlogPost[] }> {
+type TemplateRead = components['schemas']['TemplateRead'];
+type BlogPostRead = components['schemas']['BlogPostOut'];
+
+async function getHomeData(): Promise<{ templates: TemplateRead[]; blogposts: BlogPostRead[] }> {
   const res = await fetch(`${process.env.API_URL_SERVER}/home`, {
     next: { revalidate: 60 },
   });
@@ -14,40 +15,15 @@ async function getHomeData(): Promise<{ templates: Template[]; blogposts: BlogPo
   return res.json();
 }
 
-// SEO + OpenGraph + Twitter metadata
-export async function generateMetadata(): Promise<Metadata> {
-  const data = await getHomeData();
-
-  const title = "Moyatapokana.bg — Шаблони за покани и блог";
-  const description = "Разгледайте най-новите шаблони за покани и статии в блога на Moyatapokana.bg";
-  const url = process.env.NEXT_PUBLIC_CLIENT_URL;
-  const ogImage = data.templates[0]?.wallpaper || `${url}/default-og.jpg`;
-
-  return {
-    title,
-    description,
-    openGraph: {
-      title,
-      description,
-      url,
-      type: "website",
-      siteName: "Moyatapokana.bg",
-      images: [ogImage],
-    },
-    twitter: {
-      card: "summary_large_image",
-      title,
-      description,
-      images: [ogImage],
-    },
-    alternates: {
-      canonical: url,
-    },
-  };
-}
-
 export default async function Page() {
   const { templates, blogposts } = await getHomeData();
+
+  const data = await getHomeData();
+
+  const title = "Moyatapokana.bg — Шаблони за покани";
+  const description = "Разгледайте най-новите шаблони за покани на Moyatapokana.bg";
+  const url = process.env.NEXT_PUBLIC_CLIENT_URL || "https://www.moyatapokana.bg";
+  const image = data.templates[0]?.wallpaper || `${url}/default-og.jpg`;
 
   const fontLinks = Array.from(
     new Set(
@@ -111,7 +87,7 @@ export default async function Page() {
             position: index + 1,
             item: {
               "@type": "Product",
-              name: t.name,
+              name: t.title,
               url: `${process.env.NEXT_PUBLIC_CLIENT_URL}/template/preview/${t.slug}`,
               image: t.wallpaper,
               description: t.description || "Цифрова покана",
@@ -154,6 +130,26 @@ export default async function Page() {
 
   return (
     <>
+      <head>
+        <title>{title}</title>
+        <meta name="description" content={description} />
+        <link rel="canonical" href={url} />
+
+        {/* Open Graph / Facebook */}
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="Moyatapokana.bg" />
+        <meta property="og:title" content={title} />
+        <meta property="og:description" content={description} />
+        <meta property="og:url" content={url} />
+        <meta property="og:image" content={image} />
+
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={title} />
+        <meta name="twitter:description" content={description} />
+        <meta name="twitter:image" content={image} />
+      </head>
+
       {/* Dynamic fonts */}
       {fontLinks.map((url, i) => (
         <link key={i} rel="stylesheet" href={url} />

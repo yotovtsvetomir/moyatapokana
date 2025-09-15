@@ -11,9 +11,10 @@ import type { components } from '@/shared/types';
 import { useInvitation } from '@/context/InvitationContext';
 import styles from './rsvp.module.css';
 
-type GuestCreate = components["schemas"]["GuestCreate"];
+type GuestCreate = Omit<components["schemas"]["GuestCreate"], 'attending'> & {
+  attending?: boolean;
+};
 type GuestRead = components["schemas"]["GuestRead"];
-type Invitation = components['schemas']['InvitationRead'];
 
 const guestTypes: Option[] = [
   { label: 'Възрастен', value: 'adult' },
@@ -26,8 +27,6 @@ const menuOptions: Option[] = [
   { label: 'Риба', value: 'fish' },
   { label: 'Детско меню', value: 'kid' },
 ];
-
-const isCyrillic = (text: string) => /^[\u0400-\u04FF\s\-]+$/.test(text.trim());
 
 export default function RSVPForm() {
   const { invitation } = useInvitation();
@@ -81,28 +80,11 @@ export default function RSVPForm() {
     }
   };
 
-  const handleRemoveSubGuest = (index: number) => {
-    setSubGuests(prev => prev.filter((_, i) => i !== index));
-    setSubGuestErrors(prev => {
-      const copy = { ...prev };
-      delete copy[index];
-      return copy;
-    });
-  };
-
-  const handleMenuChoiceChange = (option: Option | null) => {
+  const handleMenuChoiceChange = (option: Option | null | undefined) => {
     setMainGuest(prev => ({
       ...prev,
       menu_choice: option?.value || undefined,
     }));
-  };
-
-  const handleSubGuestMenuChange = (index: number, option: Option | null) => {
-    setSubGuests(prev =>
-      prev.map((sg, i) =>
-        i === index ? { ...sg, menu_choice: option?.value || undefined } : sg
-      )
-    );
   };
 
   const handleGuestTypeChange = (value: string) => {
@@ -112,12 +94,13 @@ export default function RSVPForm() {
     }));
   };
 
-  const handleSubGuestTypeChange = (index: number, value: string) => {
-    setSubGuests(prev =>
-      prev.map((sg, i) =>
-        i === index ? { ...sg, guest_type: value } : sg
-      )
-    );
+  const handleRemoveSubGuest = (index: number) => {
+    setSubGuests(prev => prev.filter((_, i) => i !== index));
+    setSubGuestErrors(prev => {
+      const copy = { ...prev };
+      delete copy[index];
+      return copy;
+    });
   };
 
   const handleSubmit = async (confirmAdd = false) => {
@@ -138,7 +121,12 @@ export default function RSVPForm() {
         const errData = await res.json();
         if (res.status === 409 && errData.detail?.includes('Гост с това име')) {
           // Backend returned duplicates
-          setDuplicatesList(errData.detail.split(':')[1].split(',').map(s => s.trim()));
+          setDuplicatesList(
+            errData.detail
+              .split(':')[1]
+              .split(',')
+              .map((s: string) => s.trim())
+          );
           setShowConfirmModal(true);
           return;
         }
@@ -148,8 +136,10 @@ export default function RSVPForm() {
       const data: GuestRead = await res.json();
       setSubmittedGuests([data, ...(data.sub_guests || [])]);
       toast.success('RSVP записан успешно!');
-    } catch (err: any) {
-      toast.error(`Грешка: ${err.message}`);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        toast.error(`Грешка: ${err.message}`);
+      }
     } finally {
       setLoading(false);
     }
@@ -198,10 +188,12 @@ export default function RSVPForm() {
     ]);
   };
 
+  const primary_color: string | undefined = invitation?.primary_color || undefined;
+
   // -------------------- Render --------------------
   if (submittedGuests) {
     return (
-      <div className="container centerWrapper" style={{ '--primary-color': invitation.primary_color }}>
+      <div className="container centerWrapper" style={{ '--primary-color': primary_color } as React.CSSProperties}>
         <div className={styles.confirmation}>
           <h2>Потвърдихте</h2>
           <ul className={styles.confirmationList}>
@@ -230,7 +222,7 @@ export default function RSVPForm() {
 
   // -------------------- RSVP Form --------------------
   return (
-    <div className="container centerWrapper" style={{ '--primary-color': invitation.primary_color }}>
+    <div className="container centerWrapper" style={{ '--primary-color': primary_color }  as React.CSSProperties}>
       <div className={styles.rsvp}>
         <Toaster
           position="top-center"
@@ -262,7 +254,7 @@ export default function RSVPForm() {
           label="Име"
           value={mainGuest.first_name}
           error={mainGuestErrors.first_name}
-          color={invitation.primary_color}
+          color={primary_color}
           onChange={handleMainGuestChange}
         />
 
@@ -272,7 +264,7 @@ export default function RSVPForm() {
           label="Фамилия"
           value={mainGuest.last_name}
           error={mainGuestErrors.last_name}
-          color={invitation.primary_color}
+          color={primary_color}
           onChange={handleMainGuestChange}
         />
 
@@ -281,7 +273,7 @@ export default function RSVPForm() {
             label="Ще присъствам"
             name="attending"
             value="yes"
-            color={invitation.primary_color}
+            color={primary_color}
             selected={mainGuest.attending === true}
             onSelect={handleAttendingYes}
           />
@@ -289,7 +281,7 @@ export default function RSVPForm() {
             label="Няма да присъствам"
             name="attending"
             value="no"
-            color={invitation.primary_color}
+            color={primary_color}
             selected={mainGuest.attending === false}
             onSelect={() => setMainGuest(prev => ({ ...prev, attending: false }))}
           />
@@ -300,7 +292,7 @@ export default function RSVPForm() {
             <div className={styles.selects}>
               <ReactSelect
                 options={guestTypes}
-                color={invitation.primary_color}
+                color={primary_color}
                 value={guestTypes.find(o => o.value === mainGuest.guest_type) || null}
                 onChange={option => handleGuestTypeChange(option?.value || 'adult')}
                 placeholder="Тип гост"
@@ -309,8 +301,12 @@ export default function RSVPForm() {
               {invitation.rsvp.ask_menu && (
                 <ReactSelect
                   options={menuOptions}
-                  color={invitation.primary_color}
-                  value={menuOptions.find(o => o.value === mainGuest.menu_choice) || menuOptions.find(o => o.value === 'meat')}
+                  color={primary_color}
+                  value={
+                    menuOptions.find(o => o.value === mainGuest.menu_choice) ?? 
+                    menuOptions.find(o => o.value === 'meat') ?? 
+                    null
+                  }
                   onChange={handleMenuChoiceChange}
                   placeholder="Избери меню"
                   isClearable={false}
@@ -328,7 +324,7 @@ export default function RSVPForm() {
                     label="Име"
                     value={sg.first_name}
                     error={subGuestErrors[idx]?.first_name}
-                    color={invitation.primary_color}
+                    color={primary_color}
                     onChange={e => handleSubGuestChange(idx, 'first_name', e.target.value)}
                   />
                   <Input
@@ -337,15 +333,15 @@ export default function RSVPForm() {
                     label="Фамилия"
                     value={sg.last_name}
                     error={subGuestErrors[idx]?.last_name}
-                    color={invitation.primary_color}
+                    color={primary_color}
                     onChange={e => handleSubGuestChange(idx, 'last_name', e.target.value)}
                   />
 
                   <ReactSelect
                     options={guestTypes}
-                    value={guestTypes.find(o => o.value === sg.guest_type) || null}
+                    value={guestTypes.find(o => o.value === sg.guest_type) ?? null}
                     onChange={option => handleSubGuestChange(idx, 'guest_type', option?.value || 'adult')}
-                    color={invitation.primary_color}
+                    color={primary_color}
                     placeholder="Тип гост"
                     isClearable={false}
                   />
@@ -355,10 +351,14 @@ export default function RSVPForm() {
                   {invitation.rsvp.ask_menu && (
                     <ReactSelect
                       options={menuOptions}
-                      value={menuOptions.find(o => o.value === sg.menu_choice) || menuOptions.find(o => o.value === 'meat')}
-                      onChange={option => handleSubGuestChange(idx, 'menu_choice', option?.value)}
+                      value={
+                        menuOptions.find(o => o.value === sg.menu_choice) ??
+                        menuOptions.find(o => o.value === 'meat') ??
+                        null
+                      }
+                      onChange={option => handleSubGuestChange(idx, 'menu_choice', option?.value ?? 'meat')}
                       placeholder="Избери меню"
-                      color={invitation.primary_color}
+                      color={primary_color}
                       isClearable={false}
                     />
                   )}
@@ -368,7 +368,7 @@ export default function RSVPForm() {
                       type="button"
                       variant="danger"
                       size="middle"
-                      onClick={() => removeSubGuest(idx)}
+                      onClick={() => handleRemoveSubGuest(idx)}
                     >
                       Премахни
                     </Button>
@@ -383,7 +383,7 @@ export default function RSVPForm() {
                 width="100%"
                 icon="add"
                 iconPosition="left"
-                color={invitation.primary_color}
+                color={primary_color}
                 onClick={addSubGuest}
               >
                 Добави
@@ -400,7 +400,7 @@ export default function RSVPForm() {
             iconPosition="left"
             size="large"
             width="100%"
-            color={invitation.primary_color}
+            color={primary_color}
             loading={loading}
             onClick={handleButtonClick}
             disabled={!canSubmit || hasInvalidNames}

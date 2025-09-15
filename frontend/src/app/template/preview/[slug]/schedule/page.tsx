@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useTemplate } from "@/context/TemplateContext";
-import { useUser } from "@/context/UserContext";
 import { useDynamicFont } from "@/hooks/useDynamicFont";
 
 import { motion } from "framer-motion";
@@ -15,9 +14,8 @@ import styles from "./schedule.module.css";
 
 export default function TemplatePreview() {
   const router = useRouter();
-  const { user } = useUser();
   const { template } = useTemplate();
-  const fontFamily = useDynamicFont(template?.font_obj);
+  const fontFamily = useDynamicFont(template?.font_obj ?? null);
 
   const [isPlaying, setIsPlaying] = useState(true);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -187,31 +185,33 @@ export default function TemplatePreview() {
   };
   const itemVariants = {
     hidden: { opacity: 0, y: 20 },
-    show: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.6, ease: "linear" },
+    show: { 
+      opacity: 1, 
+      y: 0, 
+      transition: { duration: 0.6, ease: "linear" as const } 
     },
   };
 
   if (!template) return <p>Зареждане...</p>;
+
+  const primary_color: string | undefined = template?.primary_color || undefined;
+  const secondary_color: string | undefined = template?.secondary_color || undefined;
 
   return (
     <div
       className={styles.wrapper}
       style={
         {
-          "--primary-color": template.primary_color,
-          "--secondary-color": template.secondary_color || template.primary_color,
+          "--primary-color": primary_color,
+          "--secondary-color": secondary_color,
         } as React.CSSProperties
       }
     >
       <div className={styles.invitation}>
         <Image
-          src={template.wallpaper}
+          src={template.wallpaper || "/fallback.png"}
           alt="Template background"
           fill
-          priority
           unoptimized
           className={styles.bgImage}
         />
@@ -224,7 +224,7 @@ export default function TemplatePreview() {
           {template.title && (
             <motion.div
               className={styles.title}
-              style={{ color: template.primary_color, fontFamily }}
+              style={{ color: primary_color, fontFamily }}
               variants={itemVariants}
             >
               <h1>{template.title}</h1>
@@ -238,7 +238,7 @@ export default function TemplatePreview() {
               .map((p, i) => (
                 <motion.p
                   key={i}
-                  style={{ color: template.primary_color, fontFamily }}
+                  style={{ color: primary_color, fontFamily }}
                   className={styles.description}
                   variants={itemVariants}
                 >
@@ -257,7 +257,7 @@ export default function TemplatePreview() {
           <div className={styles.pointerCircle}>
             <span
               className={`material-symbols-outlined ${styles.arrowBounce}`}
-              style={{ color: `${template.primary_color}`, fontSize: "2rem" }}
+              style={{ color: `${primary_color}`, fontSize: "2rem" }}
             >
               south
             </span>
@@ -273,7 +273,7 @@ export default function TemplatePreview() {
             <button onClick={toggleAudio}>
               <span
                 className="material-symbols-outlined"
-                style={{ color: template.primary_color }}
+                style={{ color: primary_color }}
               >
                 {isPlaying ? "volume_up" : "volume_off"}
               </span>
@@ -303,7 +303,7 @@ export default function TemplatePreview() {
 
         <Button
           variant="basic"
-          color={template.primary_color}
+          color={primary_color}
           size="large"
           width="100%"
           icon="replay"

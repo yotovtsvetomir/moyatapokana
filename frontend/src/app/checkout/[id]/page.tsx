@@ -28,7 +28,7 @@ async function getOrder(id: string): Promise<{ order: Order; tiers: PriceTier[];
   }
 }
 
-export default async function CheckoutPage({ params }: { params: { id: string } }) {
+export default async function CheckoutPage({ params }: { params: Promise<{ id: string }> }) {
   const pm = await params;
   const orderData = await getOrder(pm.id);
 

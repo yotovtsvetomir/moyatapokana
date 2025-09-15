@@ -13,11 +13,9 @@ export interface paths {
         };
         /**
          * Get Home
-         * @description Get templates for the homepage:
-         *     - Only where first_page=True
-         *     - Ordered by created_at (descending)
-         *     - Limited to 7 results
-         *     - Preload related objects for efficient querying
+         * @description Get data for homepage:
+         *     - Templates (7 latest with first_page=True)
+         *     - Blog posts (2 latest)
          */
         get: operations["get_home_home_get"];
         put?: never;
@@ -2138,7 +2136,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TemplateRead"][];
+                    "application/json": unknown;
                 };
             };
         };

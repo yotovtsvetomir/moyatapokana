@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/ui-components/Button/Button";
-import { Spinner } from "@/ui-components/Spinner/Spinner";
 import styles from "./order-detail.module.css";
 import type { components } from "@/shared/types";
 
@@ -137,9 +136,12 @@ export default function OrderDetailClient({ order, paymentStatus }: Props) {
 
           <div className={styles.pair}>
             <p><strong>Заглавие на поканата</strong></p>
-            <p>{order.invitation_title.length > 10
+            <p>
+              {order.invitation_title
+                ? order.invitation_title.length > 10
                   ? order.invitation_title.slice(0, 10) + '…'
-                  : order.invitation_title}
+                  : order.invitation_title
+                : "—"}
             </p>
           </div>
 

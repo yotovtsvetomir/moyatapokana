@@ -27,7 +27,7 @@ export default function SlideshowClient({ slideshows }: Props) {
   const router = useRouter()
   const { invitation, setInvitation } = useInvitation()
 
-  const [selectedSlideshow, setSelectedSlideshow] = useState<Option | null>(null)
+  const [selectedSlideshow, setSelectedSlideshow] = useState<Option | null | undefined>(null)
   const [slides, setSlides] = useState<SlideState[]>(Array(MAX_SLIDES).fill({}))
   const [previews, setPreviews] = useState<(string | null)[]>(Array(MAX_SLIDES).fill(null))
   const [loading, setLoading] = useState(false)
@@ -110,11 +110,10 @@ export default function SlideshowClient({ slideshows }: Props) {
       slides.forEach(s => s.file && formData.append("slides", s.file))
 
       // Send existing slides URLs (or null) — always required
-      const existingSlidesToSend =
-        slides.map(s => s.file_url || null)
+      const existingSlidesToSend = slides.map(s => s.file_url || null)
       formData.append("existing_slides", JSON.stringify(existingSlidesToSend))
 
-      // **Always send selected_slideshow** — this ensures animation changes are saved
+      // Always send selected_slideshow — ensures animation changes are saved
       formData.append("selected_slideshow", selectedSlideshow?.value || "")
 
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/invitations/slides/${id}`, {
@@ -123,18 +122,22 @@ export default function SlideshowClient({ slideshows }: Props) {
         credentials: "include"
       })
 
-      const data = await res.json()
+      const data = (await res.json()) as { slideshow_images: SlideshowImageRead[] }
       if (!res.ok) throw data
 
       // Update slides & previews
-      const imgs = data.slideshow_images.slice(0, MAX_SLIDES)
       const newSlides: SlideState[] = [
-        ...imgs.map(s => ({ file_url: s.file_url })),
-        ...Array(MAX_SLIDES - imgs.length).fill({})
+        ...data.slideshow_images.slice(0, MAX_SLIDES).map(s => ({ file_url: s.file_url })),
+        ...Array(MAX_SLIDES - data.slideshow_images.length).fill({})
       ]
       setSlides(newSlides)
       setPreviews(newSlides.map(s => s.file_url || null))
-      setInvitation(data)
+
+      // Merge updated slides into existing invitation
+      setInvitation({
+        ...invitation,
+        slideshow_images: data.slideshow_images
+      })
     } catch (err) {
       console.error(err)
       alert("Неуспешно записване на слайдове")
@@ -174,7 +177,7 @@ export default function SlideshowClient({ slideshows }: Props) {
       {selectedSlideshow && selectedSlideshow.label !== 'Без' &&
         <div className="presentImageSlideshow">
           <Image
-            src={selectedSlideshow.presentationImage}
+            src={selectedSlideshow.presentationImage || '/placeholder.png'}
             alt="Wallpaper Preview"
             fill
             style={{ objectFit: 'contain' }}

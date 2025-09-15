@@ -9,6 +9,7 @@ interface CarouselProps<T> {
   renderItem: (item: T, index: number) => React.ReactNode;
   interval?: number;
   minHeight?: string | number;
+  autoPlay?: boolean;
 }
 
 export function Carousel<T>({
@@ -16,11 +17,12 @@ export function Carousel<T>({
   renderItem,
   interval = 5000,
   minHeight = 400,
+  autoPlay = false,
 }: CarouselProps<T>) {
   const [currentSlide, setCurrentSlide] = React.useState(0);
   const [loaded, setLoaded] = React.useState(false);
   const [progress, setProgress] = React.useState(0);
-  const animationFrame = React.useRef<number>();
+  const animationFrame = React.useRef<number | null>(null);
   const startTime = React.useRef<number>(0);
 
   const [sliderRef, slider] = useKeenSlider<HTMLDivElement>({
@@ -41,6 +43,8 @@ export function Carousel<T>({
  const progressRef = React.useRef(0);
 
   const animate = () => {
+    if (!autoPlay) return;
+
     const step = (time: number) => {
       const elapsed = time - startTime.current;
       const pct = Math.min((elapsed / interval) * 100, 100);
@@ -63,7 +67,9 @@ export function Carousel<T>({
   };
 
   React.useEffect(() => {
-    return () => cancelAnimationFrame(animationFrame.current!);
+    return () => {
+      if (animationFrame.current) cancelAnimationFrame(animationFrame.current);
+    };
   }, []);
 
   return (

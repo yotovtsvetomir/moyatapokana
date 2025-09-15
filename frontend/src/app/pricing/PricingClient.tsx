@@ -42,41 +42,34 @@ export default function PricingClient({ initialTiers, initialCurrencies }: Props
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const loadTiers = async (currency: string) => {
-    setLoading(true);
-    setError(null);
+  useEffect(() => {
+    if (!selectedCurrency?.value) return;
 
-    try {
-      const data = await fetchTiers(currency);
+    const fetchData = async () => {
+      setLoading(true);
+      setError(null);
 
-      // Ensure we always get arrays
-      const fetchedTiers = Array.isArray(data.tiers) ? data.tiers : [];
-      const fetchedCurrencies = Array.isArray(data.currencies) ? data.currencies : [];
+      try {
+        const data = await fetchTiers(selectedCurrency.value);
 
-      setTiers(fetchedTiers);
-      setCurrencies(fetchedCurrencies.map((c) => ({ value: c, label: c })));
+        const fetchedTiers = Array.isArray(data.tiers) ? data.tiers : [];
+        const fetchedCurrencies = Array.isArray(data.currencies) ? data.currencies : [];
 
-      // Automatically select the first currency in the new list if it changed
-      if (!fetchedCurrencies.includes(selectedCurrency.value)) {
-        setSelectedCurrency({ value: fetchedCurrencies[0], label: fetchedCurrencies[0] });
+        setTiers(fetchedTiers);
+        setCurrencies(fetchedCurrencies.map((c) => ({ value: c, label: c })));
+
+        if (!fetchedCurrencies.includes(selectedCurrency.value)) {
+          setSelectedCurrency({ value: fetchedCurrencies[0], label: fetchedCurrencies[0] });
+        }
+      } catch (err) {
+        console.error(err);
+        setError("Грешка при зареждане на цените.");
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      console.error(err);
-      setError("Грешка при зареждане на цените.");
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
-
-  // Load tiers whenever the selected currency changes
-  useEffect(() => {
-    if (selectedCurrency?.value) {
-      loadTiers(selectedCurrency.value);
-    }
+    fetchData();
   }, [selectedCurrency]);
 
   return (

@@ -4,9 +4,14 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
-import Lottie from 'lottie-react';
+import Lottie, { LottieRefCurrentProps } from 'lottie-react';
 import fireworks from '@/assets/boom_confetti.json';
 import styles from './slide1.module.css';
+
+interface SlideshowImage {
+  order: number;
+  file_url: string;
+}
 
 const steps = [
   [0],
@@ -15,11 +20,18 @@ const steps = [
   [0],
   [0, 1, 2, 3, 4],
 ];
+
 const confettiSoundUrl = '/surprise.wav';
 
-function getRandomPositions(num, imageSize = 140, padding = 32, reservedFooterHeight = 110, buffer = 12) {
+function getRandomPositions(
+  num: number,
+  imageSize = 140,
+  padding = 32,
+  reservedFooterHeight = 110,
+  buffer = 12
+): { x: number; y: number }[] {
   let size = imageSize;
-  let positions = [];
+  let positions: { x: number; y: number }[] = [];
 
   for (let attemptShrink = 0; attemptShrink < 4; attemptShrink++) {
     positions = [];
@@ -37,7 +49,7 @@ function getRandomPositions(num, imageSize = 140, padding = 32, reservedFooterHe
         const overlaps = positions.some(pos => {
           const dx = pos.x - x;
           const dy = pos.y - y;
-          return Math.sqrt(dx * dx + dy * dy) < (size + buffer);
+          return Math.sqrt(dx * dx + dy * dy) < size + buffer;
         });
 
         if (!overlaps) {
@@ -51,7 +63,6 @@ function getRandomPositions(num, imageSize = 140, padding = 32, reservedFooterHe
         break;
       }
     }
-
     if (success) break;
     size = Math.max(60, size - 18);
   }
@@ -60,14 +71,14 @@ function getRandomPositions(num, imageSize = 140, padding = 32, reservedFooterHe
 }
 
 export default function SlideOne() {
-  const router = useRouter()
+  const router = useRouter();
   const [slug, setSlug] = useState("");
   const [primaryColor, setPrimaryColor] = useState("");
   const [secondaryColor, setSecondaryColor] = useState("");
-  const [ isTemplate, setIsTemplate ] = useState(false)
-  const [images, setImages] = useState([])
+  const [isTemplate, setIsTemplate] = useState(false);
+  const [images, setImages] = useState<SlideshowImage[]>([]);
   const [step, setStep] = useState(0);
-  const [positions, setPositions] = useState([]);
+  const [positions, setPositions] = useState<{ x: number; y: number }[]>([]);
   const [imageSize, setImageSize] = useState(140);
   const [footerHeight, setFooterHeight] = useState(97);
   const [showLottie, setShowLottie] = useState(true);
@@ -75,12 +86,12 @@ export default function SlideOne() {
 
   const animationIsDone = step === steps.length - 1;
 
-  const audioRef = useRef(null);
-  const lottieRef = useRef(null);
-  const footerRef = useRef(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const lottieRef = useRef<LottieRefCurrentProps>(null);
+  const footerRef = useRef<HTMLDivElement>(null);
 
   const calcImageSize = () => {
-    if (typeof window === 'undefined') return 140;
+    if (typeof window === "undefined") return 140;
     if (window.innerWidth >= 1200) return 300;
     if (window.innerWidth >= 768) return 200;
     return 140;
@@ -92,12 +103,11 @@ export default function SlideOne() {
       audioRef.current.currentTime = 0;
     }
 
-    if (isTemplate) {
-      router.push(`/template/preview/${slug}/schedule`)
-    }
-    else {
-       router.push(`/invitations/preview/${slug}/schedule`)
-    }
+    router.push(
+      isTemplate
+        ? `/template/preview/${slug}/schedule`
+        : `/invitations/preview/${slug}/schedule`
+    );
   };
 
   useEffect(() => {
@@ -106,11 +116,13 @@ export default function SlideOne() {
       const data = JSON.parse(stored);
       setSlug(data.slug ?? "");
       setImages(
-        (data.slideshowImages ?? []).sort((a, b) => a.order - b.order)
+        (data.slideshowImages ?? []).sort(
+          (a: SlideshowImage, b: SlideshowImage) => a.order - b.order
+        )
       );
       setPrimaryColor(data.primaryColor ?? "");
       setSecondaryColor(data.secondaryColor ?? "");
-      setIsTemplate(data.template ?? false)
+      setIsTemplate(data.template ?? false);
     }
   }, []);
 
@@ -142,8 +154,8 @@ export default function SlideOne() {
     };
 
     updateLayout();
-    window.addEventListener('resize', updateLayout);
-    return () => window.removeEventListener('resize', updateLayout);
+    window.addEventListener("resize", updateLayout);
+    return () => window.removeEventListener("resize", updateLayout);
   }, [footerHeight, images]);
 
   useEffect(() => {
@@ -159,6 +171,7 @@ export default function SlideOne() {
     return () => {
       if (audioRef.current) {
         audioRef.current.pause();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
         audioRef.current.currentTime = 0;
       }
     };
@@ -181,12 +194,12 @@ export default function SlideOne() {
           autoplay={false}
           onComplete={() => setShowLottie(false)}
           style={{
-            position: 'fixed',
+            position: "fixed",
             left: 0,
             top: 0,
-            width: '120vw',
-            height: '120vh',
-            pointerEvents: 'none',
+            width: "120vw",
+            height: "120vh",
+            pointerEvents: "none",
             zIndex: 2000,
           }}
         />
@@ -195,8 +208,8 @@ export default function SlideOne() {
       <audio ref={audioRef} src={confettiSoundUrl} />
 
       <AnimatePresence>
-        {steps[step].map(i => (
-          positions[i] && (
+        {steps[step].map(i =>
+          positions[i] ? (
             <motion.div
               key={i}
               initial={{ scale: 0, opacity: 0 }}
@@ -204,7 +217,7 @@ export default function SlideOne() {
               exit={{ scale: 0, opacity: 0 }}
               transition={{ duration: 0.5 }}
               style={{
-                position: 'absolute',
+                position: "absolute",
                 left: positions[i].x - imageSize / 2,
                 top: positions[i].y - imageSize / 2,
               }}
@@ -219,8 +232,8 @@ export default function SlideOne() {
                 style={{ width: imageSize, height: imageSize }}
               />
             </motion.div>
-          )
-        ))}
+          ) : null
+        )}
       </AnimatePresence>
 
       <div className={styles.AniFooter} ref={footerRef}>
@@ -235,7 +248,7 @@ export default function SlideOne() {
         <button
           className={styles.continueButton}
           onClick={handleContinue}
-          disabled={step !== steps.length - 1}
+          disabled={!animationIsDone}
         >
           Продължи
         </button>

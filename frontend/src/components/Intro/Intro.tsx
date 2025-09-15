@@ -1,25 +1,28 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Template } from "@/shared/types";
+import type { components } from '@/shared/types';
 import { Carousel } from "@/ui-components/Carousel/Carousel";
 import { Button } from "@/ui-components/Button/Button";
 import Image from "next/image";
 import styles from "./intro.module.css";
 
+type TemplateRead = components['schemas']['TemplateRead'];
+
 interface IntroProps {
-  templates: Template[];
+  templates: TemplateRead[];
 }
 
 // ----------------------
 // Slide component
 // ----------------------
-function TemplateSlide({ template }: { template: Template }) {
+function TemplateSlide({ template }: { template: TemplateRead }) {
   const fontFamily = template.font_obj?.font_family ?? "sans-serif";
+  const primary_color: string | undefined = template?.primary_color || undefined;
 
   return (
     <div className={styles.templateItemWallpaper}>
-      <div className={styles.templateText} style={{ color: template.primary_color, fontFamily }}>
+      <div className={styles.templateText} style={{ color: primary_color, fontFamily }}>
         <div className={styles.templateTitle}>
           <h3>{template.title}</h3>
         </div>
@@ -31,12 +34,12 @@ function TemplateSlide({ template }: { template: Template }) {
             .map((p, i) => (
               <p key={i}>{p.length > 115 ? p.slice(0, 115) + "…" : p}</p>
             ))}
-          {template.description?.split("\n").filter(p => p.trim()).length > 2 && <p>...</p>}
+          {((template?.description?.split("\n") ?? []).filter(p => p.trim()).length > 2) && <p>...</p>}
         </div>
       </div>
 
       <Image
-        src={template.wallpaper}
+        src={template.wallpaper || "/fallback.png"}
         alt="Преглед на поканата"
         fill
         unoptimized
@@ -85,7 +88,7 @@ export default function Intro({ templates }: IntroProps) {
           items={templates}
           interval={5000}
           autoPlay
-          renderItem={(template: Template) => <TemplateSlide key={template.id} template={template} />}
+          renderItem={(template: TemplateRead) => <TemplateSlide key={template.id} template={template} />}
         />
 
         <div className={styles.introWrapper}>

@@ -1,13 +1,22 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import Image from "next/image";
+import Image, { StaticImageData } from "next/image";
 import { useRouter } from "next/navigation";
 import Bubble from "@/assets/bubble.png";
 import GameHeader from "@/components/GameHeader/GameHeader";
 import GameFooter from "@/components/GameFooter/GameFooter";
 import GameSuccess from "@/components/GameSuccess/GameSuccess";
 import styles from "./bubbles.module.css";
+
+type Balloon = {
+  id: string;
+  left: number;
+  imgSrc: StaticImageData;
+  bornAt: number;
+  popped: boolean;
+  bottomWhenPopped?: number;
+};
 
 const BALLOON_IMAGES = [Bubble];
 const BALLOON_WIDTH = 130;
@@ -23,12 +32,11 @@ function getRandomImg() {
   return BALLOON_IMAGES[Math.floor(Math.random() * BALLOON_IMAGES.length)];
 }
 
-export default function BalloonGame() {
+export default function BubbleGame() {
   const router = useRouter();
-  const [balloons, setBalloons] = useState([]);
+  const [balloons, setBalloons] = useState<Balloon[]>([]);
   const [popped, setPopped] = useState(0);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [animateScore, setAnimateScore] = useState(false);
 
   const [showSkip, setShowSkip] = useState(false);
   const [slug, setSlug] = useState("");
@@ -69,21 +77,13 @@ export default function BalloonGame() {
     document.documentElement.style.setProperty("--invitation-text-main", "#2C3E50");
   }, [primaryColor, secondaryColor]);
 
-  // Animate score
-  useEffect(() => {
-    if (popped === 0) return;
-    setAnimateScore(true);
-    const timeout = setTimeout(() => setAnimateScore(false), 340);
-    return () => clearTimeout(timeout);
-  }, [popped]);
-
-  // Spawn balloons
+  // Spawn balloons/bubbles
   useEffect(() => {
     const spawn = () => {
       const id = Math.random().toString(36).slice(2);
       setBalloons((prev) => [
         ...prev,
-        { id, left: getRandomLeft(), imgSrc: getRandomImg(), bornAt: Date.now(), popped: false, bottomWhenPopped: null },
+        { id, left: getRandomLeft(), imgSrc: getRandomImg(), bornAt: Date.now(), popped: false },
       ]);
       setTimeout(() => setBalloons((prev) => prev.filter((b) => b.id !== id)), FLOAT_DURATION);
     };
@@ -126,12 +126,13 @@ export default function BalloonGame() {
       <Image src="/bgr.webp" alt="Background" fill style={{ objectFit: "cover", position: "absolute", top: 0, left: 0, zIndex: 0 }} priority />
       <audio ref={popSound} src="/bubblepop.wav" preload="auto" />
       <audio ref={victorySound} src="/tada.wav" preload="auto" />
+      <audio ref={progressSound} src="/blip.wav" preload="auto" />
 
       <GameHeader title={`Спукай ${POP_TARGET} мехурчета и виж изненада!`} />
 
       <div style={{ flex: 1, position: "relative" }}>
         {balloons.map((b) => {
-          const style = {
+          const style: React.CSSProperties = {
             left: b.left,
             width: BALLOON_WIDTH,
             height: BALLOON_HEIGHT,
@@ -151,7 +152,6 @@ export default function BalloonGame() {
         })}
       </div>
 
-      {/* Footer showing progress using your GameFooter component */}
       <GameFooter
         current={popped}
         total={POP_TARGET}
@@ -159,17 +159,11 @@ export default function BalloonGame() {
         showSkip={showSkip}
       />
 
-      {/* Success overlay using your GameSuccess component */}
       {showSuccess && (
         <GameSuccess
           title="🎉 Браво! 🎉"
           message="Ти спука всички мехурчета! Ето твоята изненада!"
           onConfirm={handleSuccess}
-          onSkip={showSkip ? handleSuccess : undefined}
-          onReset={() => {
-            setPopped(0);
-            setShowSuccess(false);
-          }}
         />
       )}
     </div>

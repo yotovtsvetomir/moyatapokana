@@ -74,7 +74,7 @@ export default function ProfileInvitationsList() {
     fetchInvitations();
   }, [page, selectedStatus, setInvitations, setLoading]);
 
-  const handleFilterChange = (option: { value: InvitationStatus | 'all'; label: string } | null) => {
+  const handleFilterChange = (option: { value: InvitationStatus | 'all'; label: string } | null | undefined) => {
     setSelectedStatus(option || filterOptions[0]);
     setPage(1);
   };

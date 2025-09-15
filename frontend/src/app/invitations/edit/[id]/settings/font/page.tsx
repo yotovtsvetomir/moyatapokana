@@ -1,5 +1,3 @@
-import { cookies } from 'next/headers'
-import { notFound } from 'next/navigation'
 import FontSettingsClient from './FontSettingsClient'
 import type { components } from '@/shared/types'
 

@@ -1,7 +1,6 @@
 "use client";
 
 import { ReactNode, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { useInvitation } from "@/context/InvitationContext";
 import { Spinner } from "@/ui-components/Spinner/Spinner";
 import Stepper from "@/components/Stepper/Stepper";
@@ -15,7 +14,6 @@ interface Props {
 }
 
 export default function EditInvitationLayoutClient({ children, invitation }: Props) {
-  const router = useRouter();
   const { setInvitation } = useInvitation();
   const [localLoading, setLocalLoading] = useState(true);
 

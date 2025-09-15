@@ -5,10 +5,11 @@ import { Button } from '@/ui-components/Button/Button';
 import styles from './BlogPosts.module.css';
 import type { components } from '@/shared/types';
 
-type BlogPostRead = components['schemas']['BlogPostRead'];
+type BlogPostRead = components['schemas']['BlogPostOut'];
 
 interface Props {
   posts: BlogPostRead[];
+  home: boolean;
 }
 
 export default function BlogPostsClient({ home, posts }: Props) {
@@ -36,11 +37,13 @@ export default function BlogPostsClient({ home, posts }: Props) {
             <h2 className={styles.title}>{post.title}</h2>
             <p className={styles.author}>{post.authored_by ? `От ${post.authored_by}` : ''}</p>
             <p className={styles.date}>
-              {new Date(post.updated_at).toLocaleDateString('bg-BG', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric'
-              })}
+              {post.updated_at
+                ? new Date(post.updated_at).toLocaleDateString('bg-BG', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric'
+                  })
+                : ''}
             </p>
             <p className={styles.excerpt}>{post.paragraphs[0].slice(0, 120)}...</p>
             <div className={styles.cardActions}>

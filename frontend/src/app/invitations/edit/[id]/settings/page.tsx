@@ -1,16 +1,14 @@
 "use client";
 
-import { useEffect } from "react";
 import { useParams } from "next/navigation";
 import { Spinner } from "@/ui-components/Spinner/Spinner";
 import { Button } from "@/ui-components/Button/Button";
 import OverviewSection from "@/ui-components/OverviewSection/OverviewSection";
-import type { components } from "@/shared/types";
 import { useInvitation } from "@/context/InvitationContext";
 
 export default function InvitationSettingsPage() {
   const { id } = useParams<{ id: string }>();
-  const { invitation, setInvitation, loading, setLoading } = useInvitation();
+  const { invitation, loading } = useInvitation();
 
   if (loading) return <Spinner size={60} />;
   if (!invitation) return <p>Не е намерена покана</p>;

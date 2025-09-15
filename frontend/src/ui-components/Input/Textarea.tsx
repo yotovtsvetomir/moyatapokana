@@ -14,7 +14,7 @@ interface TextareaProps {
   onFocus?: () => void;
   required?: boolean;
   disabled?: boolean;
-  size?: 'default' | 'large';
+  size?: 'default' | 'large' | 'small';
 }
 
 export const Textarea: React.FC<TextareaProps> = ({

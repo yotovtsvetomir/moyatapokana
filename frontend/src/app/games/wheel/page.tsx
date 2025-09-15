@@ -22,16 +22,16 @@ const SEGMENT_COLORS = [
 
 export default function WheelPage() {
   const router = useRouter();
-  const wheelRef = useRef<HTMLDivElement | null>(null);
+  const wheelRef = useRef<SVGSVGElement | null>(null);
   const pointerRef = useRef<HTMLDivElement | null>(null);
   const [spinning, setSpinning] = useState(false);
   const [result, setResult] = useState<string | null>(null);
-  const segmentRefs = useRef<Array<SVGTextElement | null>>([]);
+  const segmentPaths = useRef<Array<SVGPathElement | null>>([]);
 
   const [charging, setCharging] = useState(false);
   const [power, setPower] = useState(0);
   const chargeSound = useRef<HTMLAudioElement | null>(null);
-  const chargeRef = useRef<number | null>(null);
+  const chargeRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const currentRotation = useRef(0);
 
   const [slug, setSlug] = useState("");
@@ -91,7 +91,6 @@ export default function WheelPage() {
     setResult(null);
     spinSound.current?.play();
 
-    const segmentAngle = 360 / WHEEL_SEGMENTS.length;
     const extraRotation = strength * 360 + Math.random() * 360;
     const newRotation = currentRotation.current + extraRotation;
 
@@ -99,7 +98,7 @@ export default function WheelPage() {
     wheelRef.current.style.transform = `rotate(${newRotation}deg)`;
 
     setTimeout(() => {
-      spinSound.current.pause();
+      spinSound.current?.pause();
       setSpinning(false);
 
       if (!wheelRef.current || !pointerRef.current) return;
@@ -115,7 +114,7 @@ export default function WheelPage() {
       let closestIndex = 0;
       let minAngularDistance = Infinity;
 
-      segmentRefs.current.forEach((segEl, i) => {
+      segmentPaths.current.forEach((segEl, i) => {
         if (!segEl) return;
 
         const segRect = segEl.getBoundingClientRect();
@@ -159,6 +158,12 @@ export default function WheelPage() {
     document.documentElement.style.setProperty("--invitation-bg-dark", "#181818");
     document.documentElement.style.setProperty("--invitation-text-main", "#2C3E50");
   }, [primaryColor, secondaryColor]);
+
+  useEffect(() => {
+    if (!slug) return;
+    const seenIds = JSON.parse(localStorage.getItem("seen_invitation_slugs") || "[]");
+    setShowSkip(seenIds.includes(slug));
+  }, [slug]);
 
   return (
     <div className={styles.wrapper}>
@@ -221,7 +226,7 @@ export default function WheelPage() {
             return (
               <g key={i}>
                 <path
-                  ref={(el) => (segmentRefs.current[i] = el)}
+                  ref={(el) => { segmentPaths.current[i] = el; }}
                   d={`M${center},${center} L${x1},${y1} A${radius},${radius} 0 0,1 ${x2},${y2} Z`}
                   fill={SEGMENT_COLORS[i % SEGMENT_COLORS.length]}
                   stroke="white"
@@ -291,15 +296,13 @@ export default function WheelPage() {
           title="🎉 Честито! 🎉"
           message={`Ти спечели: ${result}`}
           onConfirm={() => router.push(`/slideshows/${slideshowKey || "demo"}`)}
-          onSkip={showSkip ? () => router.push(`/slideshows/${slideshowKey || "demo"}`) : undefined}
-          onReset={() => setResult(null)}
         />
       )}
 
       <GameFooter
         current={0}
         total={0}
-        showSkip={false}
+        showSkip={showSkip}
         showIndicator={false}
         onSkip={() => router.push("/")}
       />

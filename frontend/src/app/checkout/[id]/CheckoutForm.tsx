@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Button } from "@/ui-components/Button/Button";
 import { Input } from "@/ui-components/Input/Input";
@@ -45,7 +44,6 @@ export default function CheckoutForm({
   currencies: string[]; 
   setOrder: (o: Order) => void;
 }) {
-  const router = useRouter();
   const [isCompany, setIsCompany] = useState(order.is_company ?? false);
   const [companyName, setCompanyName] = useState(order.company_name ?? "");
   const [vatNumber, setVatNumber] = useState(order.vat_number ?? "");
@@ -64,7 +62,7 @@ export default function CheckoutForm({
     })
   );
 
-  const [selectedTier, setSelectedTier] = useState<TierOption | null>(
+  const [selectedTier, setSelectedTier] = useState<TierOption | null | undefined>(
     order.price_tier
       ? {
           value: order.price_tier.id.toString(),
@@ -132,11 +130,11 @@ export default function CheckoutForm({
     }
   };
 
-  const handleCurrencyChange = async (opt: CurrencyOption | null) => {
+  const handleCurrencyChange = async (opt: CurrencyOption | null | undefined) => {
     if (!opt) return;
 
     try {
-      await updateOrderBackend({ currency: opt.value, duration_days: null, voucher_code: null });
+      await updateOrderBackend({ currency: opt.value, duration_days: undefined, voucher_code: null });
       setSelectedTier(null);
       setVoucherCode('');
 
@@ -175,17 +173,6 @@ export default function CheckoutForm({
   const handleRemoveVoucher = () => {
     updateOrderBackend({ voucher_code: null });
     setVoucherCode('');
-  };
-
-  const handleVatChange = (value: string) => {
-    const digitsOnly = value.replace(/\D/g, '');
-    setVatNumber(digitsOnly);
-
-    if (digitsOnly.length > 0 && digitsOnly.length !== 9) {
-      setVatError("Моля, въведете точно 9 цифри");
-    } else {
-      setVatError(null);
-    }
   };
 
   const now = new Date();

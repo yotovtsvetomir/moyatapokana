@@ -32,15 +32,16 @@ export default async function PreviewInvitationLayout({
   params,
 }: {
   children: React.ReactNode;
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }) {
-  const invitation = await getInvitation(params.slug);
+  const pm = await params;
+  const invitation = await getInvitation(pm.slug);
   if (!invitation) return notFound();
 
   const ogTitle = invitation.title ?? "";
   const ogDescription = invitation.description ?? "";
-  const ogImage = invitation.og_image_url ?? "";
-  const ogUrl = `https://www.moyatapokana.bg/invitations/preview/${params.slug}`;
+  const ogImage = invitation.wallpaper ?? "";
+  const ogUrl = `https://www.moyatapokana.bg/invitations/preview/${pm.slug}`;
 
   return (
     <>

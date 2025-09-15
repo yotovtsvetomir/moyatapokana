@@ -36,8 +36,8 @@ export default async function OrderDetailPage({
   params,
   searchParams,
 }: {
-  params: { order_number: string };
-  searchParams: { payment_status?: string };
+  params: Promise<{ order_number: string }>;
+  searchParams: Promise<{ payment_status?: string }>;
 }) {
   const { order_number } = await params;
   const { payment_status } = await searchParams;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import Image from "next/image";
+import Image, { StaticImageData } from "next/image";
 import { useRouter } from "next/navigation";
 import Yellow from "@/assets/yellow.png";
 import Red from "@/assets/red.png";
@@ -11,6 +11,15 @@ import GameHeader from "@/components/GameHeader/GameHeader";
 import GameFooter from "@/components/GameFooter/GameFooter";
 import GameSuccess from "@/components/GameSuccess/GameSuccess";
 import styles from "./balloons.module.css";
+
+type Balloon = {
+  id: string;
+  left: number;
+  imgSrc: StaticImageData;
+  bornAt: number;
+  popped: boolean;
+  bottomWhenPopped?: number;
+};
 
 const BALLOON_IMAGES = [Yellow, Red, Blue, Green];
 const BALLOON_WIDTH = 130;
@@ -28,10 +37,9 @@ function getRandomImg() {
 
 export default function BalloonGame() {
   const router = useRouter();
-  const [balloons, setBalloons] = useState([]);
+  const [balloons, setBalloons] = useState<Balloon[]>([]);
   const [popped, setPopped] = useState(0);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [animateScore, setAnimateScore] = useState(false);
 
   const [showSkip, setShowSkip] = useState(false);
   const [slug, setSlug] = useState("");
@@ -72,13 +80,6 @@ export default function BalloonGame() {
     document.documentElement.style.setProperty("--invitation-text-main", "#2C3E50");
   }, [primaryColor, secondaryColor]);
 
-  // Animate score
-  useEffect(() => {
-    if (popped === 0) return;
-    setAnimateScore(true);
-    const timeout = setTimeout(() => setAnimateScore(false), 340);
-    return () => clearTimeout(timeout);
-  }, [popped]);
 
   // Spawn balloons
   useEffect(() => {
@@ -86,7 +87,7 @@ export default function BalloonGame() {
       const id = Math.random().toString(36).slice(2);
       setBalloons((prev) => [
         ...prev,
-        { id, left: getRandomLeft(), imgSrc: getRandomImg(), bornAt: Date.now(), popped: false, bottomWhenPopped: null },
+        { id, left: getRandomLeft(), imgSrc: getRandomImg(), bornAt: Date.now(), popped: false },
       ]);
       setTimeout(() => setBalloons((prev) => prev.filter((b) => b.id !== id)), FLOAT_DURATION);
     };
@@ -135,12 +136,12 @@ export default function BalloonGame() {
 
       <div style={{ flex: 1, position: "relative" }}>
         {balloons.map((b) => {
-          const style = {
+          const style: React.CSSProperties = {
             left: b.left,
             width: BALLOON_WIDTH,
             height: BALLOON_HEIGHT,
             pointerEvents: b.popped ? "none" : "auto",
-            ...(b.popped ? { bottom: b.bottomWhenPopped, animation: `${styles.pop} 0.35s cubic-bezier(0.68,-0.55,0.27,1.55) forwards` } : {}),
+            ...(b.popped ? { bottom: b.bottomWhenPopped, animation: `${styles.pop} 0.35s ... forwards` } : {}),
           };
           return (
             <div
@@ -169,11 +170,6 @@ export default function BalloonGame() {
           title="🎉 Браво! 🎉"
           message="Ти спука всички балони! Ето твоята изненада!"
           onConfirm={handleSuccess}
-          onSkip={showSkip ? handleSuccess : undefined}
-          onReset={() => {
-            setPopped(0);
-            setShowSuccess(false);
-          }}
         />
       )}
     </div>

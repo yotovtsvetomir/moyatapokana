@@ -32,7 +32,7 @@ export default async function EditInvitationLayout({
   params,
 }: {
   children: React.ReactNode;
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
   const pm = await params;
   const invitation = await getInvitation(pm.id);

@@ -1,66 +1,59 @@
-// app/templates/page.tsx
-import { Metadata } from "next";
 import Script from "next/script";
 import TemplatesClient from "./TemplatesClient";
-import type { TemplatesApiResponse } from "./types";
+import type { components } from '@/shared/types';
+
+type TemplateRead = components['schemas']['TemplateRead'];
+
+interface Variant {
+  id: number;
+  name: string;
+  slug: string;
+}
+
+interface Subcategory {
+  id: number;
+  name: string;
+  slug: string;
+  variants: Variant[];
+}
+
+interface Category {
+  id: number;
+  name: string;
+  slug: string;
+  subcategories: Subcategory[];
+}
+
+interface Filters {
+  categories: Category[];
+}
+
+interface TemplatesApiResponse {
+  templates: {
+    total_count: number;
+    current_page: number;
+    page_size: number;
+    total_pages: number;
+    items: TemplateRead[];
+  };
+  filters: Filters;
+  error?: string;
+}
 
 type Props = {
-  searchParams: { [key: string]: string | string[] | undefined };
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
-
-// Generate SEO metadata
-export async function generateMetadata({ searchParams }: { searchParams: Props["searchParams"] }): Promise<Metadata> {
-  const getParam = (param?: string | string[]) =>
-    Array.isArray(param) ? param[0] : param || "";
-
-  const search = getParam(searchParams?.search);
-  const category = getParam(searchParams?.category);
-  const subcategory = getParam(searchParams?.subcategory);
-  const variant = getParam(searchParams?.variant);
-
-  let queryString = "";
-  if (search) queryString += `search=${encodeURIComponent(search)}&`;
-  if (category) queryString += `category=${encodeURIComponent(category)}&`;
-  if (subcategory) queryString += `subcategory=${encodeURIComponent(subcategory)}&`;
-  if (variant) queryString += `variant=${encodeURIComponent(variant)}&`;
-  queryString = queryString ? "?" + queryString.replace(/&$/, "") : "";
-
-  const res = await fetch(
-    `${process.env.API_URL_SERVER}/invitations/templates/list/view?${queryString}`,
-    { cache: "no-store" }
-  );
-  const data: TemplatesApiResponse = await res.json();
-
-  const title = "Шаблони за покани";
-  const description = "Разгледайте шаблоните за покани";
-  const url = `https://www.moyatapokana.bg/templates${queryString}`;
-  const image = data.templates.items[0]?.wallpaper || "/fallback.jpg";
-
-  return {
-    title,
-    description,
-    openGraph: {
-      title,
-      description,
-      images: [image],
-      type: "website",
-      url,
-    },
-    alternates: {
-      canonical: url,
-    },
-  };
-}
 
 // Page component
 export default async function TemplatesPage({ searchParams }: Props) {
+  const sp = await searchParams
   const getParam = (param?: string | string[]) =>
     Array.isArray(param) ? param[0] : param || "";
 
-  const search = getParam(searchParams?.search);
-  const category = getParam(searchParams?.category);
-  const subcategory = getParam(searchParams?.subcategory);
-  const variant = getParam(searchParams?.variant);
+  const search = getParam(sp?.search);
+  const category = getParam(sp?.category);
+  const subcategory = getParam(sp?.subcategory);
+  const variant = getParam(sp?.variant);
 
   let queryString = "";
   if (search) queryString += `search=${encodeURIComponent(search)}&`;
@@ -70,7 +63,7 @@ export default async function TemplatesPage({ searchParams }: Props) {
   queryString = queryString ? "?" + queryString.replace(/&$/, "") : "";
 
   const res = await fetch(
-    `${process.env.API_URL_SERVER}/invitations/templates/list/view?${queryString}`,
+    `${process.env.API_URL_SERVER}/invitations/templates/list/view${queryString}`,
     { cache: "no-store" }
   );
   const data: TemplatesApiResponse = await res.json();
@@ -88,7 +81,7 @@ export default async function TemplatesPage({ searchParams }: Props) {
       position: index + 1,
       item: {
         "@type": "Product",
-        name: t.name,
+        name: t.title,
         image: t.wallpaper,
         url: `https://www.moyatapokana.bg/template/preview/${t.slug}`,
         description: t.description || "Цифрова покана",
@@ -108,6 +101,11 @@ export default async function TemplatesPage({ searchParams }: Props) {
     }))
   };
 
+  const title = "Шаблони за покани";
+  const description = "Разгледайте шаблоните за покани";
+  const url = `https://www.moyatapokana.bg/templates${queryString}`;
+  const image = data.templates.items[0]?.wallpaper || "/fallback.jpg";
+
   const fontLinks = Array.from(
     new Set(
       data.templates.items
@@ -118,6 +116,25 @@ export default async function TemplatesPage({ searchParams }: Props) {
 
   return (
     <>
+      <head>
+        <title>{title}</title>
+        <meta name="description" content={description} />
+        <link rel="canonical" href={url} />
+
+        {/* Open Graph / Facebook */}
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content={title} />
+        <meta property="og:description" content={description} />
+        <meta property="og:url" content={url} />
+        <meta property="og:image" content={image} />
+
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={title} />
+        <meta name="twitter:description" content={description} />
+        <meta name="twitter:image" content={image} />
+      </head>
+
       {/* JSON-LD structured data */}
       <Script
         id="jsonld"

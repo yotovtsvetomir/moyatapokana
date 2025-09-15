@@ -1,4 +1,3 @@
-import { cookies } from 'next/headers'
 import SlideshowClient from './SlideshowClient'
 import type { components } from '@/shared/types'
 

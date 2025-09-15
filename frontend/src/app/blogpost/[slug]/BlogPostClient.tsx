@@ -4,23 +4,27 @@ import Image from 'next/image';
 import styles from './BlogPost.module.css';
 import type { components } from '@/shared/types';
 
-type BlogPostRead = components['schemas']['BlogPostRead'];
+type BlogPostRead = components['schemas']['BlogPostOut'];
 
 interface Props {
   post: BlogPostRead;
 }
 
 export default function BlogPostClient({ post }: Props) {
+  const updatedDate = post.updated_at
+    ? new Date(post.updated_at).toLocaleDateString('bg-BG', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      })
+    : '';
+
   return (
     <div className="container fullHeight centerWrapper">
       <h1 className={styles.title}>{post.title}</h1>
       <p className={styles.meta}>
         {post.authored_by ? `От ${post.authored_by}` : ''} {' / '}
-        {new Date(post.updated_at).toLocaleDateString('bg-BG', {
-          day: '2-digit',
-          month: '2-digit',
-          year: 'numeric'
-        })}
+        {updatedDate}
       </p>
       {post.image && (
         <div className={styles.imageWrapper}>
