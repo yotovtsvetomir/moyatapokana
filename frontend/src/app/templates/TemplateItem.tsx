@@ -1,10 +1,11 @@
+import { useState, useEffect } from 'react';
 import { useDynamicFont } from "@/hooks/useDynamicFont";
 import Image from 'next/image';
 import { Button } from "@/ui-components/Button/Button";
 import styles from './templates.module.css'
 
-export default function TemplateItem({ template, priority }: { template: Template }) {
-  const fontFamily = useDynamicFont(template.font_obj);
+export default function TemplateItem({ template, priority, isMobile }: { template: Template }) {
+  const fontFamily = template.font_obj?.font_family ?? "sans-serif";
 
   return (
     <li className={styles.templateItem}>
@@ -39,7 +40,7 @@ export default function TemplateItem({ template, priority }: { template: Templat
         {[
           { label: 'Категория', value: template.category?.name ?? 'Без' },
           { label: 'Подкатегория', value: template.subcategory?.name ?? 'Без' },
-          { label: 'Пол', value: template.subcategory_variant?.name ?? 'Без' },
+          { label: 'Вариянт', value: template.subcategory_variant?.name ?? 'Без' },
           { label: 'Игра', value: template.selected_game_obj?.name ?? 'Без' },
           { label: 'Слайдшоу', value: template.selected_slideshow_obj?.name ?? 'Без' },
           { label: 'Шрифт', value: template.font_obj?.label ?? 'Без' },
@@ -75,7 +76,7 @@ export default function TemplateItem({ template, priority }: { template: Templat
       <div className={styles.actions}>
         <Button
           variant="primary"
-          size="middle"
+          size={isMobile ? "small" : "middle"}
           width="100%"
           icon="visibility"
           iconPosition="right"

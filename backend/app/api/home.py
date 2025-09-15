@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
@@ -6,21 +6,22 @@ from typing import List
 
 from app.db.session import get_read_session
 from app.db.models.invitation import Template
+from app.db.models.blog import BlogPost
 from app.schemas.invitation import TemplateRead
+from app.schemas.blog import BlogPostOut
 
 router = APIRouter()
 
-
-@router.get("/home", response_model=List[TemplateRead])
+@router.get("/home")
 async def get_home(db: AsyncSession = Depends(get_read_session)):
     """
-    Get templates for the homepage:
-    - Only where first_page=True
-    - Ordered by created_at (descending)
-    - Limited to 7 results
-    - Preload related objects for efficient querying
+    Get data for homepage:
+    - Templates (7 latest with first_page=True)
+    - Blog posts (2 latest)
     """
-    stmt = (
+
+    # Templates query
+    stmt_templates = (
         select(Template)
         .options(
             selectinload(Template.slideshow_images),
@@ -36,6 +37,20 @@ async def get_home(db: AsyncSession = Depends(get_read_session)):
         .limit(7)
     )
 
-    result = await db.execute(stmt)
-    templates = result.scalars().all()
-    return templates
+    result_templates = await db.execute(stmt_templates)
+    templates = result_templates.scalars().all()
+
+    # Blog posts query
+    stmt_blogs = (
+        select(BlogPost)
+        .order_by(BlogPost.created_at.desc())
+        .limit(2)
+    )
+
+    result_blogs = await db.execute(stmt_blogs)
+    blogs = result_blogs.scalars().all()
+
+    return {
+        "templates": [TemplateRead.from_orm(t) for t in templates],
+        "blogposts": [BlogPostOut.from_orm(b) for b in blogs],
+    }

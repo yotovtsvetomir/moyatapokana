@@ -1,8 +1,42 @@
+// app/contact/layout.tsx
+import { Metadata } from "next";
 import Script from "next/script";
 import styles from './Contact.module.css';
 
-export default function ContactLayout({ children }: { children?: React.ReactNode }) {
-  // Structured data for contact page (Organization + ContactPoint)
+const CONTACT_URL = `${process.env.NEXT_PUBLIC_CLIENT_URL}/contact`;
+
+export async function generateMetadata(): Promise<Metadata> {
+  const title = "Свържете се с нас - Moyatapokana.bg";
+  const description =
+    "Свържете се с нас за въпроси или запитвания. Имейл, офис адрес и работно време на Moyatapokana.bg.";
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: "website",
+      url: CONTACT_URL,
+      siteName: "Moyatapokana.bg",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+    },
+    alternates: {
+      canonical: CONTACT_URL,
+    },
+  };
+}
+
+interface Props {
+  children?: React.ReactNode;
+}
+
+export default function ContactLayout({ children }: Props) {
+  // JSON-LD structured data
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "Organization",
@@ -17,48 +51,22 @@ export default function ContactLayout({ children }: { children?: React.ReactNode
       availableLanguage: "BG",
       hoursAvailable: {
         "@type": "OpeningHoursSpecification",
-        dayOfWeek: [
-          "Monday",
-          "Tuesday",
-          "Wednesday",
-          "Thursday",
-          "Friday"
-        ],
+        dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
         opens: "09:00",
-        closes: "17:00"
-      }
+        closes: "17:00",
+      },
     },
     address: {
       "@type": "PostalAddress",
       streetAddress: "ул. Уста Колю Фичето 25A",
       addressLocality: "Варна",
       postalCode: "9010",
-      addressCountry: "BG"
-    }
+      addressCountry: "BG",
+    },
   };
 
   return (
     <>
-      <head>
-        <title>Свържете се с нас - Moyatapokana.bg</title>
-        <meta
-          name="description"
-          content="Свържете се с нас за въпроси или запитвания. Имейл, офис адрес и работно време на Moyatapokana.bg."
-        />
-
-        {/* Open Graph */}
-        <meta property="og:title" content="Свържете се с нас - Moyatapokana.bg" />
-        <meta property="og:description" content="Свържете се с нас за въпроси или запитвания. Имейл, офис адрес и работно време на Moyatapokana.bg." />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content={`${process.env.NEXT_PUBLIC_CLIENT_URL}/contact`} />
-        <meta property="og:site_name" content="Moyatapokana.bg" />
-
-        {/* Twitter */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Свържете се с нас - Moyatapokana.bg" />
-        <meta name="twitter:description" content="Свържете се с нас за въпроси или запитвания. Имейл, офис адрес и работно време на Moyatapokana.bg." />
-      </head>
-
       {/* JSON-LD */}
       <Script
         id="jsonld-contact"

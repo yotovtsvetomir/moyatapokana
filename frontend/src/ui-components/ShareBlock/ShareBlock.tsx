@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FaFacebookF, FaWhatsapp, FaViber } from 'react-icons/fa';
 import { Button } from '@/ui-components/Button/Button';
 import { Input } from '@/ui-components/Input/Input';
@@ -18,6 +18,18 @@ export const ShareBlock = ({ shareUrl, invitationId }: ShareBlockProps) => {
 
   const combinedText = `${message ? message + '\n\n' : ''}${shareUrl}`;
   const encodedMessageWithLink = encodeURIComponent(combinedText);
+
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const handleCopy = async () => {
     try {
@@ -42,8 +54,10 @@ export const ShareBlock = ({ shareUrl, invitationId }: ShareBlockProps) => {
         disabled
         icon="link"
         label="Линк за гостите"
-        size=""
+        size={isMobile ? "small" : "large"}
       />
+
+      <div className={styles.distance}></div>
 
       <Textarea
         id="share-message"
@@ -51,12 +65,12 @@ export const ShareBlock = ({ shareUrl, invitationId }: ShareBlockProps) => {
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         label="Съобщение за споделяне"
-        size=""
+        size={isMobile ? "small" : "large"}
       />
 
       <div className={styles.copy}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <Button variant="secondary" size="" onClick={handleCopy}>
+          <Button variant="secondary" size={isMobile ? "small" : "large"} onClick={handleCopy}>
             Копирай
             <span className="material-symbols-outlined">content_copy</span>
           </Button>

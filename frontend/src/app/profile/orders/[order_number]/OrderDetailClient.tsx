@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/ui-components/Button/Button";
@@ -40,6 +41,17 @@ interface Props {
 
 export default function OrderDetailClient({ order, paymentStatus }: Props) {
   const router = useRouter();
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const handleDownloadInvoice = async () => {
     try {
@@ -125,7 +137,10 @@ export default function OrderDetailClient({ order, paymentStatus }: Props) {
 
           <div className={styles.pair}>
             <p><strong>Заглавие на поканата</strong></p>
-            <p>{order.invitation_title}</p>
+            <p>{order.invitation_title.length > 10
+                  ? order.invitation_title.slice(0, 10) + '…'
+                  : order.invitation_title}
+            </p>
           </div>
 
           <div className={styles.pair}>
@@ -169,7 +184,7 @@ export default function OrderDetailClient({ order, paymentStatus }: Props) {
               icon="picture_as_pdf"
               iconPosition="right"
               width="100%"
-              size="large"
+              size={isMobile ? "small" : "large"}
               onClick={handleDownloadInvoice}
             >
               Изтегли фактура
@@ -183,7 +198,7 @@ export default function OrderDetailClient({ order, paymentStatus }: Props) {
                 icon="payments"
                 iconPosition="right"
                 width="100%"
-                size="large"
+                size={isMobile ? "small" : "large"}
               >
                 Купи
               </Button>
@@ -196,7 +211,7 @@ export default function OrderDetailClient({ order, paymentStatus }: Props) {
               icon="mail"
               iconPosition="right"
               width="100%"
-              size="large"
+              size={isMobile ? "small" : "large"}
             >
               Към поканата
             </Button>

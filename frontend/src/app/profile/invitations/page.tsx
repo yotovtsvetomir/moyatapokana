@@ -35,6 +35,18 @@ export default function ProfileInvitationsList() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   useEffect(() => {
     const fetchInvitations = async () => {
       setLoading(true);
@@ -140,7 +152,7 @@ export default function ProfileInvitationsList() {
                     <div className={styles.actions}>
                       <Button
                         variant="secondary"
-                        size="large"
+                        size={isMobile ? "small" : "large"}
                         onClick={() => router.push(`/profile/invitations/${invitation.id}/`)}
                         icon="thumbnail_bar"
                         iconPosition="right"

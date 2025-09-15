@@ -30,16 +30,15 @@
 }
 
 .blockTitle {
-  font-size: var(--font-xl);
+  font-size: var(--font-lg);
   font-weight: var(--font-weight-semi);
   margin: 0;
 }
 
 .text {
-  font-size: var(--font-xl);
+  font-size: var(--font-lg);
   color: var(--color-dark-200);
   line-height: 1.5;
-  margin-bottom: 0.5rem;
 }
 
 .email {
@@ -57,5 +56,13 @@
     background-color: var(--color-neutral-500);
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  }
+
+  .text {
+    font-size: var(--font-xl);
+  }
+
+  .blockTitle {
+    font-size: var(--font-xl);
   }
 }

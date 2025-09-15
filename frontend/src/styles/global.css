@@ -154,3 +154,12 @@ a {
   border-radius: 12px;
   overflow: hidden;
 }
+
+.section {
+  border-top: 1px solid #eee;
+  padding-top: 2rem;
+}
+
+.section h1 {
+  color: var(--color-highlight-1) !important;
+}

@@ -5,11 +5,15 @@
 
 .share h3 {
 	font-size: var(--font-2xl);
-	margin-bottom: 1rem;
+	margin-bottom: 1.5rem;
+}
+
+.distance {
+	margin-top: 1.5rem;
 }
 
 .copy {
-	margin-bottom: 1rem;
+	margin-bottom: 1.5rem;
 }
 
 .copy_feedback {
@@ -92,4 +96,14 @@
 
 .socials_inner a:hover {
 	opacity: 0.77;
+}
+
+@media (min-width: 1024px) {
+	.socials_inner a {
+		padding: 0.65rem !important;
+	}
+
+	.socials_inner svg {
+		font-size: var(--font-2xl);
+	}
 }

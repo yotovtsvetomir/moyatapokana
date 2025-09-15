@@ -18,8 +18,6 @@ export default function EasyShare() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  console.log(isMobile)
-
   return (
     <div className={isMobile ? "" : "container"}>
       <section className={styles.EasyShare}>

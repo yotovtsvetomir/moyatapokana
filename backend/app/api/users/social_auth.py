@@ -1,3 +1,5 @@
+from transliterate import translit
+import re
 from fastapi import APIRouter, HTTPException, Depends, status, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -22,6 +24,11 @@ class GoogleLoginPayload(BaseModel):
 class FacebookLoginPayload(BaseModel):
     user: dict
 
+
+def process_name(name: str) -> str:
+    if re.fullmatch(r"[A-Za-z\s\-']+", name):
+        return translit(name, 'bg')
+    return name
 
 # ------------------------------
 # Google login
@@ -65,8 +72,8 @@ async def google_login(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Email not available"
         )
 
-    first_name = data.get("given_name", "")
-    last_name = data.get("family_name", "")
+    first_name = process_name(data.get("given_name", ""))
+    last_name = process_name(data.get("family_name", ""))
     profile_picture = data.get("picture")
 
     result = await db_read.execute(select(User).filter_by(email=email))
@@ -160,8 +167,8 @@ async def facebook_login(
         )
 
     email = email if email else f"fb_{fb_id}"
-    first_name = user_data.get("first_name", "")
-    last_name = user_data.get("last_name", "")
+    first_name = process_name(user_data.get("first_name", ""))
+    last_name = process_name(user_data.get("last_name", ""))
 
     profile_picture = (
         user_data.get("picture", {}).get("data", {}).get("url")

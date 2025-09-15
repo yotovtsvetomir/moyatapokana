@@ -26,6 +26,17 @@ export default function InvitationDetail() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [showPurchaseConfirm, setShowPurchaseConfirm] = useState(false);
   const [purchaseErrors, setPurchaseErrors] = useState<string[] | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     const fetchInvitation = async () => {
@@ -104,7 +115,7 @@ export default function InvitationDetail() {
         <div className={styles.actions}>
           <Button
             variant="ghost"
-            size="middle"
+            size={isMobile ? "small" : "middle"}
             onClick={() => router.push("/profile/invitations")}
             width="47%"
             icon="arrow_back"
@@ -116,7 +127,7 @@ export default function InvitationDetail() {
           {!invitation.is_active && (
             <Button
               variant="secondary"
-              size="middle"
+              size={isMobile ? "small" : "middle"}
               width="47%"
               href={`/invitations/edit/${invitation.id}/settings/`}
               icon="edit"
@@ -189,7 +200,7 @@ export default function InvitationDetail() {
           {invitation.status !== 'expired' && (
             <Button
               variant="secondary"
-              size="large"
+              size={isMobile ? "small" : "large"}
               width="100%"
               href={`/invitations/preview/${invitation.slug}/`}
               icon="visibility"
@@ -202,7 +213,7 @@ export default function InvitationDetail() {
           {invitation.status === 'active' && (
             <Button
               variant="primary"
-              size="middle"
+              size={isMobile ? "small" : "middle"}
               width="100%"
               href={`/profile/invitations/${invitation.id}/guests`}
               icon="group"
@@ -215,7 +226,7 @@ export default function InvitationDetail() {
           {invitation.status === 'draft' && (
             <Button
               variant="primary"
-              size="middle"
+              size={isMobile ? "small" : "middle"}
               width="100%"
               icon="shopping_cart"
               iconPosition="right"
@@ -242,7 +253,7 @@ export default function InvitationDetail() {
             <Button
               type="button"
               variant="danger"
-              size="middle"
+              size={isMobile ? "small" : "middle"}
               width="100%"
               icon="delete"
               iconPosition="left"

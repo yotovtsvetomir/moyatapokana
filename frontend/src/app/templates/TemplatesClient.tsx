@@ -50,6 +50,8 @@ export default function TemplatesClient({
   const [subcategory, setSubcategory] = useState<string | null>(initialSubcategoryValue);
   const [variant, setVariant] = useState<string | null>(initialVariantValue);
 
+  const [isMobile, setIsMobile] = useState(false);
+
   // --- Select Options (computed upfront to avoid state updates on mount) ---
   const [categoryOptions] = useState<Option[]>([
     { value: '', label: 'Без' },
@@ -162,11 +164,22 @@ export default function TemplatesClient({
   useEffect(() => { if (page > 1) fetchTemplates(true); }, [page]);
   useEffect(() => {
     const handleScroll = () => {
-      if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 300 && hasMore && !loading) setPage(prev => prev + 1);
+      if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 1400 && hasMore && !loading) setPage(prev => prev + 1);
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, [hasMore, loading]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   return (
     <div className="container fullHeight centerWrapper">
@@ -185,7 +198,7 @@ export default function TemplatesClient({
       {error && <p className={styles.error}>{error}</p>}
 
       <ul className={styles.templateList}>
-        {templates.map((template, index) => <TemplateItem key={template.id} template={template} priority={index === 0} />)}
+        {templates.map((template, index) => <TemplateItem key={template.id} template={template} priority={index === 0} isMobile={isMobile} />)}
       </ul>
 
       {loading && <Spinner />}

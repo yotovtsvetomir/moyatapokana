@@ -1,5 +1,5 @@
 .sectionWrapper {
-  margin: calc(var(--mobile-header-height) + 3rem) auto 0 auto;
+  margin: 0 auto;
   border: 1px solid #eee;
   border-radius: 7px;
   padding: 1rem;
@@ -53,7 +53,7 @@
 }
 
 .info {
-  margin: calc(var(--mobile-header-height)) auto 0 auto;
+  margin: 0 auto;
   padding-top: 1rem;
   border-radius: 7px;
   border: 1px solid #eee;
@@ -174,7 +174,6 @@
   }
 
   .sectionWrapper {
-    margin: calc(var(--desktop-header-height) + 1rem) auto 0 auto;
     max-width: 680px;
   }
 

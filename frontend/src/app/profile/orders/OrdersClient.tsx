@@ -39,6 +39,18 @@ export default function OrdersClient({ initialData }: Props) {
   const [totalPages, setTotalPages] = useState(initialData.total_pages);
   const firstRender = useRef(true);
 
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   useEffect(() => {
     if (firstRender.current && page === 1 && selectedStatus.value === "all") {
       firstRender.current = false;
@@ -155,7 +167,7 @@ export default function OrdersClient({ initialData }: Props) {
                     <div className={styles.order_actions}>
                       <Button
                         variant="secondary"
-                        size="large"
+                        size={isMobile ? "small" : "large"}
                         icon="receipt_long"
                         iconPosition="right"
                         onClick={() =>

@@ -7,7 +7,7 @@ from app.db.session import get_write_session, get_read_session
 from app.db.models.blog import BlogPost
 from app.services.s3.presentation_image import PresentationImageService
 from app.core.permissions import is_admin_authenticated
-from app.services.helpers import generate_slug
+from app.services.helpers import slugify
 from datetime import datetime
 
 
@@ -43,7 +43,7 @@ async def handle_blog_post_upload(
         instance.title = title
         instance.paragraphs = paragraphs
         instance.updated_at = now
-        instance.slug = generate_slug(title)
+        instance.slug = slugify(title)
         if authored_by:
             instance.authored_by = authored_by
     else:
@@ -51,7 +51,7 @@ async def handle_blog_post_upload(
         instance = BlogPost(
             title=title,
             paragraphs=paragraphs,
-            slug=generate_slug(title),
+            slug=slugify(title),
             authored_by=authored_by,
             created_at=now,
             updated_at=None

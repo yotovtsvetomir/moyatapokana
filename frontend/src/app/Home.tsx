@@ -9,13 +9,13 @@ import GuestTracking from "@/components/GuestTracking/GuestTracking";
 import ChooseGame from "@/components/ChooseGame/ChooseGame";
 import ChooseSlideshow from "@/components/ChooseSlideshow/ChooseSlideshow";
 import CTA from '@/components/CTA/cta';
-import CTAPricing from '@/components/CTAPricing/ctapricing';
+import BlogPostsClient from '@/app/blogposts/BlogPostsClient'
 
 interface HomeProps {
   templates: Template[];
 }
 
-export default function Home({ templates }: HomeProps) {
+export default function Home({ templates, blogposts }: HomeProps) {
   return (
     <div className={styles.Home}>
       <Intro templates={templates} />
@@ -24,7 +24,7 @@ export default function Home({ templates }: HomeProps) {
       <CTA />
       <ChooseSlideshow />
       <ChooseGame />
-      <CTAPricing />
+      <BlogPostsClient home={true} posts={blogposts} />
     </div>
   );
 }

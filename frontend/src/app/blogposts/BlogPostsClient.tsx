@@ -11,11 +11,11 @@ interface Props {
   posts: BlogPostRead[];
 }
 
-export default function BlogPostsClient({ posts }: Props) {
+export default function BlogPostsClient({ home, posts }: Props) {
   if (posts.length === 0) return <p className={styles.empty}>Няма намерени блог постове.</p>;
 
   return (
-    <div className="container fullHeight centerWrapper">
+    <div className={home ? "container centerWrapper section" : "container fullHeight centerWrapper"}>
       <h1 className={styles.heading}>Блог</h1>
 
       <div className={styles.grid}>
