@@ -158,9 +158,12 @@ export default function RegisterPage() {
                 required
               />
 
-              <Button width="100%" type="submit" variant="primary" disabled={loading}>
+              <Button width="100%" type="submit" variant="primary" disabled={loading || success}>
                 {loading ? 'Регистрирам...' : 'Регистрация'}
               </Button>
+
+              {errors.apiError && <p className={styles.errorMessage}>{errors.apiError}</p>}
+              {success && <p className={styles.successMessage}>Успешна регистрация!</p>}
 
               <div className={styles.buttonSecondaryGroup}>
                 <p>
@@ -172,9 +175,6 @@ export default function RegisterPage() {
                   Вече имате акаунт? <TextLink href="/login">Влезте от тук</TextLink>.
                 </p>
               </div>
-
-              {errors.apiError && <p className={styles.errorMessage}>{errors.apiError}</p>}
-              {success && <p className={styles.successMessage}>Успешна регистрация!</p>}
             </form>
           </div>
         </div>

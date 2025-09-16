@@ -94,7 +94,7 @@ async def register(
         result_user_invites = await db_read.execute(
             select(func.count(Invitation.id)).where(
                 Invitation.owner_id == user.id,
-                Invitation.status == InvitationStatus.DRAFT
+                Invitation.status == InvitationStatus.DRAFT,
             )
         )
         user_invite_count = result_user_invites.scalar() or 0
@@ -123,7 +123,7 @@ async def register(
 
     # -------------------- Send Welcome Email --------------------
     html_content = render_email(
-        "customers/welcome.html",
+        "customers/emails/welcome.html",
         {
             "first_name": user.first_name or user.email,
             "email": user.email,

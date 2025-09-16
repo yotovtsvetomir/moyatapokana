@@ -43,7 +43,7 @@ export default function Footer() {
             <div className={styles.social}>
               <a
                 className={styles.socialIcon}
-                href="https://instagram.com"
+                href="https://instagram.com/моятапокана.бг"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Instagram"
@@ -52,7 +52,7 @@ export default function Footer() {
               </a>
               <a
                 className={styles.socialIcon}
-                href="https://facebook.com"
+                href="https://facebook.com/моятапокана.бг"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Facebook"

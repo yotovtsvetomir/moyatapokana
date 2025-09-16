@@ -69,6 +69,7 @@ export function useRegister() {
     if (!validate()) return;
 
     setLoading(true);
+
     try {
       const res = await fetch("/api/auth/register", {
         method: "POST",
@@ -78,7 +79,17 @@ export function useRegister() {
 
       if (!res.ok) {
         const data = await res.json();
-        setErrors({ apiError: data.error || "Регистрацията неуспешна" });
+        console.log(data)
+        if (Array.isArray(data.error) && data.error.length > 0) {
+          const rawMsg = data.error[0].msg;
+          const cleanedMsg = rawMsg.replace(/^Value error, /, "");
+          setErrors({ apiError: cleanedMsg });
+        } else if (typeof data.error === "string") {
+          setErrors({ apiError: data.error });
+        } else {
+          setErrors({ apiError: "Регистрацията неуспешна" });
+        }
+
         return;
       }
 

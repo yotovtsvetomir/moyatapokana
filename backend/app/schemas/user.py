@@ -15,15 +15,8 @@ class UserCreate(BaseModel):
     @validator("password")
     def validate_password(cls, v):
         if len(v) < 8:
-            raise ValueError("Паролата трябва да е поне 8 символа")
-        if not re.search(r"[A-Z]", v):
-            raise ValueError("Паролата трябва да съдържа поне една главна буква")
-        if not re.search(r"[a-z]", v):
-            raise ValueError("Паролата трябва да съдържа поне една малка буква")
-        if not re.search(r"\d", v):
-            raise ValueError("Паролата трябва да съдържа поне една цифра")
-        if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", v):
-            raise ValueError("Паролата трябва да съдържа поне един специален символ")
+            raise ValueError("Паролата трябва да е поне 5 символа")
+
         return v
 
 
