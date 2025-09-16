@@ -87,7 +87,31 @@
 
     <div class="section">
       <div class="row">
-        <span class="label">Сума:</span>
+        <span class="label">Цена без ДДС:</span>
+        {{ order.price_without_vat }}
+        {% if order.currency == "EUR" %}
+          евро
+        {% elif order.currency == "BGN" %}
+          лева
+        {% else %}
+          {{ order.currency }}
+        {% endif %}
+      </div>
+
+      <div class="row">
+        <span class="label">ДДС (20%):</span>
+        {{ order.vat_amount }}
+        {% if order.currency == "EUR" %}
+          евро
+        {% elif order.currency == "BGN" %}
+          лева
+        {% else %}
+          {{ order.currency }}
+        {% endif %}
+      </div>
+
+      <div class="row">
+        <span class="label">Крайна цена:</span>
         {{ order.total_price }}
         {% if order.currency == "EUR" %}
           евро
@@ -97,6 +121,7 @@
           {{ order.currency }}
         {% endif %}
       </div>
+
       <div class="row"><span class="label">Платена на:</span> {{ order.paid_at }}</div>
     </div>
 

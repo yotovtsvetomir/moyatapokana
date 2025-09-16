@@ -360,10 +360,19 @@ export default function CheckoutForm({
 
         <div className={styles.summary}>
           <h2>Общо</h2>
+
+          {/* Original price without VAT */}
           <div className={styles.summaryRow}>
-            <p>Цена:</p>
-            <p>{order.original_price?.toFixed(2) ?? '0.00'} {order.currency}</p>
+            <p>Цена (без ДДС):</p>
+            <p>
+              {order.total_price > 0
+                ? (order.total_price / 1.2).toFixed(2)
+                : order.original_price?.toFixed(2) ?? '0.00'
+              } {order.currency}
+            </p>
           </div>
+
+          {/* Voucher / discount */}
           {order.voucher_code && (
             <div className={styles.summaryRow} style={{ color: '#298267' }}>
               <p>Отстъпка:</p>
@@ -375,6 +384,25 @@ export default function CheckoutForm({
               </p>
             </div>
           )}
+
+          {/* Price without VAT and VAT calculation */}
+          {order.total_price != null && (
+            (() => {
+              const discountedTotal = Math.max(order.total_price - (order.discount_amount || 0), 0);
+              const vatAmount = (discountedTotal - discountedTotal / 1.2).toFixed(2);
+
+              return (
+                <>
+                  <div className={styles.summaryRow}>
+                    <p>ДДС (20%):</p>
+                    <p>{vatAmount} {order.currency}</p>
+                  </div>
+                </>
+              );
+            })()
+          )}
+
+          {/* Final total */}
           <div className={styles.summaryRow}>
             <p><strong>Крайна цена:</strong></p>
             <p><strong>{order.total_price?.toFixed(2) ?? '0.00'} {order.currency}</strong></p>

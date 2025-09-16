@@ -39,7 +39,7 @@ from app.db.models.invitation import (
     Guest,
     Font,
     Category,
-    SubCategory
+    SubCategory,
 )
 from app.schemas.invitation import (
     InvitationUpdate,
@@ -75,6 +75,7 @@ async def fetch_invitation(
     cookie_header = request.headers.get("cookie")
     if cookie_header:
         from http.cookies import SimpleCookie
+
         cookies = SimpleCookie(cookie_header)
         if "anonymous_session_id" in cookies:
             anon_session_id = cookies["anonymous_session_id"].value
@@ -105,7 +106,9 @@ async def fetch_invitation(
     # 2. Anonymous owner
     if invitation.anon_session_id and anon_session_id == invitation.anon_session_id:
         if invitation.is_active:
-            raise HTTPException(status_code=403, detail="Access denied")  # anon owner cannot access active
+            raise HTTPException(
+                status_code=403, detail="Access denied"
+            )  # anon owner cannot access active
         return invitation
 
     # 3. Guest access (registered or anonymous, not owners)
@@ -127,6 +130,7 @@ async def fetch_invitation_by_slug(
     cookie_header = request.headers.get("cookie")
     if cookie_header:
         from http.cookies import SimpleCookie
+
         cookies = SimpleCookie(cookie_header)
         if "anonymous_session_id" in cookies:
             anon_session_id = cookies["anonymous_session_id"].value
@@ -157,7 +161,9 @@ async def fetch_invitation_by_slug(
     # 2. Anonymous owner
     if invitation.anon_session_id and anon_session_id == invitation.anon_session_id:
         if invitation.is_active:
-            raise HTTPException(status_code=403, detail="Access denied")  # anon owner cannot access active
+            raise HTTPException(
+                status_code=403, detail="Access denied"
+            )  # anon owner cannot access active
         return invitation
 
     # 3. Guest access (registered or anonymous, not owners)
@@ -236,7 +242,9 @@ async def create_empty_invitation(
 
     limit = 3 if current_user else 1
     if len(existing_drafts) >= limit:
-        user_type = "регистриран потребител" if current_user else "нерегистриран потребител"
+        user_type = (
+            "регистриран потребител" if current_user else "нерегистриран потребител"
+        )
         draft_word = "чернова" if limit == 1 else "чернови"
         raise HTTPException(
             status_code=400,
@@ -392,11 +400,15 @@ async def create_invitation_from_template(
 
     # -------------------- Duplicate wallpaper --------------------
     if template.wallpaper:
-        new_invitation.wallpaper = await copy_service.copy_file(template.wallpaper, folder="wallpapers")
+        new_invitation.wallpaper = await copy_service.copy_file(
+            template.wallpaper, folder="wallpapers"
+        )
 
     # -------------------- Duplicate background audio --------------------
     if template.background_audio:
-        new_invitation.background_audio = await copy_service.copy_file(template.background_audio, folder="music")
+        new_invitation.background_audio = await copy_service.copy_file(
+            template.background_audio, folder="music"
+        )
 
     # -------------------- Duplicate slides --------------------
     for slide in template.slideshow_images:
@@ -457,10 +469,12 @@ async def get_template_by_slug(
 
     return template
 
+
 def slugifycats(name: str) -> str:
     latin_name = translit(name, reversed=True)
-    slug = re.sub(r'[^a-z0-9]+', '-', latin_name.lower()).strip('-')
+    slug = re.sub(r"[^a-z0-9]+", "-", latin_name.lower()).strip("-")
     return slug
+
 
 def deslugifycats(slug: str) -> str:
     name_guess = slug.replace("-", " ")
@@ -469,6 +483,7 @@ def deslugifycats(slug: str) -> str:
         return name_guess_cyrillic.capitalize()
     except Exception:
         return name_guess
+
 
 # do not change url -> router can't handle it ...
 @router.get("/templates/list/view", response_model=dict)
@@ -688,11 +703,9 @@ async def list_invitations(
     status: InvitationStatus | None = None,
 ):
     owner_id = int(current_user.get("user_id")) if current_user else None
-
+    print(owner_id)
     if owner_id is None:
-        raise HTTPException(
-            status_code=403, detail="Not authorized"
-        )
+        raise HTTPException(status_code=403, detail="Not authorized")
 
     options = [
         selectinload(Invitation.rsvp),
@@ -898,6 +911,12 @@ async def upload_slides(
         invitation.selected_slideshow_obj = selected_slideshow_obj
         invitation.selected_slideshow = selected_slideshow_obj.key
     else:
+        # No slideshow selected -> remove all existing slides
+        for slide in invitation.slideshow_images:
+            await slide_service._delete(slide.file_url)
+            await write_db.delete(slide)
+        invitation.slideshow_images = []
+
         invitation.selected_slideshow = None
         invitation.selected_slideshow_obj = None
 
@@ -1001,18 +1020,23 @@ async def add_guest(
     read_db: AsyncSession = Depends(get_read_session),
     write_db: AsyncSession = Depends(get_write_session),
     current_user: dict | None = Depends(get_current_user),
-    confirm_add: bool = Query(False)
+    confirm_add: bool = Query(False),
 ):
     # -------------------- Fetch Invitation --------------------
     result = await read_db.execute(select(Invitation).where(Invitation.slug == slug))
     invitation = result.scalars().first()
 
     if not invitation or not invitation.is_active:
-        raise HTTPException(status_code=404, detail="Поканата не може да бъде намерена или е неактивна.")
+        raise HTTPException(
+            status_code=404, detail="Поканата не може да бъде намерена или е неактивна."
+        )
 
     # --- Block owner (registered or anonymous) from RSVPing ---
     if current_user and invitation.owner_id == int(current_user.get("user_id")):
-        raise HTTPException(status_code=400, detail="Собственикът на поканата не може да бъде добавен като гост.")
+        raise HTTPException(
+            status_code=400,
+            detail="Собственикът на поканата не може да бъде добавен като гост.",
+        )
 
     anon_session_id = None
     cookie_header = request.headers.get("cookie")
@@ -1022,7 +1046,10 @@ async def add_guest(
             anon_session_id = cookies["anonymous_session_id"].value
 
     if invitation.anon_session_id and anon_session_id == invitation.anon_session_id:
-        raise HTTPException(status_code=400, detail="Собственикът на поканата не може да бъде добавен като гост.")
+        raise HTTPException(
+            status_code=400,
+            detail="Собственикът на поканата не може да бъде добавен като гост.",
+        )
 
     # -------------------- Check duplicates (main + sub) --------------------
     # Prepare all names to check
@@ -1032,12 +1059,11 @@ async def add_guest(
 
     # Query DB for any existing guests with these names for this RSVP
     duplicates = await read_db.execute(
-        select(Guest.first_name, Guest.last_name)
-        .where(
+        select(Guest.first_name, Guest.last_name).where(
             Guest.rsvp_id == invitation.rsvp_id,
             tuple_(Guest.first_name, Guest.last_name).in_(
                 [(fn, ln) for fn, ln in all_names]
-            )
+            ),
         )
     )
     existing = duplicates.all()
@@ -1047,7 +1073,7 @@ async def add_guest(
         duplicate_names = [f"{fn} {ln}" for fn, ln in existing]
         raise HTTPException(
             status_code=409,
-            detail=f"Гост с това име вече е потвърден: {', '.join(duplicate_names)}. Моля потвърдете, ако искате да добавите."
+            detail=f"Гост с това име вече е потвърден: {', '.join(duplicate_names)}. Моля потвърдете, ако искате да добавите.",
         )
 
     # -------------------- Create Guest(s) --------------------
@@ -1143,7 +1169,7 @@ async def get_rsvp_for_owner(
     # --- Separate guests by attendance ---
     attending_guests = [g for g in guests_all if g.attending is True]
     not_attending_guests = [g for g in guests_all if g.attending is False]
-    #unanswered_guests = [g for g in guests_all if g.attending is None]  # optional
+    # unanswered_guests = [g for g in guests_all if g.attending is None]  # optional
 
     # --- Totals for attending ---
     total_attending = len(attending_guests)

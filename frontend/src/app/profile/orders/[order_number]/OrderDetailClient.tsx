@@ -118,10 +118,21 @@ export default function OrderDetailClient({ order, paymentStatus }: Props) {
             <p>{ORDER_STATUS_LABELS_BG[order.status] || order.status}</p>
           </div>
 
+          <div className={styles.pair}>
+            <p><strong>ДДС (20%)</strong></p>
+            <p>
+              {(order.total_price - order.total_price / 1.2).toFixed(2)}{" "}
+              {{
+                BGN: "лв",
+                EUR: "€",
+              }[order.currency] || order.currency}
+            </p>
+          </div>
+
           <div className={`${styles.pair} ${styles.last}`}>
             <p><strong>Цена</strong></p>
             <p>
-              {order.total_price}{" "}
+              {order.total_price.toFixed(2)}{" "}
               {{
                 BGN: "лв",
                 EUR: "€",

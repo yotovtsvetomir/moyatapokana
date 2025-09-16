@@ -13,7 +13,7 @@ from fastapi.responses import StreamingResponse
 from io import BytesIO
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from weasyprint import HTML
-
+from decimal import Decimal
 from app.db.session import get_write_session, get_read_session
 from app.db.models.order import Order, OrderStatus, Voucher, PriceTier, CurrencyRate
 from app.db.models.invitation import Invitation, InvitationStatus
@@ -583,6 +583,29 @@ async def generate_invoice(
         )
 
     order_data = format_order_dates(order)
+
+    # --- VAT logic ---
+    # --- VAT logic ---
+    total_price = order.total_price or Decimal("0.00")
+    original_price = order.original_price or Decimal("0.00")
+
+    if total_price > 0:
+        price_without_vat = total_price / Decimal("1.2")
+        vat_amount = total_price - price_without_vat
+    else:
+        # if fully discounted, show original price but no VAT
+        price_without_vat = original_price
+        vat_amount = Decimal("0.00")
+
+    order_data.update(
+        {
+            "price_without_vat": round(price_without_vat, 2),
+            "vat_amount": round(vat_amount, 2),
+            "currency": order.currency,
+        }
+    )
+    # -----------------
+
     full_name = order.customer_name
 
     template = env.get_template("invoice.html")
@@ -666,18 +689,17 @@ async def get_user_order(
         raise HTTPException(status_code=404, detail="Order not found or forbidden")
     return OrderRead.from_orm(order)
 
+
 @router.get("/tiers/pricing", response_model=PriceTierReadWithChoices)
 async def get_price_tiers(
-    currency: str | None = None,
-    read_db: AsyncSession = Depends(get_read_session)
+    currency: str | None = None, read_db: AsyncSession = Depends(get_read_session)
 ):
     result = await read_db.execute(select(PriceTier).where(PriceTier.active))
     all_tiers = result.scalars().all()
     currencies = sorted(list({tier.currency for tier in all_tiers}))
-    filtered_tiers = [tier for tier in all_tiers if not currency or tier.currency == currency]
+    filtered_tiers = [
+        tier for tier in all_tiers if not currency or tier.currency == currency
+    ]
     filtered_tiers = sorted(filtered_tiers, key=lambda t: t.price)
 
-    return PriceTierReadWithChoices(
-        tiers=filtered_tiers,
-        currencies=currencies
-    )
+    return PriceTierReadWithChoices(tiers=filtered_tiers, currencies=currencies)

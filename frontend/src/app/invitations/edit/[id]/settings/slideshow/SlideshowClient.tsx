@@ -25,7 +25,7 @@ const MAX_SLIDES = 5
 export default function SlideshowClient({ slideshows }: Props) {
   const { id } = useParams()
   const router = useRouter()
-  const { invitation, setInvitation } = useInvitation()
+  const { invitation, setInvitation, updateInvitation } = useInvitation()
 
   const [selectedSlideshow, setSelectedSlideshow] = useState<Option | null | undefined>(null)
   const [slides, setSlides] = useState<SlideState[]>(Array(MAX_SLIDES).fill({}))
@@ -138,6 +138,7 @@ export default function SlideshowClient({ slideshows }: Props) {
         ...invitation,
         slideshow_images: data.slideshow_images
       })
+      await updateInvitation({}); 
     } catch (err) {
       console.error(err)
       alert("Неуспешно записване на слайдове")

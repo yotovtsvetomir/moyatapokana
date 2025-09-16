@@ -24,7 +24,7 @@ export function InvitationProvider({ children }: { children: ReactNode }) {
 
     setLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/invitations/update/${invitation.id}/`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/invitations/update/${invitation.id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",

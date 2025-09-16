@@ -195,11 +195,84 @@ export default function Schedule() {
     if (!events || events.length === 0) return null;
 
     return (
-      <div ref={timelineRef} className={styles.timeline}>
-        <div ref={fillRef} className={styles.fill}></div>
-        {events.map((_, idx) => (
-          <div key={idx} data-index={idx} className={styles.dot}></div>
-        ))}
+      <div className={styles.timeline} ref={timelineRef}>
+        <div className={styles.timelineTrack} />
+        <div className={styles.timelineFilled} ref={fillRef} />
+
+        <ul className={styles.eventList}>
+          {events.map((event, idx) => {
+            const start = new Date(event.start_datetime);
+            const end = event.finish_datetime ? new Date(event.finish_datetime) : null;
+
+            const startTime = start.toLocaleTimeString("bg-BG", { hour: "2-digit", minute: "2-digit", hour12: false });
+            const endTime = end ? end.toLocaleTimeString("bg-BG", { hour: "2-digit", minute: "2-digit", hour12: false }) : "";
+            const date = start.toLocaleDateString("bg-BG", { day: "2-digit", month: "numeric", year: "numeric" });
+
+            return (
+              <li key={event.id} className={styles.eventItem} data-index={idx}>
+                <div className={styles.eventCardWrapper}>
+                  <div className={styles.eventCard}>
+                    <div className={styles.eventInfo}>
+                      <div className={styles.eventInfoInner}>
+                        <div className={styles.eventInfoGroup}>
+                          <div className={styles.eventInfoLabel}>
+                            <span className="material-symbols-outlined">schedule</span>
+                          </div>
+                          <p>{startTime} ч. {endTime ? ` - ${endTime} ч.` : ""}</p>
+                        </div>
+
+                        <div className={styles.eventInfoGroup}>
+                          <div className={styles.eventInfoLabel}>
+                            <span className="material-symbols-outlined">calendar_today</span>
+                          </div>
+                          <p>{date}</p>
+                        </div>
+
+                        <div className={styles.eventInfoGroup}>
+                          <div className={styles.eventInfoLabel}>
+                            <span className="material-symbols-outlined">location_on</span>
+                          </div>
+                          <p>{event.location || "—"}</p>
+                        </div>
+                      </div>
+
+                      <div className={styles.eventText} style={{ borderColor: invitation?.primary_color }}>
+                        <h4>{`${idx + 1}. ${event.title}` || `Събитие ${idx + 1}`}</h4>
+                        {event.description && <p>{event.description}</p>}
+                      </div>
+
+                      <div className={styles.actions}>
+                        <Button
+                          variant="basic"
+                          icon="location_on"
+                          iconPosition="left"
+                          size="large"
+                          color={invitation?.primary_color}
+                          href={event.location_link}
+                          target="_blank"
+                        >
+                          Локация
+                        </Button>
+
+                        <Button
+                          variant="basic"
+                          icon="calendar_today"
+                          iconPosition="left"
+                          size="large"
+                          color={invitation?.primary_color}
+                          href={event.calendar_link}
+                          target="_blank"
+                        >
+                          Запази
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
       </div>
     );
   };
