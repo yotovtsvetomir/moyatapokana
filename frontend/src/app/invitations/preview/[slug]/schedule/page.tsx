@@ -236,7 +236,7 @@ export default function Schedule() {
                         </div>
                       </div>
 
-                      <div className={styles.eventText} style={{ borderColor: invitation?.primary_color }}>
+                      <div className={styles.eventText} style={{ borderColor: primary_color }}>
                         <h4>{`${idx + 1}. ${event.title}` || `Събитие ${idx + 1}`}</h4>
                         {event.description && <p>{event.description}</p>}
                       </div>
@@ -247,8 +247,8 @@ export default function Schedule() {
                           icon="location_on"
                           iconPosition="left"
                           size="large"
-                          color={invitation?.primary_color}
-                          href={event.location_link}
+                          color={primary_color}
+                          href={event.location_link || ""}
                           target="_blank"
                         >
                           Локация
@@ -259,8 +259,8 @@ export default function Schedule() {
                           icon="calendar_today"
                           iconPosition="left"
                           size="large"
-                          color={invitation?.primary_color}
-                          href={event.calendar_link}
+                          color={primary_color}
+                          href={event.calendar_link || ""}
                           target="_blank"
                         >
                           Запази
