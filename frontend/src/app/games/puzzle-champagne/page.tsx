@@ -171,7 +171,13 @@ export default function PuzzleGame() {
         <GameSuccess
           title="🎉 Браво! 🎉"
           message="Ти подреди картинката успешно! Ето твоята изненада!"
-          onConfirm={() => router.push(`/slideshows/${slideshowKey || "demo"}`)}
+          onConfirm={() => {
+            if (slideshowKey || slideshowKey !== "") {
+              router.push(`/slideshows/${slideshowKey}`);
+            } else {
+              router.push(`/invitations/preview/${slug}/schedule`);
+            }
+          }}
         />
       )}
     </div>

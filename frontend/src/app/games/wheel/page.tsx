@@ -295,7 +295,13 @@ export default function WheelPage() {
         <GameSuccess
           title="🎉 Честито! 🎉"
           message={`Ти спечели: ${result}`}
-          onConfirm={() => router.push(`/slideshows/${slideshowKey || "demo"}`)}
+          onConfirm={() => {
+            if (slideshowKey || slideshowKey !== "") {
+              router.push(`/slideshows/${slideshowKey}`);
+            } else {
+              router.push(`/invitations/preview/${slug}/schedule`);
+            }
+          }}
         />
       )}
 

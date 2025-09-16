@@ -49,7 +49,11 @@ export default function BubbleGame() {
   const progressSound = useRef<HTMLAudioElement>(null);
 
   const handleSuccess = () => {
-    router.push(`/slideshows/${slideshowKey || "demo"}`);
+    if (slideshowKey || slideshowKey !== "") {
+      router.push(`/slideshows/${slideshowKey}`);
+    } else {
+      router.push(`/invitations/preview/${slug}/schedule`);
+    }
   };
 
   useEffect(() => {
