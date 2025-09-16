@@ -7,11 +7,20 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
 from app.db.session import get_write_session, get_read_session
-from app.db.models.invitation import Template, Category, SubCategory, SubCategoryVariant, Font, Game, Slideshow, SlideshowImage
+from app.db.models.invitation import (
+    Template,
+    Category,
+    SubCategory,
+    SubCategoryVariant,
+    Font,
+    Game,
+    Slideshow,
+    SlideshowImage,
+)
 from app.services.s3.wallpaper import WallpaperService
 from app.services.s3.music import MusicService
 from app.services.s3.slide import SlideService
-from app.services.helpers import generate_slug
+from app.services.helpers import generate_template_slug
 from app.core.permissions import is_admin_authenticated
 
 router = APIRouter()
@@ -61,12 +70,24 @@ async def new_template_form(
     db: AsyncSession = Depends(get_read_session),
     admin=Depends(is_admin_authenticated),
 ):
-    categories = (await db.execute(select(Category).order_by(Category.name))).scalars().all()
-    subcategories = (await db.execute(select(SubCategory).order_by(SubCategory.name))).scalars().all()
-    subcategories_variants = (await db.execute(select(SubCategoryVariant).order_by(SubCategoryVariant.name))).scalars().all()
+    categories = (
+        (await db.execute(select(Category).order_by(Category.name))).scalars().all()
+    )
+    subcategories = (
+        (await db.execute(select(SubCategory).order_by(SubCategory.name)))
+        .scalars()
+        .all()
+    )
+    subcategories_variants = (
+        (await db.execute(select(SubCategoryVariant).order_by(SubCategoryVariant.name)))
+        .scalars()
+        .all()
+    )
     fonts = (await db.execute(select(Font).order_by(Font.label))).scalars().all()
     games = (await db.execute(select(Game).order_by(Game.name))).scalars().all()
-    slideshows = (await db.execute(select(Slideshow).order_by(Slideshow.name))).scalars().all()
+    slideshows = (
+        (await db.execute(select(Slideshow).order_by(Slideshow.name))).scalars().all()
+    )
 
     return jinja_templates.TemplateResponse(
         "new.html",
@@ -115,7 +136,9 @@ async def create_template(
     slideshow_obj = None
     slideshow_id = None
     if slideshow_key:
-        result = await db.execute(select(Slideshow).where(Slideshow.key == slideshow_key))
+        result = await db.execute(
+            select(Slideshow).where(Slideshow.key == slideshow_key)
+        )
         slideshow_obj = result.scalar_one_or_none()
         if not slideshow_obj:
             raise HTTPException(400, "Invalid slideshow selected")
@@ -123,11 +146,13 @@ async def create_template(
 
     tpl = Template(
         title=title,
-        slug=generate_slug(title),
+        slug=generate_template_slug(title),
         description=description,
         category_id=category_id,
         subcategory_id=int(subcategory_id) if subcategory_id else None,
-        subcategory_variant_id=int(subcategory_variant_id) if subcategory_variant_id else None,
+        subcategory_variant_id=int(subcategory_variant_id)
+        if subcategory_variant_id
+        else None,
         selected_font=font_value,
         primary_color=primary_color,
         secondary_color=secondary_color,
@@ -168,7 +193,7 @@ async def edit_template_form(
     request: Request,
     template_id: int,
     db: AsyncSession = Depends(get_read_session),
-    admin=Depends(is_admin_authenticated)
+    admin=Depends(is_admin_authenticated),
 ):
     result = await db.execute(
         select(Template)
@@ -179,7 +204,7 @@ async def edit_template_form(
             selectinload(Template.font_obj),
             selectinload(Template.selected_game_obj),
             selectinload(Template.selected_slideshow_obj),
-            selectinload(Template.slideshow_images)
+            selectinload(Template.slideshow_images),
         )
         .where(Template.id == template_id)
     )
@@ -188,12 +213,24 @@ async def edit_template_form(
     if not tpl:
         return RedirectResponse("/admin/templates/", status_code=303)
 
-    categories = (await db.execute(select(Category).order_by(Category.name))).scalars().all()
-    subcategories = (await db.execute(select(SubCategory).order_by(SubCategory.name))).scalars().all()
-    subcategories_variants = (await db.execute(select(SubCategoryVariant).order_by(SubCategoryVariant.name))).scalars().all()
+    categories = (
+        (await db.execute(select(Category).order_by(Category.name))).scalars().all()
+    )
+    subcategories = (
+        (await db.execute(select(SubCategory).order_by(SubCategory.name)))
+        .scalars()
+        .all()
+    )
+    subcategories_variants = (
+        (await db.execute(select(SubCategoryVariant).order_by(SubCategoryVariant.name)))
+        .scalars()
+        .all()
+    )
     fonts = (await db.execute(select(Font).order_by(Font.label))).scalars().all()
     games = (await db.execute(select(Game).order_by(Game.name))).scalars().all()
-    slideshows = (await db.execute(select(Slideshow).order_by(Slideshow.name))).scalars().all()
+    slideshows = (
+        (await db.execute(select(Slideshow).order_by(Slideshow.name))).scalars().all()
+    )
 
     return jinja_templates.TemplateResponse(
         "edit.html",
@@ -238,11 +275,17 @@ async def update_template(
         return RedirectResponse("/admin/templates/", status_code=303)
 
     tpl.title = title
-    tpl.slug = generate_slug(title)
+    tpl.slug = generate_template_slug(title)
     tpl.description = description
     tpl.category_id = category_id
-    tpl.subcategory_id = int(subcategory_id) if subcategory_id not in (None, "") else None
-    tpl.subcategory_variant_id=int(subcategory_variant_id) if subcategory_variant_id not in (None, "") else None
+    tpl.subcategory_id = (
+        int(subcategory_id) if subcategory_id not in (None, "") else None
+    )
+    tpl.subcategory_variant_id = (
+        int(subcategory_variant_id)
+        if subcategory_variant_id not in (None, "")
+        else None
+    )
     tpl.selected_slideshow = slideshow_key
     tpl.selected_game = game_key
     tpl.primary_color = primary_color
@@ -254,7 +297,9 @@ async def update_template(
     # Convert slideshow_key to numeric id
     slideshow_id = None
     if slideshow_key:
-        result = await db.execute(select(Slideshow).where(Slideshow.key == slideshow_key))
+        result = await db.execute(
+            select(Slideshow).where(Slideshow.key == slideshow_key)
+        )
         slideshow_obj = result.scalar_one_or_none()
         if not slideshow_obj:
             raise HTTPException(400, "Invalid slideshow selected")
@@ -287,7 +332,9 @@ async def update_template(
         if len(slide_images) != 5:
             raise HTTPException(400, "Exactly 5 slides must be uploaded")
         # Delete old slides
-        result = await db.execute(select(SlideshowImage).where(SlideshowImage.template_id == tpl.id))
+        result = await db.execute(
+            select(SlideshowImage).where(SlideshowImage.template_id == tpl.id)
+        )
         old_slides = result.scalars().all()
         for old_slide in old_slides:
             try:
@@ -341,7 +388,9 @@ async def delete_template(
             print("Failed to delete music:", e)
 
     # Delete slides
-    result = await db.execute(select(SlideshowImage).where(SlideshowImage.template_id == tpl.id))
+    result = await db.execute(
+        select(SlideshowImage).where(SlideshowImage.template_id == tpl.id)
+    )
     slides = result.scalars().all()
     for slide in slides:
         try:
