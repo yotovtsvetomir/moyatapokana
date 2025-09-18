@@ -54,7 +54,7 @@ export async function middleware(req: NextRequest) {
       response.cookies.set("anonymous_session_id", data.anonymous_session_id, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
+        sameSite: isProd ? "none" : "lax",
         path: "/",
         expires: new Date(data.expires_at),
       });
@@ -64,7 +64,7 @@ export async function middleware(req: NextRequest) {
         response.cookies.set("unique_id", data.unique_id, {
           httpOnly: true,
           secure: process.env.NODE_ENV === "production",
-          sameSite: "lax",
+          sameSite: isProd ? "none" : "lax",
           path: "/",
           expires: new Date(Date.now() + oneYear),
         });

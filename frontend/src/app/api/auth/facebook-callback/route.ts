@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
   res.cookies.set("session_id", backendData.session_id, {
     httpOnly: true,
     secure: isProd,
-    sameSite: "lax",
+    sameSite: isProd ? "none" : "lax",
     path: "/",
     expires,
   });

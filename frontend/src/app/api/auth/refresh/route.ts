@@ -20,7 +20,7 @@ export async function POST(req: Request) {
     res.cookies.set("session_id", data.session_id, {
       httpOnly: true,
       secure: isProd,
-      sameSite: "lax",
+      sameSite: isProd ? "none" : "lax",
       path: "/",
       expires: new Date(data.expires_at),
     });

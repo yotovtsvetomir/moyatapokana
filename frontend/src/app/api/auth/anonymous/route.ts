@@ -30,7 +30,7 @@ export async function POST(req: Request) {
     res.cookies.set("anonymous_session_id", data.anonymous_session_id, {
       httpOnly: true,
       secure: isProd,
-      sameSite: "lax",
+      sameSite: isProd ? "none" : "lax",
       path: "/",
       expires: new Date(data.expires_at),
     });
@@ -41,7 +41,7 @@ export async function POST(req: Request) {
     res.cookies.set("unique_id", uniqueId, {
       httpOnly: true,
       secure: isProd,
-      sameSite: "lax",
+      sameSite: isProd ? "none" : "lax",
       path: "/",
       maxAge: 60 * 60 * 24 * 365, // 1 year
     });
