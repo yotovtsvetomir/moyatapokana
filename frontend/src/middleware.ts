@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const protectedRoutes = ["/profile"];
-const authPages = ["/login", "/register", "/password-reset/request"];
+const protectedRoutes = ["/профил"];
+const authPages = ["/влез", "/регистрация", "/ресет-на-парола/запитване"];
 
 export async function middleware(req: NextRequest) {
   const sessionId = req.cookies.get("session_id")?.value;
@@ -16,6 +16,11 @@ export async function middleware(req: NextRequest) {
     pathname.startsWith(route)
   );
 
+  const ignoredPaths = ["/_next/", "/favicon.ico", "/manifest.json"];
+  if (ignoredPaths.some(path => req.nextUrl.pathname.startsWith(path))) {
+    return NextResponse.next();
+  }
+
   // Skip API routes
   if (isApiRoute) {
     return NextResponse.next();
@@ -23,12 +28,12 @@ export async function middleware(req: NextRequest) {
 
   // Logged in → block auth pages
   if (sessionId && isAuthPage) {
-    return NextResponse.redirect(new URL("/profile", req.url));
+    return NextResponse.redirect(new URL("/профил", req.url));
   }
 
   // Not logged in → block protected pages
   if (!sessionId && isProtectedPage) {
-    return NextResponse.redirect(new URL("/login", req.url));
+    return NextResponse.redirect(new URL("/влез", req.url));
   }
 
   // Ensure `unique_id` exists
@@ -44,6 +49,7 @@ export async function middleware(req: NextRequest) {
 
     if (res.ok) {
       const data = await res.json();
+      console.log(data)
       const response = NextResponse.next();
 
       response.cookies.set("anonymous_session_id", data.anonymous_session_id, {

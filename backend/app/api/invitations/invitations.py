@@ -13,7 +13,6 @@ from fastapi import (
     File,
     Form,
 )
-from transliterate import translit
 from sqlalchemy import desc, tuple_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -471,18 +470,13 @@ async def get_template_by_slug(
 
 
 def slugifycats(name: str) -> str:
-    latin_name = translit(name, reversed=True)
-    slug = re.sub(r"[^a-z0-9]+", "-", latin_name.lower()).strip("-")
+    slug = re.sub(r"[^\w\d]+", "-", name.lower(), flags=re.UNICODE).strip("-")
     return slug
 
 
 def deslugifycats(slug: str) -> str:
     name_guess = slug.replace("-", " ")
-    try:
-        name_guess_cyrillic = translit(name_guess, "bg")
-        return name_guess_cyrillic.capitalize()
-    except Exception:
-        return name_guess
+    return name_guess.capitalize()
 
 
 # do not change url -> router can't handle it ...
@@ -491,10 +485,10 @@ async def list_templates(
     db: AsyncSession = Depends(get_read_session),
     page: int = Query(1, ge=1),
     page_size: int = Query(7, ge=1, le=100),
-    search: Optional[str] = Query(None),
-    category: Optional[str] = Query(None),
-    subcategory: Optional[str] = Query(None),
-    variant: Optional[str] = Query(None),
+    търсене: Optional[str] = Query(None),
+    категория: Optional[str] = Query(None),
+    подкатегория: Optional[str] = Query(None),
+    вариант: Optional[str] = Query(None),
     ordering: str = Query("-created_at"),
 ):
     """List templates with filters, only released, using slugs for categories/subcategories/variants."""
@@ -502,20 +496,20 @@ async def list_templates(
     filters = [Template.is_released.is_(True)]
 
     # --- Resolve slugs to IDs ---
-    if category:
-        filters.append(Template.category.has(name=deslugifycats(category)))
+    if категория:
+        filters.append(Template.category.has(name=deslugifycats(категория)))
 
-    if subcategory:
-        filters.append(Template.subcategory.has(name=deslugifycats(subcategory)))
+    if подкатегория:
+        filters.append(Template.subcategory.has(name=deslugifycats(подкатегория)))
 
-    if variant:
-        filters.append(Template.subcategory_variant.has(name=deslugifycats(variant)))
+    if вариант:
+        filters.append(Template.subcategory_variant.has(name=deslugifycats(вариант)))
 
     # --- Apply search + ordering ---
     filters, order_by = await apply_filters_search_ordering(
         model=Template,
         db=db,
-        search=search,
+        search=търсене,
         search_columns=[Template.title, Template.description],
         filters=filters,
         ordering=ordering,
@@ -572,6 +566,8 @@ async def list_templates(
         }
         for c in categories
     ]
+
+    print(category_list)
 
     return {
         "templates": paginated_templates,

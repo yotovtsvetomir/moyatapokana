@@ -27,8 +27,9 @@ class FacebookLoginPayload(BaseModel):
 
 def process_name(name: str) -> str:
     if re.fullmatch(r"[A-Za-z\s\-']+", name):
-        return translit(name, 'bg')
+        return translit(name, "bg")
     return name
+
 
 # ------------------------------
 # Google login
@@ -98,11 +99,10 @@ async def google_login(
         result_user_invites = await db_read.execute(
             select(func.count(Invitation.id)).where(
                 Invitation.owner_id == user.id,
-                Invitation.status == InvitationStatus.DRAFT
+                Invitation.status == InvitationStatus.DRAFT,
             )
         )
         user_invite_count = result_user_invites.scalar() or 0
-
 
         result_drafts = await db_read.execute(
             select(Invitation).where(Invitation.anon_session_id == anon_session_id)
@@ -198,11 +198,10 @@ async def facebook_login(
         result_user_invites = await db_read.execute(
             select(func.count(Invitation.id)).where(
                 Invitation.owner_id == user.id,
-                Invitation.status == InvitationStatus.DRAFT
+                Invitation.status == InvitationStatus.DRAFT,
             )
         )
         user_invite_count = result_user_invites.scalar() or 0
-
 
         result_drafts = await db_read.execute(
             select(Invitation).where(Invitation.anon_session_id == anon_session_id)
@@ -221,7 +220,6 @@ async def facebook_login(
             await db_write.commit()
 
         await delete_session(anon_session_id, anonymous=True)
-
 
     # -------------------- Create new session --------------------
     session_id = await create_session(user)

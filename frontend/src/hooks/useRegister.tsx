@@ -94,7 +94,7 @@ export function useRegister() {
       }
 
       setSuccess(true);
-      window.location.href = "/profile";
+      window.location.href = "/профил";
     } catch (error) {
       setErrors({
         apiError: error instanceof Error ? error.message : "Сървърна грешка",

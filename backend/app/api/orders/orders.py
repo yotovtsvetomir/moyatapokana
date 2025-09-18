@@ -13,7 +13,6 @@ from fastapi.responses import StreamingResponse
 from io import BytesIO
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from weasyprint import HTML
-from decimal import Decimal
 from app.db.session import get_write_session, get_read_session
 from app.db.models.order import Order, OrderStatus, Voucher, PriceTier, CurrencyRate
 from app.db.models.invitation import Invitation, InvitationStatus
@@ -29,6 +28,7 @@ from app.schemas.order import (
 )
 from app.core.permissions import require_role
 from app.core.settings import settings
+from urllib.parse import quote
 
 router = APIRouter()
 
@@ -101,7 +101,7 @@ async def create_order_with_tiers_route(
 
         # Generate unique order number
         while True:
-            order_number = "MP" + "".join(random.choices(string.digits, k=8))
+            order_number = "МП" + "".join(random.choices(string.digits, k=8))
             existing = await read_db.execute(
                 select(Order).where(Order.order_number == order_number)
             )
@@ -422,7 +422,7 @@ async def initiate_payment(
 
         return {
             "stripe_session_id": None,
-            "payment_url": f"{settings.FRONTEND_BASE_URL}/profile/orders/{order.order_number}?payment_status=success",
+            "payment_url": f"{settings.FRONTEND_BASE_URL}/%D0%BF%D1%80%D0%BE%D1%84%D0%B8%D0%BB/%D0%BF%D0%BE%D1%80%D1%8A%D1%87%D0%BA%D0%B8/{quote(order.order_number, safe='')}?%D1%81%D1%82%D0%B0%D1%82%D1%83%D1%81=%D1%83%D1%81%D0%BF%D0%B5%D1%88%D0%BD%D0%BE",
             "message": "Order fully paid. Invitation activated.",
         }
 
@@ -446,8 +446,8 @@ async def initiate_payment(
                 }
             ],
             mode="payment",
-            success_url=f"{settings.FRONTEND_BASE_URL}/profile/orders/{order.order_number}?payment_status=success",
-            cancel_url=f"{settings.FRONTEND_BASE_URL}/profile/orders/{order.order_number}?payment_status=cancel",
+            success_url=f"{settings.FRONTEND_BASE_URL}/%D0%BF%D1%80%D0%BE%D1%84%D0%B8%D0%BB/%D0%BF%D0%BE%D1%80%D1%8A%D1%87%D0%BA%D0%B8/{quote(order.order_number, safe='')}?%D1%81%D1%82%D0%B0%D1%82%D1%83%D1%81=%D1%83%D1%81%D0%BF%D0%B5%D1%88%D0%BD%D0%BE",
+            cancel_url=f"{settings.FRONTEND_BASE_URL}/%D0%BF%D1%80%D0%BE%D1%84%D0%B8%D0%BB/%D0%BF%D0%BE%D1%80%D1%8A%D1%87%D0%BA%D0%B8/{quote(order.order_number, safe='')}?%D1%81%D1%82%D0%B0%D1%82%D1%83%D1%81=%D0%BD%D0%B5%D1%83%D1%81%D0%BF%D0%B5%D1%88%D0%BD%D0%BE",
             metadata={"order_number": str(order.order_number)},
             locale="bg",
             customer_email=current_user["email"],

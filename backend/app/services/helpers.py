@@ -1,19 +1,21 @@
 from urllib.parse import urlencode
 from datetime import datetime
 import secrets
-import string
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from app.db.models.invitation import Invitation, Template
-from unidecode import unidecode
+from app.db.models.invitation import Invitation
 import re
+import random
 
 
 SLUG_LENGTH = 64
 
 
+CYRILLIC_ALPHABET = "АБВГДЕЖЗИКЛМНОПРСТУФХЦЧШЩЬЮЯабвгдежзиклмнопрстуфхцчшщьюя"
+
+
 async def generate_slug(db: AsyncSession, length: int = SLUG_LENGTH) -> str:
-    alphabet = string.ascii_letters + string.digits
+    alphabet = CYRILLIC_ALPHABET + "0123456789"
     while True:
         slug = "".join(secrets.choice(alphabet) for _ in range(length))
         result = await db.execute(select(Invitation).where(Invitation.slug == slug))
@@ -21,23 +23,22 @@ async def generate_slug(db: AsyncSession, length: int = SLUG_LENGTH) -> str:
             return slug
 
 
-async def generate_template_slug(db: AsyncSession, title: str) -> str:
-    alphabet = string.ascii_letters + string.digits
-    base_slug = re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")
+def generate_template_slug(title: str, suffix_length: int = 6) -> str:
+    text = title.lower()
+    text = re.sub(r"[^\w\d]+", "-", text, flags=re.UNICODE)
+    text = text.strip("-")
 
-    while True:
-        random_suffix = "".join(secrets.choice(alphabet) for _ in range(4))
-        slug = f"{base_slug}-{random_suffix}"
+    random_suffix = "".join(
+        random.choices(CYRILLIC_ALPHABET + "0123456789", k=suffix_length)
+    )
 
-        result = await db.execute(select(Template).where(Template.slug == slug))
-        if not result.scalars().first():
-            return slug
+    slug = f"{text}-{random_suffix}"
+    return slug
 
 
 def slugify(text: str) -> str:
-    text = unidecode(text)
     text = text.lower()
-    text = re.sub(r"[^a-z0-9]+", "-", text)
+    text = re.sub(r"[^\w\d]+", "-", text, flags=re.UNICODE)
     text = text.strip("-")
     return text
 

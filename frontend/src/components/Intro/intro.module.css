@@ -52,7 +52,7 @@
 .templateTitle h3 {
   font-size: var(--font-xl);
   text-align: center;
-  line-height: 1;
+  line-height: 1.25;
 }
 
 .templateDescription p {

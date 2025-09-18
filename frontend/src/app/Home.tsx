@@ -9,7 +9,7 @@ import GuestTracking from "@/components/GuestTracking/GuestTracking";
 import ChooseGame from "@/components/ChooseGame/ChooseGame";
 import ChooseSlideshow from "@/components/ChooseSlideshow/ChooseSlideshow";
 import CTA from '@/components/CTA/cta';
-import BlogPostsClient from '@/app/blogposts/BlogPostsClient'
+import BlogPostsClient from '@/app/%D0%B1%D0%BB%D0%BE%D0%B3%D0%BF%D0%BE%D1%81%D1%82%D0%BE%D0%B2%D0%B5/BlogPostsClient'
 
 type TemplateRead = components['schemas']['TemplateRead'];
 type BlogPostRead = components['schemas']['BlogPostOut'];

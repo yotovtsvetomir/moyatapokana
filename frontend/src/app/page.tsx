@@ -20,9 +20,9 @@ export default async function Page() {
 
   const data = await getHomeData();
 
-  const title = "Moyatapokana.bg — Шаблони за покани";
-  const description = "Разгледайте най-новите шаблони за покани на Moyatapokana.bg";
-  const url = process.env.NEXT_PUBLIC_CLIENT_URL || "https://www.moyatapokana.bg";
+  const title = `${process.env.NEXT_PUBLIC_CLIENT_URL} — Шаблони за покани`;
+  const description = `Разгледайте най-новите шаблони за покани на ${process.env.NEXT_PUBLIC_CLIENT_URL}`;
+  const url = process.env.NEXT_PUBLIC_CLIENT_URL || "https://моятапокана.бг";
   const image = data.templates[0]?.wallpaper || `${url}/default-og.jpg`;
 
   const fontLinks = Array.from(
@@ -38,7 +38,7 @@ export default async function Page() {
       "@context": "https://schema.org",
       "@type": "WebSite",
       url: process.env.NEXT_PUBLIC_CLIENT_URL,
-      name: "Moyatapokana.bg",
+      name: process.env.NEXT_PUBLIC_CLIENT_URL,
       potentialAction: {
         "@type": "SearchAction",
         target: `${process.env.NEXT_PUBLIC_CLIENT_URL}/templates?search={search_term_string}`,
@@ -88,7 +88,7 @@ export default async function Page() {
             item: {
               "@type": "Product",
               name: t.title,
-              url: `${process.env.NEXT_PUBLIC_CLIENT_URL}/template/preview/${t.slug}`,
+              url: `${process.env.NEXT_PUBLIC_CLIENT_URL}/шаблон/преглед/${t.slug}`,
               image: t.wallpaper,
               description: t.description || "Цифрова покана",
               brand: {
@@ -98,7 +98,7 @@ export default async function Page() {
               },
               offers: {
                 "@type": "Offer",
-                url: `${process.env.NEXT_PUBLIC_CLIENT_URL}/template/preview/${t.slug}`,
+                url: `${process.env.NEXT_PUBLIC_CLIENT_URL}/цени`,
                 priceCurrency: "BGN",
                 price: "19.99",
                 availability: "https://schema.org/InStock",
@@ -116,7 +116,7 @@ export default async function Page() {
             item: {
               "@type": "BlogPosting",
               headline: post.title,
-              url: `${process.env.NEXT_PUBLIC_CLIENT_URL}/blogposts/${post.slug}`,
+              url: `${process.env.NEXT_PUBLIC_CLIENT_URL}/блогпост/${post.slug}`,
               image: post.image || undefined,
               datePublished: post.created_at,
               dateModified: post.updated_at,

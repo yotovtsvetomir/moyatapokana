@@ -1,0 +1,27 @@
+RUN IN SRC FOLDER!
+
+find app -depth -name '*[! -~]*' | while read -r f; do
+    base=$(basename "$f")
+    dir=$(dirname "$f")
+
+    # Skip renaming folders that start with '['
+    if [ -d "$f" ] && [[ "$base" == \[* ]]; then
+        continue
+    fi
+
+    newname=$(python3 -c "import urllib.parse, sys; print(urllib.parse.quote(sys.argv[1]))" "$base")
+
+    if [ "$base" != "$newname" ]; then
+        mv "$f" "$dir/$newname"
+    fi
+done
+
+find app -depth ! -path '*/[*]*' | while read -r f; do
+    dir=$(dirname "$f")
+    base=$(basename "$f")
+    newname=$(python3 -c "import urllib.parse, sys; print(urllib.parse.unquote(sys.argv[1]))" "$base")
+
+    if [ "$base" != "$newname" ]; then
+        mv "$f" "$dir/$newname"
+    fi
+done

@@ -27,6 +27,10 @@ export default async function RootLayout({
 
   return (
     <html lang="en">
+      <head>
+        <link rel="manifest" href="/manifest.json" />
+        <link rel="icon" href="/favicon.ico" />
+      </head>
       <body className={nunito.variable}>
         <UserProvider initialUser={user}>
           <SessionTimeoutHandler />

@@ -47,11 +47,11 @@ export default function HeaderClient() {
 
   const mainLinks = [
     { href: '/', label: 'Начало' },
-    { href: '/templates', label: 'Шаблони' },
-    { href: '/invitations/create', label: 'Създай' },
-    { href: '/pricing', label: 'Цени' },
-    { href: '/blogposts', label: 'Блог' },
-    { href: '/contact', label: 'Контакти' },
+    { href: '/шаблони', label: 'Шаблони' },
+    { href: '/покани/създай', label: 'Създай' },
+    { href: '/цени', label: 'Цени' },
+    { href: '/блогпостове', label: 'Блог' },
+    { href: '/контакти', label: 'Контакти' },
   ];
 
   useEffect(() => {
@@ -200,10 +200,10 @@ export default function HeaderClient() {
                 </button>
               ) : (
                 <div className={styles.logregDesktop}>
-                  <Link href="/login">
+                  <Link href="/влез">
                     <Button variant="secondary" size={isXL ? 'large' : undefined}>Вход</Button>
                   </Link>
-                  <Link href="/register">
+                  <Link href="/регистрация">
                     <Button variant="secondary" size={isXL ? 'large' : undefined}>Регистрация</Button>
                   </Link>
                 </div>

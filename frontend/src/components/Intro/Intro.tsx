@@ -54,7 +54,7 @@ function TemplateSlide({ template }: { template: TemplateRead }) {
           width="100%"
           icon="visibility"
           iconPosition="right"
-          href={`/template/preview/${template.slug}`}
+          href={`/шаблон/преглед/${template.slug}`}
         >
           Визуализирай
         </Button>
