@@ -567,8 +567,6 @@ async def list_templates(
         for c in categories
     ]
 
-    print(category_list)
-
     return {
         "templates": paginated_templates,
         "filters": {"categories": category_list},

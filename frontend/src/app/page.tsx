@@ -20,8 +20,8 @@ export default async function Page() {
 
   const data = await getHomeData();
 
-  const title = `${process.env.NEXT_PUBLIC_CLIENT_URL} — Шаблони за покани`;
-  const description = `Разгледайте най-новите шаблони за покани на ${process.env.NEXT_PUBLIC_CLIENT_URL}`;
+  const title = `${process.env.NEXT_PUBLIC_NAME} — Шаблони за покани`;
+  const description = `Разгледайте най-новите шаблони за покани на ${process.env.NEXT_PUBLIC_NAME}`;
   const url = process.env.NEXT_PUBLIC_CLIENT_URL || "https://моятапокана.бг";
   const image = data.templates[0]?.wallpaper || `${url}/default-og.jpg`;
 
@@ -37,7 +37,7 @@ export default async function Page() {
     {
       "@context": "https://schema.org",
       "@type": "WebSite",
-      url: process.env.NEXT_PUBLIC_CLIENT_URL,
+      url: process.env.NEXT_PUBLIC_NAME,
       name: process.env.NEXT_PUBLIC_CLIENT_URL,
       potentialAction: {
         "@type": "SearchAction",
@@ -49,7 +49,7 @@ export default async function Page() {
     {
       "@context": "https://schema.org",
       "@type": "WebPage",
-      name: "Moyatapokana.bg",
+      name: process.env.NEXT_PUBLIC_NAME,
       url: process.env.NEXT_PUBLIC_CLIENT_URL,
       mainEntity: [
         // Navigation links

@@ -49,7 +49,6 @@ export async function middleware(req: NextRequest) {
 
     if (res.ok) {
       const data = await res.json();
-      console.log(data)
       const response = NextResponse.next();
 
       response.cookies.set("anonymous_session_id", data.anonymous_session_id, {

@@ -98,7 +98,7 @@ export default function Intro({ templates }: IntroProps) {
           </div>
 
           <div className={styles.carouselFooter}>
-            <Button href="/templates" variant="secondary" size={isMobile ? "small" : "large"}>
+            <Button href="/шаблони" variant="secondary" size={isMobile ? "small" : "large"}>
               Разгледай
             </Button>
           </div>
