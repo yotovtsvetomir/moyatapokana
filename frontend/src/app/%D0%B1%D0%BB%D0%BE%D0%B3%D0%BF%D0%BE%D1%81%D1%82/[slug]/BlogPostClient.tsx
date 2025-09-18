@@ -31,10 +31,9 @@ export default function BlogPostClient({ post }: Props) {
           <Image
             src={post.image}
             alt={post.title}
-            width={800}
-            height={450}
+            fill
             unoptimized
-            style={{ objectFit: 'cover', borderRadius: '6px' }}
+            style={{ objectFit: 'cover', objectPosition: 'center', borderRadius: '6px' }}
           />
         </div>
       )}
